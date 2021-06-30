@@ -1,12 +1,14 @@
 /*******************************************************************************************
 *
-*   raylib game template
+*   raylib Game Template
 *
+*   <Game title>
+*   <Game description>
 *
-*   Code licensed under an unmodified zlib/libpng license, which is an OSI-certified,
-*   BSD-like license that allows static linking with closed source software
+*   This game has been created using raylib (www.raylib.com)
+*   raylib is licensed under an unmodified zlib/libpng license (View raylib.h for details)
 *
-*   Copyright (c) 2021-2026 Ramon Santamaria (@raysan5)
+*   Copyright (c) 2021 Ramon Santamaria (@raysan5)
 *
 ********************************************************************************************/
 
@@ -14,30 +16,13 @@
 #include "screens.h"    // NOTE: Declares global (extern) variables and screens functions
 
 #if defined(PLATFORM_WEB)
-    #include <emscripten/emscripten.h>      // Emscripten library
-#endif
-
-#include <stdio.h>                          // Required for: printf()
-#include <stdlib.h>                         // Required for: 
-#include <string.h>                         // Required for:
-
-//----------------------------------------------------------------------------------
-// Defines and Macros
-//----------------------------------------------------------------------------------
-// Simple log system to avoid printf() calls if required
-// NOTE: Avoiding those calls, also avoids const strings memory usage
-#define SUPPORT_LOG_INFO
-#if defined(SUPPORT_LOG_INFO)
-    #define LOG(...) printf(__VA_ARGS__)
-#else
-    #define LOG(...)
+    #include <emscripten/emscripten.h>
 #endif
 
 //----------------------------------------------------------------------------------
 // Shared Variables Definition (global)
-// NOTE: Those variables are shared between modules through screens.h
 //----------------------------------------------------------------------------------
-GameScreen currentScreen = LOGO;
+GameScreen currentScreen = 0;
 Font font = { 0 };
 Music music = { 0 };
 Sound fxCoin = { 0 };
@@ -53,10 +38,10 @@ static float transAlpha = 0.0f;
 static bool onTransition = false;
 static bool transFadeOut = false;
 static int transFromScreen = -1;
-static GameScreen transToScreen = UNKNOWN;
+static int transToScreen = -1;
 
 //----------------------------------------------------------------------------------
-// Module Functions Declaration
+// Local Functions Declaration
 //----------------------------------------------------------------------------------
 static void ChangeToScreen(int screen);     // Change to screen, no transition effect
 
@@ -67,32 +52,32 @@ static void DrawTransition(void);           // Draw transition effect (full-scre
 static void UpdateDrawFrame(void);          // Update and draw one frame
 
 //----------------------------------------------------------------------------------
-// Program main entry point
+// Main entry point
 //----------------------------------------------------------------------------------
 int main(void)
 {
-    // Initialization
+    // Initialization (Note windowTitle is unused on Android)
     //---------------------------------------------------------
     InitWindow(screenWidth, screenHeight, "raylib game template");
 
-    InitAudioDevice();      // Initialize audio device
+    // Global data loading (assets that must be available in all screens, i.e. fonts)
+    InitAudioDevice();
 
-    // Load global data (assets that must be available in all screens, i.e. font)
     font = LoadFont("resources/mecha.png");
-    //music = LoadMusicStream("resources/ambient.ogg"); // TODO: Load music
+    music = LoadMusicStream("resources/ambient.ogg");
     fxCoin = LoadSound("resources/coin.wav");
 
     SetMusicVolume(music, 1.0f);
     PlayMusicStream(music);
 
-    // Setup and init first screen
+    // Setup and Init first screen
     currentScreen = LOGO;
     InitLogoScreen();
 
 #if defined(PLATFORM_WEB)
     emscripten_set_main_loop(UpdateDrawFrame, 60, 1);
 #else
-    SetTargetFPS(60);       // Set our game to run at 60 frames-per-second
+    SetTargetFPS(60);   // Set our game to run at 60 frames-per-second
     //--------------------------------------------------------------------------------------
 
     // Main game loop
@@ -104,18 +89,18 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
+
     // Unload current screen data before closing
     switch (currentScreen)
     {
         case LOGO: UnloadLogoScreen(); break;
         case TITLE: UnloadTitleScreen(); break;
-        case OPTIONS: UnloadOptionsScreen(); break;
         case GAMEPLAY: UnloadGameplayScreen(); break;
         case ENDING: UnloadEndingScreen(); break;
         default: break;
     }
 
-    // Unload global data loaded
+    // Unload all global loaded data (i.e. fonts) here!
     UnloadFont(font);
     UnloadMusicStream(music);
     UnloadSound(fxCoin);
@@ -129,8 +114,9 @@ int main(void)
 }
 
 //----------------------------------------------------------------------------------
-// Module Functions Definition
+// Module specific Functions Definition
 //----------------------------------------------------------------------------------
+
 // Change to next screen, no transition
 static void ChangeToScreen(int screen)
 {
@@ -139,7 +125,6 @@ static void ChangeToScreen(int screen)
     {
         case LOGO: UnloadLogoScreen(); break;
         case TITLE: UnloadTitleScreen(); break;
-        case OPTIONS: UnloadOptionsScreen(); break;
         case GAMEPLAY: UnloadGameplayScreen(); break;
         case ENDING: UnloadEndingScreen(); break;
         default: break;
@@ -150,7 +135,6 @@ static void ChangeToScreen(int screen)
     {
         case LOGO: InitLogoScreen(); break;
         case TITLE: InitTitleScreen(); break;
-        case OPTIONS: InitOptionsScreen(); break;
         case GAMEPLAY: InitGameplayScreen(); break;
         case ENDING: InitEndingScreen(); break;
         default: break;
@@ -169,7 +153,7 @@ static void TransitionToScreen(int screen)
     transAlpha = 0.0f;
 }
 
-// Update transition effect (fade-in, fade-out)
+// Update transition effect
 static void UpdateTransition(void)
 {
     if (!transFadeOut)
@@ -198,7 +182,6 @@ static void UpdateTransition(void)
             {
                 case LOGO: InitLogoScreen(); break;
                 case TITLE: InitTitleScreen(); break;
-                case OPTIONS: InitOptionsScreen(); break;
                 case GAMEPLAY: InitGameplayScreen(); break;
                 case ENDING: InitEndingScreen(); break;
                 default: break;
@@ -220,7 +203,7 @@ static void UpdateTransition(void)
             transFadeOut = false;
             onTransition = false;
             transFromScreen = -1;
-            transToScreen = UNKNOWN;
+            transToScreen = -1;
         }
     }
 }
@@ -236,7 +219,7 @@ static void UpdateDrawFrame(void)
 {
     // Update
     //----------------------------------------------------------------------------------
-    //UpdateMusicStream(music);       // NOTE: Music keeps playing between screens
+    UpdateMusicStream(music);       // NOTE: Music keeps playing between screens
 
     if (!onTransition)
     {
