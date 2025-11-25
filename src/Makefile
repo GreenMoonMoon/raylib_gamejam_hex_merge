@@ -394,7 +394,7 @@ ifeq ($(PLATFORM),PLATFORM_DESKTOP)
 		rm -fv *.o
     endif
     ifeq ($(PLATFORM_OS),OSX)
-		find . -type f -perm +ugo+x -delete
+		#find . -type f -perm +ugo+x -delete
 		rm -f *.o
     endif
 endif
