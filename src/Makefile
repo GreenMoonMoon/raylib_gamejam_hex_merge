@@ -2,7 +2,7 @@
 #
 #   raylib makefile for Desktop platforms, Web (Wasm), Raspberry Pi (DRM mode) and Android
 #
-#   Copyright (c) 2013-2025 Ramon Santamaria (@raysan5)
+#   Copyright (c) 2013-2026 Ramon Santamaria (@raysan5)
 #
 #   This software is provided "as-is", without any express or implied warranty. In no event
 #   will the authors be held liable for any damages arising from the use of this software.
@@ -41,9 +41,9 @@ PROJECT_SOURCE_FILES  ?= \
     screen_ending.c
 
 # raylib library variables
-RAYLIB_PATH           ?= ../../raylib/src
-RAYLIB_INCLUDE_PATH   ?= $(RAYLIB_PATH)\src
-RAYLIB_LIB_PATH       ?= $(RAYLIB_PATH)\src
+RAYLIB_PATH           ?= C:/GitHub/raylib
+RAYLIB_INCLUDE_PATH   ?= $(RAYLIB_PATH)/src
+RAYLIB_LIB_PATH       ?= $(RAYLIB_PATH)/src
 
 # Library type used for raylib: STATIC (.a) or SHARED (.so/.dll)
 RAYLIB_LIBTYPE        ?= STATIC
@@ -70,9 +70,6 @@ ifeq ($(PLATFORM),PLATFORM_DESKTOP)
     ifeq ($(OS),Windows_NT)
         PLATFORM_OS = WINDOWS
         export PATH := $(COMPILER_PATH):$(PATH)
-        ifndef PLATFORM_SHELL
-            PLATFORM_SHELL = cmd
-        endif
     else
         UNAMEOS = $(shell uname)
         ifeq ($(UNAMEOS),Linux)
@@ -93,37 +90,12 @@ ifeq ($(PLATFORM),PLATFORM_DESKTOP)
         ifeq ($(UNAMEOS),Darwin)
             PLATFORM_OS = OSX
         endif
-        ifndef PLATFORM_SHELL
-            PLATFORM_SHELL = sh
-        endif
     endif
 endif
 ifeq ($(PLATFORM),PLATFORM_DRM)
     UNAMEOS = $(shell uname)
     ifeq ($(UNAMEOS),Linux)
         PLATFORM_OS = LINUX
-    endif
-    ifndef PLATFORM_SHELL
-        PLATFORM_SHELL = sh
-    endif
-endif
-ifeq ($(PLATFORM),PLATFORM_WEB)
-    ifeq ($(OS),Windows_NT)
-        PLATFORM_OS = WINDOWS
-        ifndef PLATFORM_SHELL
-            PLATFORM_SHELL = cmd
-        endif
-    else
-        UNAMEOS = $(shell uname)
-        ifeq ($(UNAMEOS),Linux)
-            PLATFORM_OS = LINUX
-        endif
-        ifeq ($(UNAMEOS),Darwin)
-            PLATFORM_OS = OSX
-        endif
-        ifndef PLATFORM_SHELL
-            PLATFORM_SHELL = sh
-        endif
     endif
 endif
 
