@@ -41,9 +41,9 @@ PROJECT_SOURCE_FILES  ?= \
     screen_ending.c
 
 # raylib library variables
-RAYLIB_SRC_PATH       ?= ../../raylib/src
-RAYLIB_INCLUDE_PATH   ?= $(RAYLIB_SRC_PATH)
-RAYLIB_LIB_PATH       ?= $(RAYLIB_SRC_PATH)
+RAYLIB_PATH           ?= ../../raylib/src
+RAYLIB_INCLUDE_PATH   ?= $(RAYLIB_PATH)\src
+RAYLIB_LIB_PATH       ?= $(RAYLIB_PATH)\src
 
 # Library type used for raylib: STATIC (.a) or SHARED (.so/.dll)
 RAYLIB_LIBTYPE        ?= STATIC
@@ -242,7 +242,7 @@ LDFLAGS = -L. -L$(RAYLIB_LIB_PATH)
 ifeq ($(PLATFORM),PLATFORM_DESKTOP)
     ifeq ($(PLATFORM_OS),WINDOWS)
         # NOTE: The resource .rc file contains windows executable icon and properties
-        LDFLAGS += $(RAYLIB_SRC_PATH)/raylib.rc.data
+        LDFLAGS += $(RAYLIB_PATH)/src/raylib.rc.data
         # -Wl,--subsystem,windows hides the console window
         ifeq ($(BUILD_MODE), RELEASE)
             LDFLAGS += -Wl,--subsystem,windows
