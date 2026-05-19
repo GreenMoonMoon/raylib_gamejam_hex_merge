@@ -340,7 +340,6 @@ else
 endif
 
 # Default target entry
-# NOTE: We call this Makefile target or Makefile.Android target
 all:
 	$(MAKE) $(MAKEFILE_TARGET)
 
@@ -353,21 +352,18 @@ $(PROJECT_NAME): $(OBJS)
 %.o: %.c
 	$(CC) -c $< -o $@ $(CFLAGS) $(INCLUDE_PATHS) -D$(PLATFORM)
 
-.PHONY: clean_shell_cmd clean_shell_sh
-
 # Clean everything
-clean:	clean_shell_$(PLATFORM_SHELL)
-	@echo Cleaning done
-
-clean_shell_sh:
+clean:
 ifeq ($(PLATFORM),PLATFORM_DESKTOP)
+    ifeq ($(PLATFORM_OS),WINDOWS)
+	del *.o *.exe /s
+    endif
     ifeq ($(PLATFORM_OS),LINUX)
-		find . -type f -executable -delete
-		rm -fv *.o
+	find . -type f -executable -delete
+	rm -fv *.o
     endif
     ifeq ($(PLATFORM_OS),OSX)
-		#find . -type f -perm +ugo+x -delete
-		rm -f *.o
+	rm -f *.o external/*.o $(PROJECT_NAME)
     endif
 endif
 ifeq ($(PLATFORM),PLATFORM_RPI)
@@ -379,14 +375,15 @@ ifeq ($(PLATFORM),PLATFORM_DRM)
 	rm -fv *.o
 endif
 ifeq ($(PLATFORM),PLATFORM_WEB)
+    ifeq ($(PLATFORM_OS),WINDOWS)
+	del *.o *.html *.js
+    endif
     ifeq ($(PLATFORM_OS),LINUX)
-		rm -fv *.o $(PROJECT_NAME).data $(PROJECT_NAME).html $(PROJECT_NAME).js $(PROJECT_NAME).wasm
+	rm -fv *.o $(PROJECT_NAME).data $(PROJECT_NAME).html $(PROJECT_NAME).js $(PROJECT_NAME).wasm
     endif
     ifeq ($(PLATFORM_OS),OSX)
-		rm -f *.o $(PROJECT_NAME).data $(PROJECT_NAME).html $(PROJECT_NAME).js $(PROJECT_NAME).wasm
+	rm -f *.o $(PROJECT_NAME).data $(PROJECT_NAME).html $(PROJECT_NAME).js $(PROJECT_NAME).wasm
     endif
 endif
+	@echo Cleaning done
 
-clean_shell_cmd: SHELL=cmd
-clean_shell_cmd:
-	del *.o *.exe $(PROJECT_NAME).data $(PROJECT_NAME).html $(PROJECT_NAME).js $(PROJECT_NAME).wasm /s
