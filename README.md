@@ -1,29 +1,15 @@
 -----------------------------------
-
 _DISCLAIMER:_
 
-Welcome to **raylib game template**!
+Welcome to the **raylib game template**!
 
 This template provides a base structure to start developing a small raylib game in plain C. The repo is also pre-configured with a default `LICENSE` (zlib/libpng) and a `README.md` (this one) to be properly filled by users. Feel free to change the LICENSE as required.
 
 All the sections defined by `$(Data to Fill)` are expected to be edited and filled properly. It's recommended to delete this disclaimer message after editing this `README.md` file.
 
-This template has been created to be used with raylib (www.raylib.com) and it's licensed under an unmodified zlib/libpng license.
-
-_Copyright (c) 2014-2026 Ramon Santamaria ([@raysan5](https://github.com/raysan5))_
-
------------------------------------
 ## Getting Started with this template
 
-#### Linux
-When setting up this template on linux for the first time, install the dependencies from this page:
-([Working on GNU Linux](https://github.com/raysan5/raylib/wiki/Working-on-GNU-Linux))
-
-You can use this templates in a few ways: using Visual Studio, using CMake, or make your own build setup. This repository comes with Visual Studio and CMake already set up.
-
-Chose one of the follow setup options that fit in you development environment.
-
-### Visual Studio
+### Windows: Visual Studio
 
 - After extracting the zip, the parent folder `raylib-game-template` should exist in the same directory as `raylib` itself.  So, your file structure should look like this:
     - Some parent directory
@@ -35,27 +21,31 @@ Chose one of the follow setup options that fit in you development environment.
 - Select on `raylib_game` in the solution explorer, then in the toolbar at the top, click `Project` > `Set as Startup Project`
 - Now you're all set up!  Click `Local Windows Debugger` with the green play arrow and the project will run.
 
-### CMake
+#### Linux
 
-- Extract the zip of this project
-- Type the follow command:
+When setting up this template on linux for the first time, install the dependencies from this page:
+([Working on GNU Linux](https://github.com/raysan5/raylib/wiki/Working-on-GNU-Linux))
 
-```sh
-cmake -S . -B build
-```
+You can use this templates in a few ways: using Visual Studio, using CMake, or make your own build setup. This repository comes with Visual Studio and CMake already set up.
 
-> if you want to configure your project to build with debug symbols, use the flag `-DCMAKE_BUILD_TYPE=Debug`
+Chose one of the follow setup options that fit in you development environment.
 
-- After CMake configures your project, build with:
+### CLI: Makefile
 
 ```sh
-cmake --build build
+mkdir ~/raylib-gamejam && cd ~/raylib-gamejam
+git clone --depth 1 --branch 6.0 https://github.com/raysan5/raylib
+make -C raylib/src
+git clone https://github.com/$(User Name)/$(Repo Name).git
+cd $(Repo Name)
+make -C src
+src/raylib_game
 ```
 
-- Inside the build folder is another folder (named the same as the project name on CMakeLists.txt) with the executable and resources folder.
-- In order for resources to load properly, cd to `src` and run the executable (`../build/${PROJECT_NAME}/${PROJECT_NAME}`) from there.
+This template has been created to be used with raylib (www.raylib.com) and it's licensed under an unmodified zlib/libpng license.
 
-- cmake will automatically download a current release of raylib but if you want to use your local version you can pass `-DFETCHCONTENT_SOURCE_DIR_RAYLIB=<dir_with_raylib>` 
+_Copyright (c) 2014-2026 Ramon Santamaria ([@raysan5](https://github.com/raysan5))_
+-----------------------------------
 
 ## $(Game Title)
 
@@ -96,7 +86,7 @@ _TODO: Show your game to the world, animated GIFs recommended!._
 
 ### License
 
-This game sources are licensed under an unmodified zlib/libpng license, which is an OSI-certified, BSD-like license that allows static linking with closed source software. Check [LICENSE](LICENSE) for further details.
+This project sources are licensed under an unmodified zlib/libpng license, which is an OSI-certified, BSD-like license that allows static linking with closed source software. Check [LICENSE](LICENSE) for further details.
 
 $(Additional Licenses)
 

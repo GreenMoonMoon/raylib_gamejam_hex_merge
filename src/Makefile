@@ -41,7 +41,7 @@ PROJECT_SOURCE_FILES  ?= \
     screen_ending.c
 
 # raylib library variables
-RAYLIB_PATH           ?= C:/GitHub/raylib
+RAYLIB_PATH           ?= C:\raylib\raylib
 RAYLIB_INCLUDE_PATH   ?= $(RAYLIB_PATH)/src
 RAYLIB_LIB_PATH       ?= $(RAYLIB_PATH)/src
 
@@ -60,8 +60,8 @@ BUILD_WEB_SHELL       ?= minshell.html
 BUILD_WEB_HEAP_SIZE   ?= 128MB
 BUILD_WEB_STACK_SIZE  ?= 1MB
 BUILD_WEB_ASYNCIFY_STACK_SIZE ?= 1048576
-BUILD_WEB_RESOURCES   ?= FALSE
-BUILD_WEB_RESOURCES_PATH ?= resources
+BUILD_WEB_RESOURCES   ?= TRUE
+BUILD_WEB_RESOURCES_PATH  ?= resources
 
 # Determine PLATFORM_OS in case PLATFORM_DESKTOP selected
 ifeq ($(PLATFORM),PLATFORM_DESKTOP)
@@ -277,8 +277,6 @@ ifeq ($(PLATFORM),PLATFORM_DESKTOP)
         # Libraries for Windows desktop compilation
         # NOTE: WinMM library required to set high-res timer resolution
         LDLIBS = -lraylib -lopengl32 -lgdi32 -lwinmm -lcomdlg32 -lole32
-        # Required for physac examples
-        LDLIBS += -static -lpthread
     endif
     ifeq ($(PLATFORM_OS),LINUX)
         # Libraries for Debian GNU/Linux desktop compiling

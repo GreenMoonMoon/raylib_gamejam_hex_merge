@@ -2,13 +2,11 @@
 *
 *   raylib game template
 *
-*   <Game title>
-*   <Game description>
 *
-*   This game has been created using raylib (www.raylib.com)
-*   raylib is licensed under an unmodified zlib/libpng license (View raylib.h for details)
+*   Code licensed under an unmodified zlib/libpng license, which is an OSI-certified,
+*   BSD-like license that allows static linking with closed source software
 *
-*   Copyright (c) 2021 Ramon Santamaria (@raysan5)
+*   Copyright (c) 2021-2026 Ramon Santamaria (@raysan5)
 *
 ********************************************************************************************/
 
@@ -16,7 +14,23 @@
 #include "screens.h"    // NOTE: Declares global (extern) variables and screens functions
 
 #if defined(PLATFORM_WEB)
-    #include <emscripten/emscripten.h>
+    #include <emscripten/emscripten.h>      // Emscripten library
+#endif
+
+#include <stdio.h>                          // Required for: printf()
+#include <stdlib.h>                         // Required for: 
+#include <string.h>                         // Required for:
+
+//----------------------------------------------------------------------------------
+// Defines and Macros
+//----------------------------------------------------------------------------------
+// Simple log system to avoid printf() calls if required
+// NOTE: Avoiding those calls, also avoids const strings memory usage
+#define SUPPORT_LOG_INFO
+#if defined(SUPPORT_LOG_INFO)
+    #define LOG(...) printf(__VA_ARGS__)
+#else
+    #define LOG(...)
 #endif
 
 //----------------------------------------------------------------------------------
