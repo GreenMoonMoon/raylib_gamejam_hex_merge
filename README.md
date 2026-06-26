@@ -7,6 +7,8 @@ This template provides a base structure to start developing a small raylib game 
 
 All the sections defined by `$(Data to Fill)` are expected to be edited and filled properly. It's recommended to delete this disclaimer message after editing this `README.md` file.
 
+-----------------------------------
+
 ## Getting Started with this template
 
 ### Windows: Visual Studio
@@ -21,7 +23,7 @@ All the sections defined by `$(Data to Fill)` are expected to be edited and fill
 - Select on `raylib_game` in the solution explorer, then in the toolbar at the top, click `Project` > `Set as Startup Project`
 - Now you're all set up!  Click `Local Windows Debugger` with the green play arrow and the project will run.
 
-#### Linux
+### Linux
 
 When setting up this template on linux for the first time, install the dependencies from this page:
 ([Working on GNU Linux](https://github.com/raysan5/raylib/wiki/Working-on-GNU-Linux))
@@ -45,6 +47,7 @@ src/raylib_game
 This template has been created to be used with raylib (www.raylib.com) and it's licensed under an unmodified zlib/libpng license.
 
 _Copyright (c) 2014-2026 Ramon Santamaria ([@raysan5](https://github.com/raysan5))_
+
 -----------------------------------
 
 ## $(Game Title)
