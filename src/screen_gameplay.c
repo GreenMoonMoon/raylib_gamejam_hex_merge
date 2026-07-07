@@ -30,6 +30,7 @@
 #include "draw_utils.h"
 
 #define DEFAULT_ANIM_SPEED 24
+#define CAMERA_SPEED 4.0f
 
 // TODO: move to player module
 typedef enum PlayerState {
@@ -44,6 +45,7 @@ static int framesCounter = 0;
 static int finishScreen = 0;
 
 static Camera3D camera;
+static Vector3 camera_offset;
 
 static Model playerModel;
 static ModelAnimation *playerAnimations;
@@ -92,6 +94,7 @@ void InitGameplayScreen(void)
 
         .projection = CAMERA_PERSPECTIVE
     };
+    camera_offset = (Vector3){0, 8.0f, 8.0f};
 
     Texture colormap = LoadTexture("resources/textures/colormap.png");
 
@@ -190,6 +193,11 @@ void UpdateGameplayScreen(void)
         (float)playerAnimations[playerCurrentAnim].keyframeCount
     );
     UpdateModelAnimation(playerModel, playerAnimations[playerCurrentAnim], playerAnimFrame);
+
+
+    // update camera
+    camera.target = Vector3Lerp(camera.target, (Vector3){playerPosition.x, 0, playerPosition.y}, CAMERA_SPEED * frameTime);
+    camera.position = Vector3Add(camera.target, camera_offset);
 }
 
 // Gameplay Screen Draw logic
