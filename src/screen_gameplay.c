@@ -224,6 +224,7 @@ void DrawGameplayScreen(void)
     BeginMode3D(camera);
 
     DrawHexGrid(20, 10);
+    DrawHex(playerCoordinate, 0.1f, BLUE);
 
     // draw player
     // DrawModel(playerModel, (Vector3){playerPosition.x + GRID_OFFSET_X, 0, playerPosition.y + GRID_OFFSET_Y} , 2.0f, WHITE);

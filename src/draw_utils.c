@@ -3,7 +3,6 @@
 //
 
 #include "draw_utils.h"
-#include "raylib.h"
 #include "rlgl.h"
 
 static void DrawHexCell(const float x, const float y) {
@@ -44,3 +43,15 @@ void DrawHexGrid(const int rows, const int columns) {
     rlPopMatrix();
 }
 
+void DrawHex(const HexCoord coord, const float height, const Color color) {
+    rlPushMatrix();
+    rlTranslatef(0, height, 0);
+    rlBegin(RL_LINES);
+    rlColor4ub(color.r, color.g, color.b, color.a);
+
+    const Vector2 position = HexCoordToPosition(coord);
+    DrawHexCell(position.x + GRID_OFFSET_X, position.y + GRID_OFFSET_Y);
+
+    rlEnd();
+    rlPopMatrix();
+}
