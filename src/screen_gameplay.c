@@ -107,9 +107,12 @@ void UpdateGameplayScreen(void)
 {
     const float frameTime = GetFrameTime();
 
-    // manage inputs
-    int move_x = IsKeyDown(KEY_D) - IsKeyDown(KEY_A);
-    int move_y = IsKeyDown(KEY_W) - IsKeyDown(KEY_S);
+    // get inputs
+    const bool move_up = IsKeyDown(KEY_W);
+    const bool move_down = IsKeyDown(KEY_S);
+    const bool move_left = IsKeyDown(KEY_A);
+    const bool move_right = IsKeyDown(KEY_D);
+    const char any_inputs = move_up | move_down << 1 | move_left << 2 | move_right << 3;
 
     // manage player state machine
 #define MOVE_TIME 0.25f
@@ -122,10 +125,14 @@ void UpdateGameplayScreen(void)
             if (move_frame < MOVE_TIME) {
                 move_frame += frameTime;
                 playerPosition = Vector2Lerp(lastPlayerPosition, nextPlayerPosition, move_frame / MOVE_TIME);
-            } else if (move_y != 0 || move_x != 0) {
+            } else if (any_inputs != 0) {
                 lastPlayerPosition = HexCoordToPosition(playerCoordinate);
-                playerCoordinate.q -= move_y;
-                playerCoordinate.r -= move_x;
+
+                if (move_down && !move_right) { playerCoordinate.q++; }
+                if (move_up && !move_left) { playerCoordinate.q--; }
+                if (move_right) { playerCoordinate.r++; }
+                if (move_left) { playerCoordinate.r--; }
+
                 nextPlayerPosition = HexCoordToPosition(playerCoordinate);
                 move_frame = frameTime;
                 playerPosition = Vector2Lerp(lastPlayerPosition, nextPlayerPosition, move_frame / MOVE_TIME);
@@ -135,16 +142,15 @@ void UpdateGameplayScreen(void)
             }
             break;
         case PS_IDLE:
-            if (move_y != 0 || move_x != 0) {
+            if (any_inputs != 0) {
                 playerState = PS_MOVING;
                 lastPlayerPosition = HexCoordToPosition(playerCoordinate);
-                if (playerCoordinate.r % 2 == 0) {
-                    playerCoordinate.q -= move_y;
-                    playerCoordinate.r += move_x;
-                } else {
-                    playerCoordinate.q += move_y - move_x;
-                    playerCoordinate.r += move_x;
-                }
+
+                if (move_down && !move_right) { playerCoordinate.q++; }
+                if (move_up && !move_left) { playerCoordinate.q--; }
+                if (move_right) { playerCoordinate.r++; }
+                if (move_left) { playerCoordinate.r--; }
+
                 nextPlayerPosition = HexCoordToPosition(playerCoordinate);
             }
             break;
