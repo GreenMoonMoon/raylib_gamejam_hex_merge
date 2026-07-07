@@ -32,6 +32,8 @@
 #define DEFAULT_ANIM_SPEED 24
 #define CAMERA_SPEED 4.0f
 
+#define STEP_SOUND_DELAY 0.35f
+
 // TODO: move to player module
 typedef enum PlayerState {
     PS_IDLE,
@@ -57,6 +59,9 @@ static PlayerState playerState;
 static HexCoord playerCoordinate;
 static Vector2 playerPosition;
 static float playerRotation;
+
+static Sound step_sound = { 0 };
+static float step_sound_timer = 0;
 
 //----------------------------------------------------------------------------------
 // Gameplay Screen Functions Definition
@@ -108,6 +113,9 @@ void InitGameplayScreen(void)
     playerPosition = HexCoordToPosition(playerCoordinate);
     playerRotation = PI;
 
+    // SFX
+    step_sound = LoadSound("resources/sfx/step.wav");
+
     // initialize scene
 
 }
@@ -135,6 +143,11 @@ void UpdateGameplayScreen(void)
     float angle = playerRotation;
     switch (playerState) {
         case PS_MOVING:
+            step_sound_timer -= frameTime;
+            if (step_sound_timer <= 0) {
+                PlaySound(step_sound);
+                step_sound_timer = STEP_SOUND_DELAY;
+            }
             if (move_frame < MOVE_TIME) {
                 move_frame += frameTime;
                 playerPosition = Vector2Lerp(lastPlayerPosition, nextPlayerPosition, move_frame / MOVE_TIME);
@@ -232,6 +245,9 @@ void DrawGameplayScreen(void)
 // Gameplay Screen Unload logic
 void UnloadGameplayScreen(void)
 {
+    UnloadSound(step_sound);
+
+    UnloadModelAnimations(playerAnimations, playerAnimCount);
     UnloadModel(playerModel);
 }
 
