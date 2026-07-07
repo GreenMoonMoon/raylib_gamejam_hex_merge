@@ -29,7 +29,7 @@
 #include "hex.h"
 #include "draw_utils.h"
 
-#define ANIM_SPEED 24
+#define DEFAULT_ANIM_SPEED 24
 
 // TODO: move to player module
 typedef enum PlayerState {
@@ -50,9 +50,11 @@ static ModelAnimation *playerAnimations;
 static int playerAnimCount;
 static int playerCurrentAnim;
 static float playerAnimFrame;
+static float playerAnimSpeed;
 static PlayerState playerState;
 static HexCoord playerCoordinate;
 static Vector2 playerPosition;
+static float playerRotation;
 
 //----------------------------------------------------------------------------------
 // Gameplay Screen Functions Definition
@@ -69,6 +71,9 @@ static void DrawDebugInfo(const int x, const int y) {
     // player state
     const char *state_name[] = {"IDLE", "MOVING"};
     DrawText(TextFormat("State: %s", state_name[playerState]), x, y + 40, 20, DARKGRAY);
+
+    // player rotation
+    DrawText(TextFormat("Rotation: %d", (int)(playerRotation * RAD2DEG)), x, y + 60, 20, DARKGRAY);
 }
 
 // Gameplay Screen Initialization logic
@@ -95,8 +100,10 @@ void InitGameplayScreen(void)
     playerAnimations = LoadModelAnimations("resources/models/character_female_a.glb", &playerAnimCount);
     playerCurrentAnim = 1;
     playerAnimFrame = 0;
+    playerAnimSpeed = DEFAULT_ANIM_SPEED;
     playerCoordinate = (HexCoord){0, 0}; // hex coordinate component sum is always 0
     playerPosition = HexCoordToPosition(playerCoordinate);
+    playerRotation = PI;
 
     // initialize scene
 
@@ -107,6 +114,7 @@ void UpdateGameplayScreen(void)
 {
     const float frameTime = GetFrameTime();
 
+    // TODO: buffer 2 or 3 frame inputs, then calculate the angle and divide by 6 directions to use in a switch statement
     // get inputs
     const bool move_up = IsKeyDown(KEY_W);
     const bool move_down = IsKeyDown(KEY_S);
@@ -118,8 +126,10 @@ void UpdateGameplayScreen(void)
 #define MOVE_TIME 0.25f
     static Vector2 lastPlayerPosition;
     static Vector2 nextPlayerPosition;
+    // static int angle;
     static float move_frame;
 
+    float angle = playerRotation;
     switch (playerState) {
         case PS_MOVING:
             if (move_frame < MOVE_TIME) {
@@ -136,14 +146,27 @@ void UpdateGameplayScreen(void)
                 nextPlayerPosition = HexCoordToPosition(playerCoordinate);
                 move_frame = frameTime;
                 playerPosition = Vector2Lerp(lastPlayerPosition, nextPlayerPosition, move_frame / MOVE_TIME);
+
+                // player angle
+                // angle = (int)floorf(Vector2Angle(lastPlayerPosition, nextPlayerPosition) / 6);
+                angle = Vector2LineAngle(lastPlayerPosition, nextPlayerPosition);
             } else {
+                // switch to idle
                 playerState = PS_IDLE;
+                playerCurrentAnim = 1;
+                playerAnimSpeed = DEFAULT_ANIM_SPEED;
+                // playerAnimFrame = 0; // no need to reset the idle animation
                 move_frame = 0;
             }
             break;
         case PS_IDLE:
             if (any_inputs != 0) {
+                // switch to moving
                 playerState = PS_MOVING;
+                playerCurrentAnim = 3;
+                playerAnimSpeed = 48; // double speed
+                playerAnimFrame = 0;
+
                 lastPlayerPosition = HexCoordToPosition(playerCoordinate);
 
                 if (move_down && !move_right) { playerCoordinate.q++; }
@@ -152,14 +175,18 @@ void UpdateGameplayScreen(void)
                 if (move_left) { playerCoordinate.r--; }
 
                 nextPlayerPosition = HexCoordToPosition(playerCoordinate);
+
+                angle = Vector2LineAngle(lastPlayerPosition, nextPlayerPosition);
             }
             break;
     }
 
-
-    // update player animation
+    // update player model
+    // -- update orientation
+    playerRotation = angle;
+    // -- update animation
     playerAnimFrame = fmodf(
-        playerAnimFrame + frameTime * ANIM_SPEED,
+        playerAnimFrame + frameTime * playerAnimSpeed,
         (float)playerAnimations[playerCurrentAnim].keyframeCount
     );
     UpdateModelAnimation(playerModel, playerAnimations[playerCurrentAnim], playerAnimFrame);
@@ -178,7 +205,15 @@ void DrawGameplayScreen(void)
     DrawHexGrid(20, 10);
 
     // draw player
-    DrawModel(playerModel, (Vector3){playerPosition.x + GRID_OFFSET_X, 0, playerPosition.y + GRID_OFFSET_Y} , 2.0f, WHITE);
+    // DrawModel(playerModel, (Vector3){playerPosition.x + GRID_OFFSET_X, 0, playerPosition.y + GRID_OFFSET_Y} , 2.0f, WHITE);
+    DrawModelEx(
+        playerModel,
+        (Vector3){playerPosition.x + GRID_OFFSET_X, 0, playerPosition.y + GRID_OFFSET_Y},
+        (Vector3){0, 1.0f, 0},
+        playerRotation * RAD2DEG + 90,
+        (Vector3){2.0f, 2.0f, 2.0f},
+        WHITE
+    );
 
     EndMode3D();
 
