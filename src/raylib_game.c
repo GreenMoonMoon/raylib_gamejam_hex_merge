@@ -86,8 +86,10 @@ int main(void)
     PlayMusicStream(music);
 
     // Setup and init first screen
-    currentScreen = LOGO;
-    InitLogoScreen();
+    // currentScreen = LOGO;
+    // InitLogoScreen();
+    currentScreen = GAMEPLAY;
+    InitGameplayScreen();
 
 #if defined(PLATFORM_WEB)
     emscripten_set_main_loop(UpdateDrawFrame, 60, 1);
@@ -304,7 +306,7 @@ static void UpdateDrawFrame(void)
         // Draw full screen rectangle in front of everything
         if (onTransition) DrawTransition();
 
-        //DrawFPS(10, 10);
+        DrawFPS(10, 10);
 
     EndDrawing();
     //----------------------------------------------------------------------------------

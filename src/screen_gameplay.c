@@ -25,12 +25,17 @@
 
 #include "raylib.h"
 #include "screens.h"
+#include "draw_utils.h"
 
 //----------------------------------------------------------------------------------
 // Module Variables Definition (local)
 //----------------------------------------------------------------------------------
 static int framesCounter = 0;
 static int finishScreen = 0;
+
+static Camera3D camera;
+
+static Model player_model;
 
 //----------------------------------------------------------------------------------
 // Gameplay Screen Functions Definition
@@ -42,29 +47,46 @@ void InitGameplayScreen(void)
     // TODO: Initialize GAMEPLAY screen variables here!
     framesCounter = 0;
     finishScreen = 0;
+
+    camera = (Camera3D) {
+        .position = (Vector3){0, 8.0f, 8.0f},
+        .target = (Vector3){0},
+        .up = (Vector3){0, 1.0f, 0},
+        .fovy = 70.0f,
+        .projection = CAMERA_PERSPECTIVE
+    };
+
+    // initialize scene
+
 }
 
 // Gameplay Screen Update logic
 void UpdateGameplayScreen(void)
 {
     // TODO: Update GAMEPLAY screen variables here!
+    // UpdateCamera(&camera, CAMERA_THIRD_PERSON);
 
     // Press enter or tap to change to ENDING screen
-    if (IsKeyPressed(KEY_ENTER) || IsGestureDetected(GESTURE_TAP))
-    {
-        finishScreen = 1;
-        PlaySound(fxCoin);
-    }
+    // if (IsKeyPressed(KEY_ENTER) || IsGestureDetected(GESTURE_TAP))
+    // {
+    //     finishScreen = 1;
+    //     PlaySound(fxCoin);
+    // }
 }
 
 // Gameplay Screen Draw logic
 void DrawGameplayScreen(void)
 {
-    // TODO: Draw GAMEPLAY screen here!
-    DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), PURPLE);
-    Vector2 pos = { 20, 10 };
-    DrawTextEx(font, "GAMEPLAY SCREEN", pos, font.baseSize*3.0f, 4, MAROON);
-    DrawText("PRESS ENTER or TAP to JUMP to ENDING SCREEN", 130, 220, 20, MAROON);
+    // DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), PURPLE);
+    // Vector2 pos = { 20, 10 };
+    // DrawTextEx(font, "GAMEPLAY SCREEN", pos, font.baseSize*3.0f, 4, MAROON);
+    // DrawText("PRESS ENTER or TAP to JUMP to ENDING SCREEN", 130, 220, 20, MAROON);
+
+    BeginMode3D(camera);
+
+    DrawHexGrid(20, 10);
+
+    EndMode3D();
 }
 
 // Gameplay Screen Unload logic
