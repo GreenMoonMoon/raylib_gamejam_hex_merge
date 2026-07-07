@@ -31,6 +31,12 @@
 
 #define ANIM_SPEED 24
 
+// TODO: move to player module
+typedef enum PlayerState {
+    PS_IDLE,
+    PS_MOVING,
+} PlayerState;
+
 //----------------------------------------------------------------------------------
 // Module Variables Definition (local)
 //----------------------------------------------------------------------------------
@@ -39,19 +45,30 @@ static int finishScreen = 0;
 
 static Camera3D camera;
 
-static Model player_model;
-static ModelAnimation *player_animations;
-static int player_anim_count;
-static int player_current_anim;
-static float player_anim_frame;
-static HexCoord player_coordinate;
+static Model playerModel;
+static ModelAnimation *playerAnimations;
+static int playerAnimCount;
+static int playerCurrentAnim;
+static float playerAnimFrame;
+static PlayerState playerState;
+static HexCoord playerCoordinate;
+static Vector2 playerPosition;
 
 //----------------------------------------------------------------------------------
 // Gameplay Screen Functions Definition
 //----------------------------------------------------------------------------------
 
-static void draw_debug_info(const int x, const int y) {
-    DrawText(TextFormat("Player anim frame: %.2f", player_anim_frame), x, y, 20, DARKGRAY);
+static void DrawDebugInfo(const int x, const int y) {
+    // animation frame
+    DrawText(TextFormat("Animation frame: %.2f", playerAnimFrame), x, y, 20, DARKGRAY);
+
+    // hex coordinate
+    DrawText(TextFormat("Coordinate: q:%d  r:%d", playerCoordinate.q, playerCoordinate.r), x,
+             y + 20, 20, DARKGRAY);
+
+    // player state
+    const char *state_name[] = {"IDLE", "MOVING"};
+    DrawText(TextFormat("State: %s", state_name[playerState]), x, y + 40, 20, DARKGRAY);
 }
 
 // Gameplay Screen Initialization logic
@@ -66,17 +83,20 @@ void InitGameplayScreen(void)
         .target = (Vector3){0},
         .up = (Vector3){0, 1.0f, 0},
         .fovy = 70.0f,
+
+
         .projection = CAMERA_PERSPECTIVE
     };
 
     Texture colormap = LoadTexture("resources/textures/colormap.png");
 
-    player_model = LoadModel("resources/models/character_female_a.glb");
-    player_model.materials[1].maps[MATERIAL_MAP_DIFFUSE].texture = colormap;
-    player_animations = LoadModelAnimations("resources/models/character_female_a.glb", &player_anim_count);
-    player_current_anim = 1;
-    player_anim_frame = 0;
-    player_coordinate = (HexCoord){1, 0, -1}; // hex coordinate component sum is always 0
+    playerModel = LoadModel("resources/models/character_female_a.glb");
+    playerModel.materials[1].maps[MATERIAL_MAP_DIFFUSE].texture = colormap;
+    playerAnimations = LoadModelAnimations("resources/models/character_female_a.glb", &playerAnimCount);
+    playerCurrentAnim = 1;
+    playerAnimFrame = 0;
+    playerCoordinate = (HexCoord){0, 0}; // hex coordinate component sum is always 0
+    playerPosition = HexCoordToPosition(playerCoordinate);
 
     // initialize scene
 
@@ -85,14 +105,58 @@ void InitGameplayScreen(void)
 // Gameplay Screen Update logic
 void UpdateGameplayScreen(void)
 {
-    const float frame_time = GetFrameTime();
+    const float frameTime = GetFrameTime();
+
+    // manage inputs
+    int move_x = IsKeyDown(KEY_D) - IsKeyDown(KEY_A);
+    int move_y = IsKeyDown(KEY_W) - IsKeyDown(KEY_S);
+
+    // manage player state machine
+#define MOVE_TIME 0.25f
+    static Vector2 lastPlayerPosition;
+    static Vector2 nextPlayerPosition;
+    static float move_frame;
+
+    switch (playerState) {
+        case PS_MOVING:
+            if (move_frame < MOVE_TIME) {
+                move_frame += frameTime;
+                playerPosition = Vector2Lerp(lastPlayerPosition, nextPlayerPosition, move_frame / MOVE_TIME);
+            } else if (move_y != 0 || move_x != 0) {
+                lastPlayerPosition = HexCoordToPosition(playerCoordinate);
+                playerCoordinate.q -= move_y;
+                playerCoordinate.r -= move_x;
+                nextPlayerPosition = HexCoordToPosition(playerCoordinate);
+                move_frame = frameTime;
+                playerPosition = Vector2Lerp(lastPlayerPosition, nextPlayerPosition, move_frame / MOVE_TIME);
+            } else {
+                playerState = PS_IDLE;
+                move_frame = 0;
+            }
+            break;
+        case PS_IDLE:
+            if (move_y != 0 || move_x != 0) {
+                playerState = PS_MOVING;
+                lastPlayerPosition = HexCoordToPosition(playerCoordinate);
+                if (playerCoordinate.r % 2 == 0) {
+                    playerCoordinate.q -= move_y;
+                    playerCoordinate.r += move_x;
+                } else {
+                    playerCoordinate.q += move_y - move_x;
+                    playerCoordinate.r += move_x;
+                }
+                nextPlayerPosition = HexCoordToPosition(playerCoordinate);
+            }
+            break;
+    }
+
 
     // update player animation
-    player_anim_frame = fmodf(
-        player_anim_frame + frame_time * ANIM_SPEED,
-        (float)player_animations[player_current_anim].keyframeCount
+    playerAnimFrame = fmodf(
+        playerAnimFrame + frameTime * ANIM_SPEED,
+        (float)playerAnimations[playerCurrentAnim].keyframeCount
     );
-    UpdateModelAnimation(player_model, player_animations[player_current_anim], player_anim_frame);
+    UpdateModelAnimation(playerModel, playerAnimations[playerCurrentAnim], playerAnimFrame);
 }
 
 // Gameplay Screen Draw logic
@@ -108,19 +172,18 @@ void DrawGameplayScreen(void)
     DrawHexGrid(20, 10);
 
     // draw player
-    const Vector2 player_position = HexCoordToPosition(player_coordinate);
-    DrawModel(player_model, (Vector3){player_position.x + 0.25f, 0, player_position.y + 0.25f}, 2.0f, WHITE);
+    DrawModel(playerModel, (Vector3){playerPosition.x + GRID_OFFSET_X, 0, playerPosition.y + GRID_OFFSET_Y} , 2.0f, WHITE);
 
     EndMode3D();
 
     // DEBUG
-    draw_debug_info(10, 30);
+    DrawDebugInfo(10, 30);
 }
 
 // Gameplay Screen Unload logic
 void UnloadGameplayScreen(void)
 {
-    UnloadModel(player_model);
+    UnloadModel(playerModel);
 }
 
 // Gameplay Screen should finish?

@@ -9,12 +9,15 @@
 
 #include "raylib.h"
 
+#define GRID_OFFSET_X 0.5f
+#define GRID_OFFSET_Y 0.86603f
+
 typedef struct HexGrid {
 
 } HexGrid;
 
 typedef struct HexCoord {
-    int q, r, s;
+    int q, r;
 } HexCoord;
 
 Vector2 HexCoordToPosition(HexCoord coord);
