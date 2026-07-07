@@ -24,8 +24,12 @@
 **********************************************************************************************/
 
 #include "raylib.h"
+#include "raymath.h"
 #include "screens.h"
+#include "hex.h"
 #include "draw_utils.h"
+
+#define ANIM_SPEED 24
 
 //----------------------------------------------------------------------------------
 // Module Variables Definition (local)
@@ -36,10 +40,19 @@ static int finishScreen = 0;
 static Camera3D camera;
 
 static Model player_model;
+static ModelAnimation *player_animations;
+static int player_anim_count;
+static int player_current_anim;
+static float player_anim_frame;
+static HexCoord player_coordinate;
 
 //----------------------------------------------------------------------------------
 // Gameplay Screen Functions Definition
 //----------------------------------------------------------------------------------
+
+static void draw_debug_info(const int x, const int y) {
+    DrawText(TextFormat("Player anim frame: %.2f", player_anim_frame), x, y, 20, DARKGRAY);
+}
 
 // Gameplay Screen Initialization logic
 void InitGameplayScreen(void)
@@ -56,6 +69,15 @@ void InitGameplayScreen(void)
         .projection = CAMERA_PERSPECTIVE
     };
 
+    Texture colormap = LoadTexture("resources/textures/colormap.png");
+
+    player_model = LoadModel("resources/models/character_female_a.glb");
+    player_model.materials[1].maps[MATERIAL_MAP_DIFFUSE].texture = colormap;
+    player_animations = LoadModelAnimations("resources/models/character_female_a.glb", &player_anim_count);
+    player_current_anim = 1;
+    player_anim_frame = 0;
+    player_coordinate = (HexCoord){1, 0, -1}; // hex coordinate component sum is always 0
+
     // initialize scene
 
 }
@@ -63,15 +85,14 @@ void InitGameplayScreen(void)
 // Gameplay Screen Update logic
 void UpdateGameplayScreen(void)
 {
-    // TODO: Update GAMEPLAY screen variables here!
-    // UpdateCamera(&camera, CAMERA_THIRD_PERSON);
+    const float frame_time = GetFrameTime();
 
-    // Press enter or tap to change to ENDING screen
-    // if (IsKeyPressed(KEY_ENTER) || IsGestureDetected(GESTURE_TAP))
-    // {
-    //     finishScreen = 1;
-    //     PlaySound(fxCoin);
-    // }
+    // update player animation
+    player_anim_frame = fmodf(
+        player_anim_frame + frame_time * ANIM_SPEED,
+        (float)player_animations[player_current_anim].keyframeCount
+    );
+    UpdateModelAnimation(player_model, player_animations[player_current_anim], player_anim_frame);
 }
 
 // Gameplay Screen Draw logic
@@ -86,13 +107,20 @@ void DrawGameplayScreen(void)
 
     DrawHexGrid(20, 10);
 
+    // draw player
+    const Vector2 player_position = HexCoordToPosition(player_coordinate);
+    DrawModel(player_model, (Vector3){player_position.x + 0.25f, 0, player_position.y + 0.25f}, 2.0f, WHITE);
+
     EndMode3D();
+
+    // DEBUG
+    draw_debug_info(10, 30);
 }
 
 // Gameplay Screen Unload logic
 void UnloadGameplayScreen(void)
 {
-    // TODO: Unload GAMEPLAY screen variables here!
+    UnloadModel(player_model);
 }
 
 // Gameplay Screen should finish?
