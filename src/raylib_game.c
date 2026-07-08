@@ -74,6 +74,7 @@ int main(void)
     // Initialization
     //---------------------------------------------------------
     InitWindow(screenWidth, screenHeight, "Hex and Merge");
+    SetTraceLogLevel(LOG_ALL);
 
     InitAudioDevice();      // Initialize audio device
 
@@ -134,7 +135,7 @@ int main(void)
 // Module Functions Definition
 //----------------------------------------------------------------------------------
 // Change to next screen, no transition
-static void ChangeToScreen(int screen)
+static void ChangeToScreen(const int screen)
 {
     // Unload current screen
     switch (currentScreen)

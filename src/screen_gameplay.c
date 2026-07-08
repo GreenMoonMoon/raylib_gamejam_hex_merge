@@ -200,13 +200,8 @@ void UpdateGameplayScreen(void)
     if (isMoving) {
         // get the hex direction
         hexMoveDir = (int)roundf(atan2f(-moveDirection.x, moveDirection.y) / M_PI_3) + 3;
+        hexMoveDir = hexMoveDir % 6;
     }
-    // // get inputs
-    // const bool moveUp = IsKeyDown(KEY_W);
-    // const bool moveDown = IsKeyDown(KEY_S);
-    // const bool moveLeft = IsKeyDown(KEY_A);
-    // const bool moveRight = IsKeyDown(KEY_D);
-    // const char anyInputs = moveUp | moveDown << 1 | moveLeft << 2 | moveRight << 3;
 
     // manage player state machine
 #define MOVE_TIME 0.25f
@@ -229,17 +224,12 @@ void UpdateGameplayScreen(void)
             } else if (isMoving) {
                 lastPlayerPosition = HexCoordToPosition(playerCoordinate);
 
-                // if (moveDown && !moveRight) { playerCoordinate.q++; }
-                // if (moveUp && !moveLeft) { playerCoordinate.q--; }
-                // if (moveRight) { playerCoordinate.r++; }
-                // if (moveLeft) { playerCoordinate.r--; }
+                playerCoordinate = HexCoordSubtract(playerCoordinate, hexDirections[hexMoveDir]);
 
                 nextPlayerPosition = HexCoordToPosition(playerCoordinate);
                 moveFrame = frameTime;
                 playerPosition = Vector2Lerp(lastPlayerPosition, nextPlayerPosition, moveFrame / MOVE_TIME);
 
-                // player angle
-                // angle = (int)floorf(Vector2Angle(lastPlayerPosition, nextPlayerPosition) / 6);
                 angle = Vector2LineAngle(lastPlayerPosition, nextPlayerPosition);
             } else {
                 // switch to idle
@@ -260,10 +250,7 @@ void UpdateGameplayScreen(void)
 
                 lastPlayerPosition = HexCoordToPosition(playerCoordinate);
 
-                // if (moveDown && !moveRight) { playerCoordinate.q++; }
-                // if (moveUp && !moveLeft) { playerCoordinate.q--; }
-                // if (moveRight) { playerCoordinate.r++; }
-                // if (moveLeft) { playerCoordinate.r--; }
+                playerCoordinate = HexCoordSubtract(playerCoordinate, hexDirections[hexMoveDir]);
 
                 nextPlayerPosition = HexCoordToPosition(playerCoordinate);
 

@@ -28,6 +28,7 @@ typedef struct HexGrid {
 typedef struct HexCoord {
     int q, r;
 } HexCoord;
+extern const HexCoord hexDirections[];
 
 HexCoord HexCoordAdd(HexCoord a, HexCoord b);
 

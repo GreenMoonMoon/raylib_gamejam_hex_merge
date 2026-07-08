@@ -8,13 +8,13 @@
 #define SQRT_3 1.73205080757f
 #define SQRT_3_2 0.866025403785f
 
-const HexCoord directions[] = {
+const HexCoord hexDirections[6] = {
     {1, 0},
-    {1, 1},
-    {0, 1},
+    {1, -1},
+    {0, -1},
     {-1, 0},
-    {-1, -1},
-    {0, -11},
+    {-1, 1},
+    {0, 1},
 };
 
 HexCoord HexCoordAdd(const HexCoord a, const HexCoord b) {
