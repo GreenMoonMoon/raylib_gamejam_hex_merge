@@ -66,6 +66,12 @@ static float stepSoundTimer = 0;
 // Gameplay Screen Functions Definition
 //----------------------------------------------------------------------------------
 
+static float LerpAngle(const float a, const float b, const float alpha) {
+#define TAU 6.28318530718
+    const float sa = fmodf(fmodf(b - a, TAU) + 3.0f * PI, TAU) - PI;
+    return a + sa * alpha;
+}
+
 static void DrawDebugInfo(const int x, const int y) {
     // animation frame
     DrawText(TextFormat("Animation frame: %.2f", playerAnimFrame), x, y, 20, DARKGRAY);
