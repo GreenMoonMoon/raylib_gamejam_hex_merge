@@ -7,6 +7,8 @@
 #include "raymath.h"
 #include "hex.h"
 
+#define M_PI_3 1.0471975512f
+
 extern Camera camera;
 
 static InputState inputState;
@@ -18,6 +20,9 @@ extern HexCoord playerCoordinate;
 extern Vector2 playerPosition;
 extern Vector2 moveDirection;
 extern HexCoord touchedCell;
+extern HexDirection hexMoveDir;
+
+bool isMoving;
 
 // TODO: split function to uses various parts in the update function directly
 void ProcessInputs(void) {
@@ -72,5 +77,14 @@ void ProcessInputs(void) {
 
     if (IsKeyPressed(KEY_PAUSE)) {
         TraceLog(LOG_DEBUG, "PAUSE KEY PRESSED");
+    }
+
+    // // TODO: buffer 2 or 3 frame inputs, then calculate the angle and divide by 6 directions to use in a switch statement
+#define IS_MOVING_CUTOFF 0.1f
+    isMoving = Vector2LengthSqr(moveDirection) > IS_MOVING_CUTOFF;
+    if (isMoving) {
+        // get the hex direction
+        hexMoveDir = (int)roundf(atan2f(-moveDirection.x, moveDirection.y) / M_PI_3) + 3;
+        hexMoveDir = hexMoveDir % 6;
     }
 }

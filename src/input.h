@@ -5,6 +5,8 @@
 #ifndef RAYLIB_GAME_TEMPLATE_INPUT_H
 #define RAYLIB_GAME_TEMPLATE_INPUT_H
 
+extern bool isMoving;
+
 typedef enum InputState {
     IS_NONE,
     IS_TOUCH_DRAG,

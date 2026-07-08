@@ -3,20 +3,10 @@
 #include "screens.h"
 #include "hex.h"
 #include "input.h"
+#include "player.h"
 #include "draw_utils.h"
 
-#define M_PI_3 1.0471975512f
-
-#define DEFAULT_ANIM_SPEED 24
 #define CAMERA_SPEED 4.0f
-
-#define STEP_SOUND_DELAY 0.35f
-
-// TODO: move to player module
-typedef enum PlayerState {
-    PS_IDLE,
-    PS_MOVING,
-} PlayerState;
 
 //----------------------------------------------------------------------------------
 // Module Variables Definition (local)
@@ -30,29 +20,16 @@ static Vector3 cameraOffset;
 
 // inputs
 Vector2 moveDirection;
-static HexDirection hexMoveDir;
+HexDirection hexMoveDir;
 HexCoord touchedCell;
 
-// player
-static Model playerModel;
-static ModelAnimation *playerAnimations;
-static int playerAnimCount;
-static int playerCurrentAnim;
-static float playerAnimFrame;
-static float playerAnimSpeed;
-static PlayerState playerState;
-HexCoord playerCoordinate;
-Vector2 playerPosition;
-static float playerRotation;
-
-static Sound stepSound = { 0 };
-static float stepSoundTimer = 0;
 
 //----------------------------------------------------------------------------------
 // Gameplay Screen Functions Definition
 //----------------------------------------------------------------------------------
 
-static float LerpAngle(const float a, const float b, const float alpha) {
+static float LerpAngle(const float a, const float b, const float alpha)
+{
 #define TAU 6.28318530718
     const float sa = fmodf(fmodf(b - a, TAU) + 3.0f * PI, TAU) - PI;
     return a + sa * alpha;
@@ -77,18 +54,18 @@ static void DrawDebugInfo(const int x, const int y) {
     DrawText(TextFormat("Hex direction: %d", hexMoveDir), x, y + 100, 20, DARKGRAY);
 }
 
-void DrawDebugInputs(void) {
+void DrawDebugInputs(void)
+{
     const Vector3 pos = {playerPosition.x + GRID_OFFSET_X, 2.0f, playerPosition.y + GRID_OFFSET_Y};
     DrawCircle3D(pos, 1.5f, (Vector3){1.0f, 0, 0}, 90, DARKBLUE);
     DrawLine3D( pos, (Vector3){pos.x + moveDirection.x * 1.5f, pos.y, pos.z + moveDirection.y * 1.5f}, RED );
-    const float angle = (float)(hexMoveDir + 3) * M_PI_3;
+    const float angle = (float)(hexMoveDir + 3) * 1.0471975512f;
     DrawLine3D( pos, Vector3Add(pos, (Vector3){sinf(-angle), 0, cosf(angle)}), BLUE );
 }
 
 // Gameplay Screen Initialization logic
 void InitGameplayScreen(void)
 {
-    // TODO: Initialize GAMEPLAY screen variables here!
     framesCounter = 0;
     finishScreen = 0;
 
@@ -103,20 +80,8 @@ void InitGameplayScreen(void)
     };
     cameraOffset = (Vector3){0, 8.0f, 8.0f};
 
-    Texture colormap = LoadTexture("resources/textures/colormap.png");
-
-    playerModel = LoadModel("resources/models/character_female_b.glb");
-    playerModel.materials[1].maps[MATERIAL_MAP_DIFFUSE].texture = colormap;
-    playerAnimations = LoadModelAnimations("resources/models/character_female_a.glb", &playerAnimCount);
-    playerCurrentAnim = 1;
-    playerAnimFrame = 0;
-    playerAnimSpeed = DEFAULT_ANIM_SPEED;
-    playerCoordinate = (HexCoord){0, 0}; // hex coordinate component sum is always 0
-    playerPosition = HexCoordToPosition(playerCoordinate);
-    playerRotation = PI;
-
-    // SFX
-    stepSound = LoadSound("resources/sfx/step.wav");
+    // initialize player
+    LoadPlayer();
 
     // initialize scene
 
@@ -129,81 +94,7 @@ void UpdateGameplayScreen(void)
 
     ProcessInputs();
 
-    // // TODO: buffer 2 or 3 frame inputs, then calculate the angle and divide by 6 directions to use in a switch statement
-#define IS_MOVING_CUTOFF 0.1f
-    const bool isMoving = Vector2LengthSqr(moveDirection) > IS_MOVING_CUTOFF;
-    if (isMoving) {
-        // get the hex direction
-        hexMoveDir = (int)roundf(atan2f(-moveDirection.x, moveDirection.y) / M_PI_3) + 3;
-        hexMoveDir = hexMoveDir % 6;
-    }
-
-    // manage player state machine
-#define MOVE_TIME 0.25f
-    static Vector2 lastPlayerPosition;
-    static Vector2 nextPlayerPosition;
-    // static int angle;
-    static float moveFrame;
-
-    float angle = playerRotation;
-    switch (playerState) {
-        case PS_MOVING:
-            stepSoundTimer -= frameTime;
-            if (stepSoundTimer <= 0) {
-                PlaySound(stepSound);
-                stepSoundTimer = STEP_SOUND_DELAY;
-            }
-            if (moveFrame < MOVE_TIME) {
-                moveFrame += frameTime;
-                playerPosition = Vector2Lerp(lastPlayerPosition, nextPlayerPosition, moveFrame / MOVE_TIME);
-            } else if (isMoving) {
-                lastPlayerPosition = HexCoordToPosition(playerCoordinate);
-
-                playerCoordinate = HexCoordSubtract(playerCoordinate, hexDirections[hexMoveDir]);
-
-                nextPlayerPosition = HexCoordToPosition(playerCoordinate);
-                moveFrame = frameTime;
-                playerPosition = Vector2Lerp(lastPlayerPosition, nextPlayerPosition, moveFrame / MOVE_TIME);
-
-                angle = Vector2LineAngle(lastPlayerPosition, nextPlayerPosition);
-            } else {
-                // switch to idle
-                playerState = PS_IDLE;
-                playerCurrentAnim = 1;
-                playerAnimSpeed = DEFAULT_ANIM_SPEED;
-                // playerAnimFrame = 0; // no need to reset the idle animation
-                moveFrame = 0;
-            }
-            break;
-        case PS_IDLE:
-            if (isMoving) {
-                // switch to moving
-                playerState = PS_MOVING;
-                playerCurrentAnim = 3;
-                playerAnimSpeed = 48; // double speed
-                playerAnimFrame = 0;
-
-                lastPlayerPosition = HexCoordToPosition(playerCoordinate);
-
-                playerCoordinate = HexCoordSubtract(playerCoordinate, hexDirections[hexMoveDir]);
-
-                nextPlayerPosition = HexCoordToPosition(playerCoordinate);
-
-                angle = Vector2LineAngle(lastPlayerPosition, nextPlayerPosition);
-            }
-            break;
-    }
-
-    // update player model
-    // -- update orientation
-    playerRotation = angle;
-    // -- update animation
-    playerAnimFrame = fmodf(
-        playerAnimFrame + frameTime * playerAnimSpeed,
-        (float)playerAnimations[playerCurrentAnim].keyframeCount
-    );
-    UpdateModelAnimation(playerModel, playerAnimations[playerCurrentAnim], playerAnimFrame);
-
+    UpdatePlayer(frameTime);
 
     // update camera
     camera.target = Vector3Lerp(camera.target, (Vector3){playerPosition.x, 0, playerPosition.y}, CAMERA_SPEED * frameTime);
@@ -213,11 +104,6 @@ void UpdateGameplayScreen(void)
 // Gameplay Screen Draw logic
 void DrawGameplayScreen(void)
 {
-    // DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), PURPLE);
-    // Vector2 pos = { 20, 10 };
-    // DrawTextEx(font, "GAMEPLAY SCREEN", pos, font.baseSize*3.0f, 4, MAROON);
-    // DrawText("PRESS ENTER or TAP to JUMP to ENDING SCREEN", 130, 220, 20, MAROON);
-
     BeginMode3D(camera);
 
     DrawHexGrid(20, 10);
@@ -247,10 +133,7 @@ void DrawGameplayScreen(void)
 // Gameplay Screen Unload logic
 void UnloadGameplayScreen(void)
 {
-    UnloadSound(stepSound);
-
-    UnloadModelAnimations(playerAnimations, playerAnimCount);
-    UnloadModel(playerModel);
+    UnloadPlayer();
 }
 
 // Gameplay Screen should finish?
