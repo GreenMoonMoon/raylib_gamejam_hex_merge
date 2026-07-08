@@ -2,6 +2,7 @@
 #include "raymath.h"
 #include "screens.h"
 #include "hex.h"
+#include "input.h"
 #include "draw_utils.h"
 
 #define M_PI_3 1.0471975512f
@@ -11,23 +12,11 @@
 
 #define STEP_SOUND_DELAY 0.35f
 
-#define GIS_DRAG_MOVE 0
-#define GIS_SELECT_DESTINATION 1
-
 // TODO: move to player module
 typedef enum PlayerState {
     PS_IDLE,
     PS_MOVING,
 } PlayerState;
-
-// TODO: move to input module
-typedef enum InputState {
-    IS_NONE,
-    IS_TOUCH_DRAG,
-    IS_TOUCH_SELECT,
-    IS_KEYBOARD_DPAD,
-} InputState;
-
 
 //----------------------------------------------------------------------------------
 // Module Variables Definition (local)
@@ -36,16 +25,13 @@ static int framesCounter = 0;
 static int finishScreen = 0;
 
 // camera
-static Camera3D camera;
+Camera3D camera;
 static Vector3 cameraOffset;
 
 // inputs
-static Vector2 moveDirection;
-static int lastGesture;
-static InputState inputState;
-static Vector3 touchedPosition;
-static HexCoord touchedCell;
+Vector2 moveDirection;
 static HexDirection hexMoveDir;
+HexCoord touchedCell;
 
 // player
 static Model playerModel;
@@ -55,8 +41,8 @@ static int playerCurrentAnim;
 static float playerAnimFrame;
 static float playerAnimSpeed;
 static PlayerState playerState;
-static HexCoord playerCoordinate;
-static Vector2 playerPosition;
+HexCoord playerCoordinate;
+Vector2 playerPosition;
 static float playerRotation;
 
 static Sound stepSound = { 0 };
@@ -87,9 +73,6 @@ static void DrawDebugInfo(const int x, const int y) {
     // player rotation
     DrawText(TextFormat("Rotation: %d", (int)(playerRotation * RAD2DEG)), x, y + 60, 20, DARKGRAY);
 
-    // gesture input state
-    DrawText(inputState == 0 ? "Drag" : "Select", x, y + 80, 20, GRAY);
-
     // hex direction
     DrawText(TextFormat("Hex direction: %d", hexMoveDir), x, y + 100, 20, DARKGRAY);
 }
@@ -100,60 +83,6 @@ void DrawDebugInputs(void) {
     DrawLine3D( pos, (Vector3){pos.x + moveDirection.x * 1.5f, pos.y, pos.z + moveDirection.y * 1.5f}, RED );
     const float angle = (float)(hexMoveDir + 3) * M_PI_3;
     DrawLine3D( pos, Vector3Add(pos, (Vector3){sinf(-angle), 0, cosf(angle)}), BLUE );
-}
-
-// TODO: put into the input module
-static void ProcessInputs(void) {
-    // handle touch input
-    const int currentGesture = GetGestureDetected();
-    const Vector2 touchPosition = GetTouchPosition(0);
-
-    if (currentGesture != GESTURE_NONE) {
-        const Ray ray = GetScreenToWorldRay(touchPosition, camera);
-        const float d = (-ray.position.y / ray.direction.y);
-        touchedPosition = Vector3Add(ray.position, Vector3Scale(ray.direction, d));
-
-        if (lastGesture == GESTURE_NONE) {
-            // get the cell coordinate from the touch position
-            touchedCell = PositionToHexCoord((Vector2){touchedPosition.x - GRID_OFFSET_X, touchedPosition.z - GRID_OFFSET_Y});
-            inputState = HexCoordEqual(touchedCell, playerCoordinate) ? IS_TOUCH_DRAG : IS_TOUCH_SELECT;
-        }
-
-        switch (inputState) {
-            case  IS_TOUCH_DRAG:
-                moveDirection = Vector2Normalize(Vector2Subtract((Vector2){touchedPosition.x, touchedPosition.z}, playerPosition));
-                break;
-            case IS_TOUCH_SELECT:
-                // TODO: implement move command and pathing
-                break;
-            default: break;
-        }
-    } else {
-        if (inputState == IS_TOUCH_DRAG) {
-            moveDirection = (Vector2){0};
-            inputState = IS_NONE;
-        }
-    }
-    lastGesture = currentGesture;
-
-    // handle keyboard input
-    Vector2 moveInput = {
-        IsKeyDown(KEY_D) - IsKeyDown(KEY_A),
-        IsKeyDown(KEY_S) - IsKeyDown(KEY_W)
-    };
-    if (fabsf(moveInput.x) > EPSILON || fabsf(moveInput.y) > EPSILON) {
-        inputState = IS_KEYBOARD_DPAD;
-        moveInput = Vector2Normalize(moveInput);
-    }
-
-    if (inputState == IS_KEYBOARD_DPAD) {
-        // FIXME: replace with a radial lerp?
-        moveDirection = Vector2Lerp(moveDirection, moveInput, 0.25f);
-    }
-
-    if (IsKeyPressed(KEY_PAUSE)) {
-        TraceLog(LOG_DEBUG, "PAUSE KEY PRESSED");
-    }
 }
 
 // Gameplay Screen Initialization logic
