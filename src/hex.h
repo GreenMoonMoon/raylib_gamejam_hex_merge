@@ -33,6 +33,17 @@ HexCoord HexCoordAdd(HexCoord a, HexCoord b);
 
 HexCoord HexCoordSubtract(HexCoord a, HexCoord b);
 
+/// Rounding fractional hex coordinate
+/// based on Jacob Rus implementation https://observablehq.com/@jrus/hexround
+/// @param q fractional q
+/// @param r fractional r
+/// @return q and r rounded to HexCoord
+HexCoord HexCoordRound(float q, float r);
+
+bool HexCoordEqual(HexCoord a, HexCoord b);
+
 Vector2 HexCoordToPosition(HexCoord coord);
+
+HexCoord PositionToHexCoord(Vector2 position);
 
 #endif //RAYLIB_GAME_TEMPLATE_HEX_H

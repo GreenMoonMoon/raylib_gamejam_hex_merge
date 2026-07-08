@@ -1,44 +1,33 @@
-/**********************************************************************************************
-*
-*   raylib - Advance Game template
-*
-*   Gameplay Screen Functions Definitions (Init, Update, Draw, Unload)
-*
-*   Copyright (c) 2014-2022 Ramon Santamaria (@raysan5)
-*
-*   This software is provided "as-is", without any express or implied warranty. In no event
-*   will the authors be held liable for any damages arising from the use of this software.
-*
-*   Permission is granted to anyone to use this software for any purpose, including commercial
-*   applications, and to alter it and redistribute it freely, subject to the following restrictions:
-*
-*     1. The origin of this software must not be misrepresented; you must not claim that you
-*     wrote the original software. If you use this software in a product, an acknowledgment
-*     in the product documentation would be appreciated but is not required.
-*
-*     2. Altered source versions must be plainly marked as such, and must not be misrepresented
-*     as being the original software.
-*
-*     3. This notice may not be removed or altered from any source distribution.
-*
-**********************************************************************************************/
-
 #include "raylib.h"
 #include "raymath.h"
 #include "screens.h"
 #include "hex.h"
 #include "draw_utils.h"
 
+#define M_PI_3 1.0471975512f
+
 #define DEFAULT_ANIM_SPEED 24
 #define CAMERA_SPEED 4.0f
 
 #define STEP_SOUND_DELAY 0.35f
+
+#define GIS_DRAG_MOVE 0
+#define GIS_SELECT_DESTINATION 1
 
 // TODO: move to player module
 typedef enum PlayerState {
     PS_IDLE,
     PS_MOVING,
 } PlayerState;
+
+// TODO: move to input module
+typedef enum InputState {
+    IS_NONE,
+    IS_TOUCH_DRAG,
+    IS_TOUCH_SELECT,
+    IS_KEYBOARD_DPAD,
+} InputState;
+
 
 //----------------------------------------------------------------------------------
 // Module Variables Definition (local)
@@ -48,10 +37,15 @@ static int finishScreen = 0;
 
 // camera
 static Camera3D camera;
-static Vector3 camera_offset;
+static Vector3 cameraOffset;
 
 // inputs
-static Vector2 move_direction;
+static Vector2 moveDirection;
+static int lastGesture;
+static InputState inputState;
+static Vector3 touchedPosition;
+static HexCoord touchedCell;
+static HexDirection hexMoveDir;
 
 // player
 static Model playerModel;
@@ -65,8 +59,8 @@ static HexCoord playerCoordinate;
 static Vector2 playerPosition;
 static float playerRotation;
 
-static Sound step_sound = { 0 };
-static float step_sound_timer = 0;
+static Sound stepSound = { 0 };
+static float stepSoundTimer = 0;
 
 //----------------------------------------------------------------------------------
 // Gameplay Screen Functions Definition
@@ -86,18 +80,74 @@ static void DrawDebugInfo(const int x, const int y) {
 
     // player rotation
     DrawText(TextFormat("Rotation: %d", (int)(playerRotation * RAD2DEG)), x, y + 60, 20, DARKGRAY);
+
+    // gesture input state
+    DrawText(inputState == 0 ? "Drag" : "Select", x, y + 80, 20, GRAY);
+
+    // hex direction
+    DrawText(TextFormat("Hex direction: %d", hexMoveDir), x, y + 100, 20, DARKGRAY);
+}
+
+void DrawDebugInputs(void) {
+    const Vector3 pos = {playerPosition.x + GRID_OFFSET_X, 2.0f, playerPosition.y + GRID_OFFSET_Y};
+    DrawCircle3D(pos, 1.5f, (Vector3){1.0f, 0, 0}, 90, DARKBLUE);
+    DrawLine3D( pos, (Vector3){pos.x + moveDirection.x * 1.5f, pos.y, pos.z + moveDirection.y * 1.5f}, RED );
+    const float angle = (float)(hexMoveDir + 3) * M_PI_3;
+    DrawLine3D( pos, Vector3Add(pos, (Vector3){sinf(-angle), 0, cosf(angle)}), BLUE );
 }
 
 // TODO: put into the input module
-static void process_inputs(void) {
-    Vector2 move_input = {
+static void ProcessInputs(void) {
+    // handle touch input
+    const int currentGesture = GetGestureDetected();
+    const Vector2 touchPosition = GetTouchPosition(0);
+
+    if (currentGesture != GESTURE_NONE) {
+        const Ray ray = GetScreenToWorldRay(touchPosition, camera);
+        const float d = (-ray.position.y / ray.direction.y);
+        touchedPosition = Vector3Add(ray.position, Vector3Scale(ray.direction, d));
+
+        if (lastGesture == GESTURE_NONE) {
+            // get the cell coordinate from the touch position
+            touchedCell = PositionToHexCoord((Vector2){touchedPosition.x - GRID_OFFSET_X, touchedPosition.z - GRID_OFFSET_Y});
+            inputState = HexCoordEqual(touchedCell, playerCoordinate) ? IS_TOUCH_DRAG : IS_TOUCH_SELECT;
+        }
+
+        switch (inputState) {
+            case  IS_TOUCH_DRAG:
+                moveDirection = Vector2Normalize(Vector2Subtract((Vector2){touchedPosition.x, touchedPosition.z}, playerPosition));
+                break;
+            case IS_TOUCH_SELECT:
+                // TODO: implement move command and pathing
+                break;
+            default: break;
+        }
+    } else {
+        if (inputState == IS_TOUCH_DRAG) {
+            moveDirection = (Vector2){0};
+            inputState = IS_NONE;
+        }
+    }
+    lastGesture = currentGesture;
+
+    // handle keyboard input
+    Vector2 moveInput = {
         IsKeyDown(KEY_D) - IsKeyDown(KEY_A),
         IsKeyDown(KEY_S) - IsKeyDown(KEY_W)
     };
-    if (fabsf(move_input.x) > EPSILON || fabsf(move_input.y) > EPSILON) { move_input = Vector2Normalize(move_input); }
+    if (fabsf(moveInput.x) > EPSILON || fabsf(moveInput.y) > EPSILON) {
+        inputState = IS_KEYBOARD_DPAD;
+        moveInput = Vector2Normalize(moveInput);
+    }
 
-    // FIXME: replace with a radial lerp?
-    move_direction = Vector2Lerp(move_direction, move_input, 0.25f);
+    if (inputState == IS_KEYBOARD_DPAD) {
+        // FIXME: replace with a radial lerp?
+        moveDirection = Vector2Lerp(moveDirection, moveInput, 0.25f);
+    }
+
+    if (IsKeyPressed(KEY_PAUSE)) {
+        TraceLog(LOG_DEBUG, "PAUSE KEY PRESSED");
+    }
 }
 
 // Gameplay Screen Initialization logic
@@ -116,7 +166,7 @@ void InitGameplayScreen(void)
 
         .projection = CAMERA_PERSPECTIVE
     };
-    camera_offset = (Vector3){0, 8.0f, 8.0f};
+    cameraOffset = (Vector3){0, 8.0f, 8.0f};
 
     Texture colormap = LoadTexture("resources/textures/colormap.png");
 
@@ -131,7 +181,7 @@ void InitGameplayScreen(void)
     playerRotation = PI;
 
     // SFX
-    step_sound = LoadSound("resources/sfx/step.wav");
+    stepSound = LoadSound("resources/sfx/step.wav");
 
     // initialize scene
 
@@ -142,43 +192,51 @@ void UpdateGameplayScreen(void)
 {
     const float frameTime = GetFrameTime();
 
-    // TODO: buffer 2 or 3 frame inputs, then calculate the angle and divide by 6 directions to use in a switch statement
-    // get inputs
-    const bool move_up = IsKeyDown(KEY_W);
-    const bool move_down = IsKeyDown(KEY_S);
-    const bool move_left = IsKeyDown(KEY_A);
-    const bool move_right = IsKeyDown(KEY_D);
-    const char any_inputs = move_up | move_down << 1 | move_left << 2 | move_right << 3;
+    ProcessInputs();
+
+    // // TODO: buffer 2 or 3 frame inputs, then calculate the angle and divide by 6 directions to use in a switch statement
+#define IS_MOVING_CUTOFF 0.1f
+    const bool isMoving = Vector2LengthSqr(moveDirection) > IS_MOVING_CUTOFF;
+    if (isMoving) {
+        // get the hex direction
+        hexMoveDir = (int)roundf(atan2f(-moveDirection.x, moveDirection.y) / M_PI_3) + 3;
+    }
+    // // get inputs
+    // const bool moveUp = IsKeyDown(KEY_W);
+    // const bool moveDown = IsKeyDown(KEY_S);
+    // const bool moveLeft = IsKeyDown(KEY_A);
+    // const bool moveRight = IsKeyDown(KEY_D);
+    // const char anyInputs = moveUp | moveDown << 1 | moveLeft << 2 | moveRight << 3;
 
     // manage player state machine
 #define MOVE_TIME 0.25f
     static Vector2 lastPlayerPosition;
     static Vector2 nextPlayerPosition;
     // static int angle;
-    static float move_frame;
+    static float moveFrame;
 
     float angle = playerRotation;
     switch (playerState) {
         case PS_MOVING:
-            step_sound_timer -= frameTime;
-            if (step_sound_timer <= 0) {
-                PlaySound(step_sound);
-                step_sound_timer = STEP_SOUND_DELAY;
+            stepSoundTimer -= frameTime;
+            if (stepSoundTimer <= 0) {
+                PlaySound(stepSound);
+                stepSoundTimer = STEP_SOUND_DELAY;
             }
-            if (move_frame < MOVE_TIME) {
-                move_frame += frameTime;
-                playerPosition = Vector2Lerp(lastPlayerPosition, nextPlayerPosition, move_frame / MOVE_TIME);
-            } else if (any_inputs != 0) {
+            if (moveFrame < MOVE_TIME) {
+                moveFrame += frameTime;
+                playerPosition = Vector2Lerp(lastPlayerPosition, nextPlayerPosition, moveFrame / MOVE_TIME);
+            } else if (isMoving) {
                 lastPlayerPosition = HexCoordToPosition(playerCoordinate);
 
-                if (move_down && !move_right) { playerCoordinate.q++; }
-                if (move_up && !move_left) { playerCoordinate.q--; }
-                if (move_right) { playerCoordinate.r++; }
-                if (move_left) { playerCoordinate.r--; }
+                // if (moveDown && !moveRight) { playerCoordinate.q++; }
+                // if (moveUp && !moveLeft) { playerCoordinate.q--; }
+                // if (moveRight) { playerCoordinate.r++; }
+                // if (moveLeft) { playerCoordinate.r--; }
 
                 nextPlayerPosition = HexCoordToPosition(playerCoordinate);
-                move_frame = frameTime;
-                playerPosition = Vector2Lerp(lastPlayerPosition, nextPlayerPosition, move_frame / MOVE_TIME);
+                moveFrame = frameTime;
+                playerPosition = Vector2Lerp(lastPlayerPosition, nextPlayerPosition, moveFrame / MOVE_TIME);
 
                 // player angle
                 // angle = (int)floorf(Vector2Angle(lastPlayerPosition, nextPlayerPosition) / 6);
@@ -189,11 +247,11 @@ void UpdateGameplayScreen(void)
                 playerCurrentAnim = 1;
                 playerAnimSpeed = DEFAULT_ANIM_SPEED;
                 // playerAnimFrame = 0; // no need to reset the idle animation
-                move_frame = 0;
+                moveFrame = 0;
             }
             break;
         case PS_IDLE:
-            if (any_inputs != 0) {
+            if (isMoving) {
                 // switch to moving
                 playerState = PS_MOVING;
                 playerCurrentAnim = 3;
@@ -202,10 +260,10 @@ void UpdateGameplayScreen(void)
 
                 lastPlayerPosition = HexCoordToPosition(playerCoordinate);
 
-                if (move_down && !move_right) { playerCoordinate.q++; }
-                if (move_up && !move_left) { playerCoordinate.q--; }
-                if (move_right) { playerCoordinate.r++; }
-                if (move_left) { playerCoordinate.r--; }
+                // if (moveDown && !moveRight) { playerCoordinate.q++; }
+                // if (moveUp && !moveLeft) { playerCoordinate.q--; }
+                // if (moveRight) { playerCoordinate.r++; }
+                // if (moveLeft) { playerCoordinate.r--; }
 
                 nextPlayerPosition = HexCoordToPosition(playerCoordinate);
 
@@ -227,7 +285,7 @@ void UpdateGameplayScreen(void)
 
     // update camera
     camera.target = Vector3Lerp(camera.target, (Vector3){playerPosition.x, 0, playerPosition.y}, CAMERA_SPEED * frameTime);
-    camera.position = Vector3Add(camera.target, camera_offset);
+    camera.position = Vector3Add(camera.target, cameraOffset);
 }
 
 // Gameplay Screen Draw logic
@@ -241,7 +299,11 @@ void DrawGameplayScreen(void)
     BeginMode3D(camera);
 
     DrawHexGrid(20, 10);
-    DrawHex(playerCoordinate, 0.1f, BLUE);
+    DrawHexWire(playerCoordinate, 0.1f, BLUE); // draw actual player coordinate
+
+    // DEBUG
+    DrawHex(touchedCell, -0.2f, RED);
+    DrawDebugInputs();
 
     // draw player
     // DrawModel(playerModel, (Vector3){playerPosition.x + GRID_OFFSET_X, 0, playerPosition.y + GRID_OFFSET_Y} , 2.0f, WHITE);
@@ -263,7 +325,7 @@ void DrawGameplayScreen(void)
 // Gameplay Screen Unload logic
 void UnloadGameplayScreen(void)
 {
-    UnloadSound(step_sound);
+    UnloadSound(stepSound);
 
     UnloadModelAnimations(playerAnimations, playerAnimCount);
     UnloadModel(playerModel);

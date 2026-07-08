@@ -5,18 +5,41 @@
 #include "draw_utils.h"
 #include "rlgl.h"
 
-static void DrawHexCell(const float x, const float y) {
-    // normalized flat hex cell corners
-    const float coordinate[6 * 2] = {
-        -1.0f, 0, -0.5f, 0.86603f, 0.5f, 0.86603f, 1.0f, 0, 0.5f, -0.86603f, -0.5f, -0.86603f
-    };
+const Vector2 point_coords[6] = {
+    {-1.0f, 0},
+    {-0.5f, 0.86603f},
+    {0.5f, 0.86603f},
+    {1.0f, 0},
+    {0.5f, -0.86603f},
+    {-0.5f, -0.86603f}
+};
 
+static void drawHexWire(const float x, const float y) {
+    // normalized flat hex cell corners
     for (int i = 0; i < 5; ++i) {
-        rlVertex3f(x + coordinate[i * 2], 0, y + coordinate[i * 2 + 1]);
-        rlVertex3f(x + coordinate[i * 2 + 2], 0, y + coordinate[i * 2 + 3]);
+        rlVertex3f(x + point_coords[i].x, 0, y + point_coords[i].y);
+        rlVertex3f(x + point_coords[i + 1].x, 0, y + point_coords[i + 1].y);
     }
-    rlVertex3f(x + coordinate[10], 0, y + coordinate[11]);
-    rlVertex3f(x + coordinate[0], 0, y + coordinate[1]);
+    rlVertex3f(x + point_coords[5].x, 0, y + point_coords[5].y);
+    rlVertex3f(x + point_coords[0].x, 0, y + point_coords[0].y);
+}
+
+static void drawHexPolygons(const float x, const float y) {
+    rlVertex3f(x + point_coords[0].x, 0, y + point_coords[0].y);
+    rlVertex3f(x + point_coords[1].x, 0, y + point_coords[1].y);
+    rlVertex3f(x + point_coords[2].x, 0, y + point_coords[2].y);
+
+    rlVertex3f(x + point_coords[2].x, 0, y + point_coords[2].y);
+    rlVertex3f(x + point_coords[5].x, 0, y + point_coords[5].y);
+    rlVertex3f(x + point_coords[0].x, 0, y + point_coords[0].y);
+
+    rlVertex3f(x + point_coords[2].x, 0, y + point_coords[2].y);
+    rlVertex3f(x + point_coords[3].x, 0, y + point_coords[3].y);
+    rlVertex3f(x + point_coords[5].x, 0, y + point_coords[5].y);
+
+    rlVertex3f(x + point_coords[3].x, 0, y + point_coords[3].y);
+    rlVertex3f(x + point_coords[4].x, 0, y + point_coords[4].y);
+    rlVertex3f(x + point_coords[5].x, 0, y + point_coords[5].y);
 }
 
 void DrawHexGrid(const int rows, const int columns) {
@@ -35,7 +58,7 @@ void DrawHexGrid(const int rows, const int columns) {
             const float x = (float)c * 3 - half_width + row_offset;
             const float y = (float)r * CELL_HEIGHT - half_height;
 
-            DrawHexCell(x, y);
+            drawHexWire(x, y);
         }
     }
 
@@ -46,11 +69,24 @@ void DrawHexGrid(const int rows, const int columns) {
 void DrawHex(const HexCoord coord, const float height, const Color color) {
     rlPushMatrix();
     rlTranslatef(0, height, 0);
+    rlBegin(RL_TRIANGLES);
+    rlColor4ub(color.r, color.g, color.b, color.a);
+
+    const Vector2 position = HexCoordToPosition(coord);
+    drawHexPolygons(position.x + GRID_OFFSET_X, position.y + GRID_OFFSET_Y);
+
+    rlEnd();
+    rlPopMatrix();
+}
+
+void DrawHexWire(const HexCoord coord, const float height, const Color color) {
+    rlPushMatrix();
+    rlTranslatef(0, height, 0);
     rlBegin(RL_LINES);
     rlColor4ub(color.r, color.g, color.b, color.a);
 
     const Vector2 position = HexCoordToPosition(coord);
-    DrawHexCell(position.x + GRID_OFFSET_X, position.y + GRID_OFFSET_Y);
+    drawHexWire(position.x + GRID_OFFSET_X, position.y + GRID_OFFSET_Y);
 
     rlEnd();
     rlPopMatrix();
