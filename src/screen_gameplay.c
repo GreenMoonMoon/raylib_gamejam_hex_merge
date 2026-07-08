@@ -46,9 +46,14 @@ typedef enum PlayerState {
 static int framesCounter = 0;
 static int finishScreen = 0;
 
+// camera
 static Camera3D camera;
 static Vector3 camera_offset;
 
+// inputs
+static Vector2 move_direction;
+
+// player
 static Model playerModel;
 static ModelAnimation *playerAnimations;
 static int playerAnimCount;
@@ -83,6 +88,18 @@ static void DrawDebugInfo(const int x, const int y) {
     DrawText(TextFormat("Rotation: %d", (int)(playerRotation * RAD2DEG)), x, y + 60, 20, DARKGRAY);
 }
 
+// TODO: put into the input module
+static void process_inputs(void) {
+    Vector2 move_input = {
+        IsKeyDown(KEY_D) - IsKeyDown(KEY_A),
+        IsKeyDown(KEY_S) - IsKeyDown(KEY_W)
+    };
+    if (fabsf(move_input.x) > EPSILON || fabsf(move_input.y) > EPSILON) { move_input = Vector2Normalize(move_input); }
+
+    // FIXME: replace with a radial lerp?
+    move_direction = Vector2Lerp(move_direction, move_input, 0.25f);
+}
+
 // Gameplay Screen Initialization logic
 void InitGameplayScreen(void)
 {
@@ -103,7 +120,7 @@ void InitGameplayScreen(void)
 
     Texture colormap = LoadTexture("resources/textures/colormap.png");
 
-    playerModel = LoadModel("resources/models/character_female_a.glb");
+    playerModel = LoadModel("resources/models/character_female_b.glb");
     playerModel.materials[1].maps[MATERIAL_MAP_DIFFUSE].texture = colormap;
     playerAnimations = LoadModelAnimations("resources/models/character_female_a.glb", &playerAnimCount);
     playerCurrentAnim = 1;
