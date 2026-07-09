@@ -7,6 +7,7 @@
 
 #include "raylib.h"
 #include "hex.h"
+#include "input.h"
 
 typedef enum PlayerState {
     PS_IDLE,
@@ -17,7 +18,6 @@ typedef struct Player {
     PlayerState state;
     Model model;
     ModelAnimation *animations;
-    int animationCount;
     int currentAnimation;
     float animationFrame;
     float animationSpeed;
@@ -33,8 +33,6 @@ void UnloadPlayerResources(void);
 
 Player CreatePlayer(void);
 
-void MovePlayer(Player *player, HexDirection direction);
-
-void UpdatePlayer(Player *player, float frameTime);
+void UpdatePlayer(Player *player, Inputs inputs, float frameTime);
 
 #endif //RAYLIB_GAME_TEMPLATE_PLAYER_H

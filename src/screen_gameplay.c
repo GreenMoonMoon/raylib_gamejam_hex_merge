@@ -64,11 +64,12 @@ static void DrawDebugInfo(const int x, const int y) {
 void DrawDebugInputs(void)
 {
     const Vector2 playerPosition = player.position;
-    const Vector3 pos = {playerPosition.x + GRID_OFFSET_X, 2.0f, playerPosition.y + GRID_OFFSET_Y};
-    DrawCircle3D(pos, 1.5f, (Vector3){1.0f, 0, 0}, 90, DARKBLUE);
-    DrawLine3D( pos, (Vector3){pos.x + inputs.moveVector.x * 1.5f, pos.y, pos.z + inputs.moveVector.y * 1.5f}, RED );
+    const Vector3 gizmoPosition = {playerPosition.x + GRID_OFFSET_X, 2.0f, playerPosition.y + GRID_OFFSET_Y};
+
+    DrawCircle3D(gizmoPosition, 1.5f, (Vector3){1.0f, 0, 0}, 90, DARKBLUE);
+    DrawLine3D( gizmoPosition, (Vector3){gizmoPosition.x + inputs.moveVector.x * 1.5f, gizmoPosition.y, gizmoPosition.z + inputs.moveVector.y * 1.5f}, RED );
     const float angle = (float)(inputs.hexMoveDir + 3) * 1.0471975512f;
-    DrawLine3D( pos, Vector3Add(pos, (Vector3){sinf(-angle), 0, cosf(angle)}), BLUE );
+    DrawLine3D( gizmoPosition, Vector3Add(gizmoPosition, (Vector3){sinf(-angle), 0, cosf(angle)}), BLUE );
 }
 
 // Gameplay Screen Initialization logic
@@ -109,10 +110,8 @@ void UpdateGameplayScreen(void)
 {
     const float frameTime = GetFrameTime();
 
-    ProcessInputs(&inputs, &player);
-
-    if (inputs.state != IS_NONE) { MovePlayer(&player, inputs.hexMoveDir); }
-    UpdatePlayer(&player, frameTime);
+    ProcessInputs(&inputs, player.coordinate);
+    UpdatePlayer(&player, inputs, frameTime);
 
     // update camera
     const Vector2 playerPosition = player.position;

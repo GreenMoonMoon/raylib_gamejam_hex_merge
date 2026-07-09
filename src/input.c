@@ -15,7 +15,7 @@ static int lastGesture;
 static Vector3 touchWorldPosition;
 static Vector2 lastKeyMoveInput;
 
-void ProcessInputs(Inputs *inputs, const Player *player) {
+void ProcessInputs(Inputs *inputs, HexCoord playerCoordinate) {
     // GESTURES
     const int currentGesture = GetGestureDetected();
     const Vector2 touchPosition = GetTouchPosition(0);
@@ -30,7 +30,7 @@ void ProcessInputs(Inputs *inputs, const Player *player) {
         if (lastGesture == GESTURE_NONE) {
             // get the cell coordinate from the touch position
             inputs->touchedCell = PositionToHexCoord((Vector2){touchWorldPosition.x - GRID_OFFSET_X, touchWorldPosition.z - GRID_OFFSET_Y});
-            if (HexCoordEqual(inputs->touchedCell, player->coordinate)) {
+            if (HexCoordEqual(inputs->touchedCell, playerCoordinate)) {
                 inputs->state = IS_TOUCH_DRAG;
             } else {
                 inputs->state = IS_TOUCH_SELECT;
@@ -38,7 +38,8 @@ void ProcessInputs(Inputs *inputs, const Player *player) {
         }
 
         if (inputs->state == IS_TOUCH_DRAG) {
-            const Vector2 dragVector = Vector2Subtract((Vector2){touchWorldPosition.x - GRID_OFFSET_X, touchWorldPosition.z - GRID_OFFSET_Y}, player->position);
+            const Vector2 playerPosition = HexCoordToPosition(playerCoordinate);
+            const Vector2 dragVector = Vector2Subtract((Vector2){touchWorldPosition.x - GRID_OFFSET_X, touchWorldPosition.z - GRID_OFFSET_Y}, playerPosition);
             const float dragVectorLength = Vector2Length(dragVector);
             if (dragVectorLength > 1.0f) { inputs->moveVector = Vector2Scale(dragVector, 1.0f / dragVectorLength); }
         }
