@@ -22,7 +22,7 @@ typedef struct Player {
     float animationFrame;
     float animationSpeed;
     HexCoord coordinate;
-    HexCoord nextCoordinate;
+    HexCoord targetCoordinate;
     Vector2 position;
     float rotation;
 } Player;

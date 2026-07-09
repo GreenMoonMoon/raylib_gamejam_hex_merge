@@ -75,8 +75,7 @@ void ProcessInputs(Inputs *inputs, HexCoord playerCoordinate) {
             inputs->hexMoveDir = inputs->hexMoveDir % 6;
             break;
         case IS_TOUCH_SELECT:
-            // TODO: handle select ...
-            inputs->state = IS_NONE;
+            if (HexCoordEqual(inputs->touchedCell, playerCoordinate)) { inputs->state = IS_NONE; }
         case IS_NONE:
             break;
     }

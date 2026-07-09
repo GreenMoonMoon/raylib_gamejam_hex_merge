@@ -19,12 +19,15 @@ typedef enum HexDirection {
     HD_SOUTH,
     HD_SOUTH_WEST,
     HD_NORTH_WEST,
+    HD_COUNT
 } HexDirection;
+
+typedef int HexMapCell;
 
 typedef struct HexMap {
     int sizeQ;
     int sizeR;
-    int *cells;
+    HexMapCell *cells;
 } HexMap;
 
 typedef struct HexCoord {
@@ -51,6 +54,13 @@ Vector2 HexCoordToPosition(HexCoord coord);
 
 HexCoord PositionToHexCoord(Vector2 position);
 
-bool CheckHexMapCollision(HexCoord coord);
+HexCoord GetMapNeighbor(HexCoord coord, HexDirection neighborDirection);
+
+///
+/// @param coord cell coordinate to test
+/// @return true if there is a collision
+bool CheckMapCollision(HexCoord coord);
+
+HexCoord PathNextMapCoordinate(HexCoord from, HexCoord to);
 
 #endif //RAYLIB_GAME_TEMPLATE_HEX_H

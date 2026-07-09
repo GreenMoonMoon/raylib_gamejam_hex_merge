@@ -23,6 +23,14 @@ static Vector2 lastPlayerPosition;
 static Vector2 nextPlayerPosition;
 static float moveFrame;
 
+static void stopPlayer(Player *player) {
+    player->state = PS_IDLE;
+    player->currentAnimation = 1;
+    player->animationSpeed = DEFAULT_ANIM_SPEED;
+    // playerAnimFrame = 0; // no need to reset the idle animation
+    moveFrame = 0;
+}
+
 void LoadPlayerResources(void)
 {
     // Model
@@ -46,7 +54,7 @@ void UnloadPlayerResources(void)
 
 Player CreatePlayer(void)
 {
-    Player player = {
+    const Player player = {
         .state = PS_IDLE,
         .model = playerModel,
         .animations = playerAnimations,
@@ -54,7 +62,7 @@ Player CreatePlayer(void)
         .animationFrame = 0,
         .animationSpeed = DEFAULT_ANIM_SPEED,
         .coordinate = (HexCoord){0, 0},
-        .nextCoordinate = (HexCoord){0, 0},
+        .targetCoordinate = (HexCoord){0, 0},
         .position = HexCoordToPosition((HexCoord){0, 0}),
         .rotation = PI
     };
@@ -76,39 +84,37 @@ void UpdatePlayer(Player *player, const Inputs inputs, const float frameTime)
                 moveFrame += frameTime;
                 player->position = Vector2Lerp(lastPlayerPosition, nextPlayerPosition, moveFrame / MOVE_TIME);
             } else {
-                moveFrame = 0;
+                moveFrame = 0; // reset movement
 
                 // if movement is finished check if the inputs ask for a movement
                 if (inputs.state == IS_TOUCH_DRAG || inputs.state == IS_KEYBOARD_DPAD) {
-                    HexCoord nextCoordinate = HexCoordSubtract(player->coordinate, hexDirections[inputs.hexMoveDir]);
-                    if (CheckHexMapCollision(nextCoordinate)) {
+                    const HexCoord nextCoordinate = GetMapNeighbor(player->coordinate, inputs.hexMoveDir);
+                    if (!CheckMapCollision(nextCoordinate)) {
+                        lastPlayerPosition = HexCoordToPosition(player->coordinate);
+                        player->coordinate = nextCoordinate;
+                        nextPlayerPosition = HexCoordToPosition(player->coordinate);
+
+                        player->rotation = Vector2LineAngle(lastPlayerPosition, nextPlayerPosition);
+                    } else { stopPlayer(player); }
+                } else if (inputs.state == IS_TOUCH_SELECT) {
+                    if (!HexCoordEqual(player->coordinate, player->targetCoordinate)) {
+                        const HexCoord nextCoordinate = PathNextMapCoordinate(player->coordinate, player->targetCoordinate);
+
                         lastPlayerPosition = HexCoordToPosition(player->coordinate);
                         player->coordinate = nextCoordinate;
                         nextPlayerPosition = HexCoordToPosition(player->coordinate);
 
                         player->rotation = Vector2LineAngle(lastPlayerPosition, nextPlayerPosition);
                     } else {
-                        // switch to idle if the movement is finished
-                        player->state = PS_IDLE;
-                        player->currentAnimation = 1;
-                        player->animationSpeed = DEFAULT_ANIM_SPEED;
-                        // playerAnimFrame = 0; // no need to reset the idle animation
-                        moveFrame = 0;
+                        stopPlayer(player);
                     }
-                } else {
-                    // switch to idle if the movement is finished
-                    player->state = PS_IDLE;
-                    player->currentAnimation = 1;
-                    player->animationSpeed = DEFAULT_ANIM_SPEED;
-                    // playerAnimFrame = 0; // no need to reset the idle animation
-                    moveFrame = 0;
-                }
+                } else { stopPlayer(player); }
             }
             break;
         case PS_IDLE:
             if (inputs.state == IS_TOUCH_DRAG || inputs.state == IS_KEYBOARD_DPAD) {
-                HexCoord nextCoordinate = HexCoordSubtract(player->coordinate, hexDirections[inputs.hexMoveDir]);
-                if (CheckHexMapCollision(nextCoordinate)) {
+                const HexCoord nextCoordinate = GetMapNeighbor(player->coordinate, inputs.hexMoveDir);
+                if (!CheckMapCollision(nextCoordinate)) {
                     player->state = PS_MOVING;
 
                     // set the running animation
@@ -122,6 +128,22 @@ void UpdatePlayer(Player *player, const Inputs inputs, const float frameTime)
 
                     player->rotation = Vector2LineAngle(lastPlayerPosition, nextPlayerPosition);
                 }
+            } else if (inputs.state == IS_TOUCH_SELECT) {
+                player->state = PS_MOVING;
+
+                // set the running animation
+                player->currentAnimation = 3;
+                player->animationSpeed = 48; // double speed
+                player->animationFrame = 0;
+
+                player->targetCoordinate = inputs.touchedCell;
+                const HexCoord nextCoordinate = PathNextMapCoordinate(player->coordinate, player->targetCoordinate);
+
+                lastPlayerPosition = HexCoordToPosition(player->coordinate);
+                player->coordinate = nextCoordinate;
+                nextPlayerPosition = HexCoordToPosition(player->coordinate);
+
+                player->rotation = Vector2LineAngle(lastPlayerPosition, nextPlayerPosition);
             }
         default:
             break;
