@@ -48,8 +48,8 @@ void UnloadPlayerResources(void)
 {
     UnloadSound(stepSound);
 
-    // UnloadModelAnimations(playerAnimations, playerAnimationCount);
-    // UnloadModel(playerModel);
+    UnloadModelAnimations(playerAnimations, playerAnimationCount);
+    UnloadModel(playerModel);
 }
 
 Player CreatePlayer(void)
