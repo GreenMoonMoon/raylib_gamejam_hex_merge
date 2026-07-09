@@ -61,6 +61,6 @@ HexCoord GetMapNeighbor(HexCoord coord, HexDirection neighborDirection);
 /// @return true if there is a collision
 bool CheckMapCollision(HexCoord coord);
 
-HexCoord PathNextMapCoordinate(HexCoord from, HexCoord to);
+// HexCoord PathNextMapCoordinate(HexCoord from, HexCoord to);
 
 #endif //RAYLIB_GAME_TEMPLATE_HEX_H

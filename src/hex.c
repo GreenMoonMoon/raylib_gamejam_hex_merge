@@ -10,7 +10,7 @@
 #define SQRT_3 1.73205080757f
 #define SQRT_3_2 0.866025403785f
 
-#define OUT_OF_BOUND(C) ((C).q < 0 || (C).q > currentMap->sizeQ || (C).r < 0 || (C).r > currentMap->sizeR)
+#define OUT_OF_BOUND(C) ((C).q < 0 || (C).q >= currentMap->sizeQ || (C).r < 0 || (C).r >= currentMap->sizeR)
 #define HEX_COORD_INDEX(C) ((C).q * currentMap->sizeQ + (C).r)
 #define INDEX_HEX_COORD(I) (HexCoord){(I) / currentMap->sizeQ, (I) % currentMap->sizeQ}
 

@@ -97,17 +97,17 @@ void UpdatePlayer(Player *player, const Inputs inputs, const float frameTime)
                         player->rotation = Vector2LineAngle(lastPlayerPosition, nextPlayerPosition);
                     } else { stopPlayer(player); }
                 } else if (inputs.state == IS_TOUCH_SELECT) {
-                    if (!HexCoordEqual(player->coordinate, player->targetCoordinate)) {
-                        const HexCoord nextCoordinate = PathNextMapCoordinate(player->coordinate, player->targetCoordinate);
-
-                        lastPlayerPosition = HexCoordToPosition(player->coordinate);
-                        player->coordinate = nextCoordinate;
-                        nextPlayerPosition = HexCoordToPosition(player->coordinate);
-
-                        player->rotation = Vector2LineAngle(lastPlayerPosition, nextPlayerPosition);
-                    } else {
-                        stopPlayer(player);
-                    }
+                    // if (!HexCoordEqual(player->coordinate, player->targetCoordinate)) {
+                    //     const HexCoord nextCoordinate = PathNextMapCoordinate(player->coordinate, player->targetCoordinate);
+                    //
+                    //     lastPlayerPosition = HexCoordToPosition(player->coordinate);
+                    //     player->coordinate = nextCoordinate;
+                    //     nextPlayerPosition = HexCoordToPosition(player->coordinate);
+                    //
+                    //     player->rotation = Vector2LineAngle(lastPlayerPosition, nextPlayerPosition);
+                    // } else {
+                    //     stopPlayer(player);
+                    // }
                 } else { stopPlayer(player); }
             }
             break;
@@ -129,21 +129,21 @@ void UpdatePlayer(Player *player, const Inputs inputs, const float frameTime)
                     player->rotation = Vector2LineAngle(lastPlayerPosition, nextPlayerPosition);
                 }
             } else if (inputs.state == IS_TOUCH_SELECT) {
-                player->state = PS_MOVING;
-
-                // set the running animation
-                player->currentAnimation = 3;
-                player->animationSpeed = 48; // double speed
-                player->animationFrame = 0;
-
-                player->targetCoordinate = inputs.touchedCell;
-                const HexCoord nextCoordinate = PathNextMapCoordinate(player->coordinate, player->targetCoordinate);
-
-                lastPlayerPosition = HexCoordToPosition(player->coordinate);
-                player->coordinate = nextCoordinate;
-                nextPlayerPosition = HexCoordToPosition(player->coordinate);
-
-                player->rotation = Vector2LineAngle(lastPlayerPosition, nextPlayerPosition);
+                // player->state = PS_MOVING;
+                //
+                // // set the running animation
+                // player->currentAnimation = 3;
+                // player->animationSpeed = 48; // double speed
+                // player->animationFrame = 0;
+                //
+                // player->targetCoordinate = inputs.touchedCell;
+                // const HexCoord nextCoordinate = PathNextMapCoordinate(player->coordinate, player->targetCoordinate);
+                //
+                // lastPlayerPosition = HexCoordToPosition(player->coordinate);
+                // player->coordinate = nextCoordinate;
+                // nextPlayerPosition = HexCoordToPosition(player->coordinate);
+                //
+                // player->rotation = Vector2LineAngle(lastPlayerPosition, nextPlayerPosition);
             }
         default:
             break;
