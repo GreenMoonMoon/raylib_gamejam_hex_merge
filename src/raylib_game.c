@@ -13,6 +13,10 @@
 #include "raylib.h"
 #include "screens.h"    // NOTE: Declares global (extern) variables and screens functions
 
+// Single header library implementations
+#define STB_DS_IMPLEMENTATION
+#include "extern/stb_ds.h"
+
 #if defined(PLATFORM_WEB)
     #include <emscripten/emscripten.h>      // Emscripten library
 #endif

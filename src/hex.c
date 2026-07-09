@@ -5,12 +5,14 @@
 #include "hex.h"
 #include <math.h>
 #include <stdlib.h>
+#include "extern/stb_ds.h"
 
 #define SQRT_3 1.73205080757f
 #define SQRT_3_2 0.866025403785f
 
 #define OUT_OF_BOUND(C) ((C).q < 0 || (C).q > currentMap->sizeQ || (C).r < 0 || (C).r > currentMap->sizeR)
 #define HEX_COORD_INDEX(C) ((C).q * currentMap->sizeQ + (C).r)
+#define INDEX_HEX_COORD(I) (HexCoord){(I) / currentMap->sizeQ, (I) % currentMap->sizeQ}
 
 HexMap *currentMap;
 
@@ -73,61 +75,52 @@ bool CheckMapCollision(const HexCoord coord) {
 
 HexCoord PathNextMapCoordinate(const HexCoord from, const HexCoord to) {
     struct Cell {
-        HexCoord coord;
-        int index;
-    };
-
-    struct CameFrom {
         int from;
         bool visited;
     };
 
-    // frontier uses the index as the cameFrom cell index
-    struct Cell frontier[currentMap->sizeQ * currentMap->sizeR / 3]; // arbitrary number I'm (almost) sure can't be reached
-    // cameFrom uses the index for the cell visited before
-    struct Cell cameFrom[currentMap->sizeQ * currentMap->sizeR];
-
-    int ci = 0;
-    cameFrom[ci] = (struct Cell){from, 0}; // initial cell
+    int frontier[currentMap->sizeQ * currentMap->sizeR]; // arbitrary number I'm (almost) sure can't be reached
     int fi = 0;
-    frontier[fi++] = (struct Cell){from, ci};
-    ci++;
+    struct Cell *cameFrom = calloc(currentMap->sizeQ * currentMap->sizeR, sizeof(struct Cell));
+
+    const int toIndex = HEX_COORD_INDEX(to);
+    const int fromIndex = HEX_COORD_INDEX(from);
+
+    int current = fromIndex;
+    cameFrom[current] = (struct Cell){fromIndex, true}; // initial cell
+    frontier[fi++] = current;
 
     bool foundPath = false;
     while (fi > 0) {
-        const struct Cell current = frontier[--fi];
-        if (HexCoordEqual(current.coord, to)) {
+        current = frontier[--fi];
+        if (current == toIndex) {
             foundPath = true;
             break;
         }
 
-        for (int i = 0; i < HD_COUNT; ++i) {
-            const HexCoord neighbor = GetMapNeighbor(current.coord, i);
+        const HexCoord currentCoord = INDEX_HEX_COORD(current);
+        for (int i = HD_COUNT - 1; i >= 0; --i) {
+            const HexCoord neighbor = GetMapNeighbor(currentCoord, i);
             if (OUT_OF_BOUND(neighbor)) { continue; }
 
-            bool isReached = false;
-            for (int j = 0; j < ci; ++j) {
-                if (HexCoordEqual(cameFrom[j].coord, neighbor)) {
-                    isReached = true;
-                    break;
-                }
-            }
-
-            if (!isReached) {
-                cameFrom[ci] = (struct Cell){neighbor, current.index};
-                frontier[fi++] = (struct Cell){neighbor, ci};
-                ci++;
+            const int neighborIndex = HEX_COORD_INDEX(neighbor);
+            if (!cameFrom[neighborIndex].visited) {
+                cameFrom[neighborIndex].visited = true;
+                cameFrom[neighborIndex].from = current;
+                frontier[fi++] = neighborIndex;
             }
         }
     }
 
-    // reconstruct the path from the target
-    struct Cell cf = cameFrom[ci - 1];
     if (foundPath) {
-        while (cf.index != 0) {
-            cf = cameFrom[cf.index];
+        int prevIndex = cameFrom[current].from;
+        while (prevIndex != fromIndex) {
+            prevIndex = cameFrom[prevIndex].from;
         }
-        return cf.coord;
+        free(cameFrom);
+        return INDEX_HEX_COORD(prevIndex);
     }
+
+    free(cameFrom);
     return from;
 }
