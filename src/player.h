@@ -26,14 +26,15 @@ typedef struct Player {
     Vector2 position;
     float rotation;
 } Player;
-extern Player player;
 
-void LoadPlayer(void);
+void LoadPlayerResources(void);
 
-void UnloadPlayer(void);
+void UnloadPlayerResources(void);
 
-void MovePlayer(HexDirection direction);
+Player CreatePlayer(void);
 
-void UpdatePlayer(float frameTime);
+void MovePlayer(Player *player, HexDirection direction);
+
+void UpdatePlayer(Player *player, float frameTime);
 
 #endif //RAYLIB_GAME_TEMPLATE_PLAYER_H

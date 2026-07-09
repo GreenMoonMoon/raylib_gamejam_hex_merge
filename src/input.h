@@ -6,6 +6,7 @@
 #define RAYLIB_GAME_TEMPLATE_INPUT_H
 
 #include "raylib.h"
+#include "player.h"
 #include "hex.h"
 
 typedef enum InputState {
@@ -22,6 +23,6 @@ typedef struct Inputs {
     HexCoord touchedCell;
 } Inputs;
 
-void ProcessInputs(Inputs *inputs);
+void ProcessInputs(Inputs *inputs, const Player *player);
 
 #endif //RAYLIB_GAME_TEMPLATE_INPUT_H

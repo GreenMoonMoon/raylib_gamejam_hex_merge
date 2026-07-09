@@ -25,10 +25,9 @@ static Vector3 cameraOffset;
 
 // inputs
 static Inputs inputs;
-// Vector2 moveDirection;
-// HexDirection hexMoveDir;
-// HexCoord touchedCell;
 
+// player
+Player player;
 
 //----------------------------------------------------------------------------------
 // Gameplay Screen Functions Definition
@@ -90,7 +89,8 @@ void InitGameplayScreen(void)
     cameraOffset = (Vector3){0, 8.0f, 8.0f};
 
     // initialize player
-    LoadPlayer();
+    LoadPlayerResources();
+    player = CreatePlayer();
 
     // initialize scene
     map = (HexMap){10, 10};
@@ -109,10 +109,10 @@ void UpdateGameplayScreen(void)
 {
     const float frameTime = GetFrameTime();
 
-    ProcessInputs(&inputs);
+    ProcessInputs(&inputs, &player);
 
-    if (inputs.state != IS_NONE) { MovePlayer(inputs.hexMoveDir); }
-    UpdatePlayer(frameTime);
+    if (inputs.state != IS_NONE) { MovePlayer(&player, inputs.hexMoveDir); }
+    UpdatePlayer(&player, frameTime);
 
     // update camera
     const Vector2 playerPosition = player.position;
@@ -154,7 +154,7 @@ void DrawGameplayScreen(void)
 void UnloadGameplayScreen(void)
 {
     free(map.cells);
-    UnloadPlayer();
+    UnloadPlayerResources();
 }
 
 // Gameplay Screen should finish?

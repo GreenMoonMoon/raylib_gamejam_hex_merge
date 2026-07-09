@@ -5,8 +5,6 @@
 #include "input.h"
 #include "raylib.h"
 #include "raymath.h"
-#include "player.h"
-#include "hex.h"
 
 #define M_PI_3 1.0471975512f
 #define MOVE_INPUT_CUTOFF 0.1f
@@ -17,7 +15,7 @@ static int lastGesture;
 static Vector3 touchWorldPosition;
 static Vector2 lastKeyMoveInput;
 
-void ProcessInputs(Inputs *inputs) {
+void ProcessInputs(Inputs *inputs, const Player *player) {
     // GESTURES
     const int currentGesture = GetGestureDetected();
     const Vector2 touchPosition = GetTouchPosition(0);
@@ -32,7 +30,7 @@ void ProcessInputs(Inputs *inputs) {
         if (lastGesture == GESTURE_NONE) {
             // get the cell coordinate from the touch position
             inputs->touchedCell = PositionToHexCoord((Vector2){touchWorldPosition.x - GRID_OFFSET_X, touchWorldPosition.z - GRID_OFFSET_Y});
-            if (HexCoordEqual(inputs->touchedCell, player.coordinate)) {
+            if (HexCoordEqual(inputs->touchedCell, player->coordinate)) {
                 inputs->state = IS_TOUCH_DRAG;
             } else {
                 inputs->state = IS_TOUCH_SELECT;
@@ -40,7 +38,7 @@ void ProcessInputs(Inputs *inputs) {
         }
 
         if (inputs->state == IS_TOUCH_DRAG) {
-            const Vector2 dragVector = Vector2Subtract((Vector2){touchWorldPosition.x - GRID_OFFSET_X, touchWorldPosition.z - GRID_OFFSET_Y}, player.position);
+            const Vector2 dragVector = Vector2Subtract((Vector2){touchWorldPosition.x - GRID_OFFSET_X, touchWorldPosition.z - GRID_OFFSET_Y}, player->position);
             const float dragVectorLength = Vector2Length(dragVector);
             if (dragVectorLength > 1.0f) { inputs->moveVector = Vector2Scale(dragVector, 1.0f / dragVectorLength); }
         }
@@ -76,6 +74,8 @@ void ProcessInputs(Inputs *inputs) {
             inputs->hexMoveDir = inputs->hexMoveDir % 6;
             break;
         case IS_TOUCH_SELECT:
+            // TODO: handle select ...
+            inputs->state = IS_NONE;
         case IS_NONE:
             break;
     }
