@@ -96,6 +96,7 @@ void InitGameplayScreen(void)
     // initialize scene
     map = (HexMap){10, 10};
     map.cells = calloc(10 * 10, sizeof(int));
+    currentMap = &map;
 
     // create obstacles
     for (int i = 0; i < 6; ++i) {

@@ -77,13 +77,24 @@ void UpdatePlayer(Player *player, const Inputs inputs, const float frameTime)
                 player->position = Vector2Lerp(lastPlayerPosition, nextPlayerPosition, moveFrame / MOVE_TIME);
             } else {
                 moveFrame = 0;
+
                 // if movement is finished check if the inputs ask for a movement
                 if (inputs.state == IS_TOUCH_DRAG || inputs.state == IS_KEYBOARD_DPAD) {
-                    lastPlayerPosition = HexCoordToPosition(player->coordinate);
-                    player->coordinate = HexCoordSubtract(player->coordinate, hexDirections[inputs.hexMoveDir]);
-                    nextPlayerPosition = HexCoordToPosition(player->coordinate);
+                    HexCoord nextCoordinate = HexCoordSubtract(player->coordinate, hexDirections[inputs.hexMoveDir]);
+                    if (CheckHexMapCollision(nextCoordinate)) {
+                        lastPlayerPosition = HexCoordToPosition(player->coordinate);
+                        player->coordinate = nextCoordinate;
+                        nextPlayerPosition = HexCoordToPosition(player->coordinate);
 
-                    player->rotation = Vector2LineAngle(lastPlayerPosition, nextPlayerPosition);
+                        player->rotation = Vector2LineAngle(lastPlayerPosition, nextPlayerPosition);
+                    } else {
+                        // switch to idle if the movement is finished
+                        player->state = PS_IDLE;
+                        player->currentAnimation = 1;
+                        player->animationSpeed = DEFAULT_ANIM_SPEED;
+                        // playerAnimFrame = 0; // no need to reset the idle animation
+                        moveFrame = 0;
+                    }
                 } else {
                     // switch to idle if the movement is finished
                     player->state = PS_IDLE;
@@ -96,19 +107,21 @@ void UpdatePlayer(Player *player, const Inputs inputs, const float frameTime)
             break;
         case PS_IDLE:
             if (inputs.state == IS_TOUCH_DRAG || inputs.state == IS_KEYBOARD_DPAD) {
-                player->state = PS_MOVING;
+                HexCoord nextCoordinate = HexCoordSubtract(player->coordinate, hexDirections[inputs.hexMoveDir]);
+                if (CheckHexMapCollision(nextCoordinate)) {
+                    player->state = PS_MOVING;
 
+                    // set the running animation
+                    player->currentAnimation = 3;
+                    player->animationSpeed = 48; // double speed
+                    player->animationFrame = 0;
 
-                // set the running animation
-                player->currentAnimation = 3;
-                player->animationSpeed = 48; // double speed
-                player->animationFrame = 0;
+                    lastPlayerPosition = HexCoordToPosition(player->coordinate);
+                    player->coordinate = nextCoordinate;
+                    nextPlayerPosition = HexCoordToPosition(player->coordinate);
 
-                lastPlayerPosition = HexCoordToPosition(player->coordinate);
-                player->coordinate = HexCoordSubtract(player->coordinate, hexDirections[inputs.hexMoveDir]);
-                nextPlayerPosition = HexCoordToPosition(player->coordinate);
-
-                player->rotation = Vector2LineAngle(lastPlayerPosition, nextPlayerPosition);
+                    player->rotation = Vector2LineAngle(lastPlayerPosition, nextPlayerPosition);
+                }
             }
         default:
             break;

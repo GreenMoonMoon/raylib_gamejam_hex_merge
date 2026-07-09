@@ -30,7 +30,9 @@ typedef struct HexMap {
 typedef struct HexCoord {
     int q, r;
 } HexCoord;
+
 extern const HexCoord hexDirections[];
+extern HexMap *currentMap;
 
 HexCoord HexCoordAdd(HexCoord a, HexCoord b);
 
@@ -48,5 +50,7 @@ bool HexCoordEqual(HexCoord a, HexCoord b);
 Vector2 HexCoordToPosition(HexCoord coord);
 
 HexCoord PositionToHexCoord(Vector2 position);
+
+bool CheckHexMapCollision(HexCoord coord);
 
 #endif //RAYLIB_GAME_TEMPLATE_HEX_H

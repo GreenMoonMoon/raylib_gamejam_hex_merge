@@ -8,6 +8,8 @@
 #define SQRT_3 1.73205080757f
 #define SQRT_3_2 0.866025403785f
 
+HexMap *currentMap;
+
 const HexCoord hexDirections[6] = {
     {1, 0},
     {1, -1},
@@ -49,4 +51,8 @@ HexCoord PositionToHexCoord(const Vector2 position) {
     const float fractional_r = 2.0f / 3.0f * position.x;
 
     return HexCoordRound(fractional_q, fractional_r);
+}
+
+bool CheckHexMapCollision(const HexCoord coord) {
+    return currentMap->cells[coord.q * currentMap->sizeQ + coord.r] == 0;
 }
