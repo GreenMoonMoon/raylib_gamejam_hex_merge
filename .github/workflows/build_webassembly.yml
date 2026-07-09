@@ -65,7 +65,8 @@ jobs:
     - name: Build Product
       run: |
         cd ${{ env.PROJECT_REPO_NAME }}/src
-        make PLATFORM=PLATFORM_WEB BUILD_MODE=RELEASE EMSDK_PATH="D:/a/${{ env.PROJECT_REPO_NAME }}/${{ env.PROJECT_REPO_NAME }}/emsdk-cache/emsdk-main" PROJECT_BUILD_PATH=. RAYLIB_PATH=../../raylib -B
+#        make PLATFORM=PLATFORM_WEB BUILD_MODE=RELEASE EMSDK_PATH="D:/a/${{ env.PROJECT_REPO_NAME }}/${{ env.PROJECT_REPO_NAME }}/emsdk-cache/emsdk-main" PROJECT_BUILD_PATH=. RAYLIB_PATH=../../raylib -B
+        emcc -o ./${{ env.PROJECT_REPO_NAME }}.html raylib_game.o -Wall -D_DEFAULT_SOURCE -Wno-missing-braces -Wno-unused-value -Wno-pointer-sign -std=c23 -Os -I. -Iexternal -I../../raylib/src -L. -L../../raylib/src -sUSE_GLFW=3 -sTOTAL_MEMORY=128MB -sSTACK_SIZE=1MB -sFORCE_FILESYSTEM=1 -sMINIFY_HTML=0 --preload-file resources --shell-file minshell.html ../../raylib/src/libraylib.web.a -DPLATFORM_WEB
 
     - name: Generate Artifacts
       run: |
