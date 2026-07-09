@@ -9,35 +9,25 @@
 #define DEFAULT_ANIM_SPEED 24
 #define STEP_SOUND_DELAY 0.35f
 
-Model playerModel;
-ModelAnimation *playerAnimations;
-int playerAnimCount;
-int playerCurrentAnim;
-float playerAnimFrame;
-float playerAnimSpeed;
-HexCoord playerCoordinate;
-Vector2 playerPosition;
-float playerRotation;
-PlayerState playerState;
+Player player;
 
 static Sound stepSound = { 0 };
 static float stepSoundTimer = 0;
 
-extern HexDirection hexMoveDir;
 
 void LoadPlayer(void)
 {
     Texture colormap = LoadTexture("resources/textures/colormap.png");
 
-    playerModel = LoadModel("resources/models/character_female_b.glb");
-    playerModel.materials[1].maps[MATERIAL_MAP_DIFFUSE].texture = colormap;
-    playerAnimations = LoadModelAnimations("resources/models/character_female_a.glb", &playerAnimCount);
-    playerCurrentAnim = 1;
-    playerAnimFrame = 0;
-    playerAnimSpeed = DEFAULT_ANIM_SPEED;
-    playerCoordinate = (HexCoord){0, 0}; // hex coordinate component sum is always 0
-    playerPosition = HexCoordToPosition(playerCoordinate);
-    playerRotation = PI;
+    player.model = LoadModel("resources/models/character_female_b.glb");
+    player.model.materials[1].maps[MATERIAL_MAP_DIFFUSE].texture = colormap;
+    player.animations = LoadModelAnimations("resources/models/character_female_a.glb", &player.animationCount);
+    player.currentAnimation = 1;
+    player.animationFrame = 0;
+    player.animationSpeed = DEFAULT_ANIM_SPEED;
+    player.coordinate = (HexCoord){0, 0}; // hex coordinate component sum is always 0
+    player.position = HexCoordToPosition(player.coordinate);
+    player.rotation = PI;
 
     // SFX
     stepSound = LoadSound("resources/sfx/step.wav");
@@ -47,8 +37,15 @@ void UnloadPlayer(void)
 {
     UnloadSound(stepSound);
 
-    UnloadModelAnimations(playerAnimations, playerAnimCount);
-    UnloadModel(playerModel);
+    UnloadModelAnimations(player.animations, player.animationCount);
+    UnloadModel(player.model);
+}
+
+void MovePlayer(const HexDirection direction) {
+    player.nextCoordinate = HexCoordSubtract(player.coordinate, hexDirections[direction]);
+    if (player.state != PS_MOVING && !HexCoordEqual(player.coordinate, player.nextCoordinate)) {
+        player.state = PS_MOVING;
+    }
 }
 
 void UpdatePlayer(const float frameTime)
@@ -58,9 +55,9 @@ void UpdatePlayer(const float frameTime)
     static Vector2 nextPlayerPosition;
     // static int angle;
     static float moveFrame;
-    float angle = playerRotation;
+    float angle = player.rotation;
 
-    switch (playerState) {
+    switch (player.state) {
         case PS_MOVING:
             stepSoundTimer -= frameTime;
             if (stepSoundTimer <= 0) {
@@ -69,39 +66,39 @@ void UpdatePlayer(const float frameTime)
             }
             if (moveFrame < MOVE_TIME) {
                 moveFrame += frameTime;
-                playerPosition = Vector2Lerp(lastPlayerPosition, nextPlayerPosition, moveFrame / MOVE_TIME);
-            } else if (isMoving) {
-                lastPlayerPosition = HexCoordToPosition(playerCoordinate);
+                player.position = Vector2Lerp(lastPlayerPosition, nextPlayerPosition, moveFrame / MOVE_TIME);
+            } else if (!HexCoordEqual(player.coordinate, player.nextCoordinate)) {
+                lastPlayerPosition = HexCoordToPosition(player.coordinate);
 
-                playerCoordinate = HexCoordSubtract(playerCoordinate, hexDirections[hexMoveDir]);
+                player.coordinate = player.nextCoordinate;
 
-                nextPlayerPosition = HexCoordToPosition(playerCoordinate);
+                nextPlayerPosition = HexCoordToPosition(player.coordinate);
                 moveFrame = frameTime;
-                playerPosition = Vector2Lerp(lastPlayerPosition, nextPlayerPosition, moveFrame / MOVE_TIME);
+                player.position = Vector2Lerp(lastPlayerPosition, nextPlayerPosition, moveFrame / MOVE_TIME);
 
                 angle = Vector2LineAngle(lastPlayerPosition, nextPlayerPosition);
             } else {
                 // switch to idle
-                playerState = PS_IDLE;
-                playerCurrentAnim = 1;
-                playerAnimSpeed = DEFAULT_ANIM_SPEED;
+                player.state = PS_IDLE;
+                player.currentAnimation = 1;
+                player.animationSpeed = DEFAULT_ANIM_SPEED;
                 // playerAnimFrame = 0; // no need to reset the idle animation
                 moveFrame = 0;
             }
             break;
         case PS_IDLE:
-            if (isMoving) {
+            if (!HexCoordEqual(player.coordinate, player.nextCoordinate)) {
                 // switch to moving
-                playerState = PS_MOVING;
-                playerCurrentAnim = 3;
-                playerAnimSpeed = 48; // double speed
-                playerAnimFrame = 0;
+                player.state = PS_MOVING;
+                player.currentAnimation = 3;
+                player.animationSpeed = 48; // double speed
+                player.animationFrame = 0;
 
-                lastPlayerPosition = HexCoordToPosition(playerCoordinate);
+                lastPlayerPosition = HexCoordToPosition(player.coordinate);
 
-                playerCoordinate = HexCoordSubtract(playerCoordinate, hexDirections[hexMoveDir]);
+                player.coordinate = player.nextCoordinate;
 
-                nextPlayerPosition = HexCoordToPosition(playerCoordinate);
+                nextPlayerPosition = HexCoordToPosition(player.coordinate);
 
                 angle = Vector2LineAngle(lastPlayerPosition, nextPlayerPosition);
             }
@@ -110,11 +107,11 @@ void UpdatePlayer(const float frameTime)
 
     // update player model
     // -- update orientation
-    playerRotation = angle;
+    player.rotation = angle;
     // -- update animation
-    playerAnimFrame = fmodf(
-        playerAnimFrame + frameTime * playerAnimSpeed,
-        (float)playerAnimations[playerCurrentAnim].keyframeCount
+    player.animationFrame = fmodf(
+        player.animationFrame + frameTime * player.animationSpeed,
+        (float)player.animations[player.currentAnimation].keyframeCount
     );
-    UpdateModelAnimation(playerModel, playerAnimations[playerCurrentAnim], playerAnimFrame);
+    UpdateModelAnimation(player.model, player.animations[player.currentAnimation], player.animationFrame);
 }

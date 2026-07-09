@@ -8,25 +8,31 @@
 #include "raylib.h"
 #include "hex.h"
 
-extern Model playerModel;
-extern ModelAnimation *playerAnimations;
-extern int playerAnimCount;
-extern int playerCurrentAnim;
-extern float playerAnimFrame;
-extern float playerAnimSpeed;
-extern HexCoord playerCoordinate;
-extern Vector2 playerPosition;
-extern float playerRotation;
-
 typedef enum PlayerState {
     PS_IDLE,
     PS_MOVING,
 } PlayerState;
-extern PlayerState playerState;
+
+typedef struct Player {
+    PlayerState state;
+    Model model;
+    ModelAnimation *animations;
+    int animationCount;
+    int currentAnimation;
+    float animationFrame;
+    float animationSpeed;
+    HexCoord coordinate;
+    HexCoord nextCoordinate;
+    Vector2 position;
+    float rotation;
+} Player;
+extern Player player;
 
 void LoadPlayer(void);
 
 void UnloadPlayer(void);
+
+void MovePlayer(HexDirection direction);
 
 void UpdatePlayer(float frameTime);
 

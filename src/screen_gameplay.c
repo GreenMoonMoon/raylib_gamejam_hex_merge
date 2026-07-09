@@ -24,9 +24,10 @@ Camera3D camera;
 static Vector3 cameraOffset;
 
 // inputs
-Vector2 moveDirection;
-HexDirection hexMoveDir;
-HexCoord touchedCell;
+static Inputs inputs;
+// Vector2 moveDirection;
+// HexDirection hexMoveDir;
+// HexCoord touchedCell;
 
 
 //----------------------------------------------------------------------------------
@@ -46,26 +47,28 @@ static void DrawDebugInfo(const int x, const int y) {
     // DrawText(TextFormat("Animation frame: %.2f", playerAnimFrame), x, y + (++row) * 20, 20, DARKGRAY);
 
     // hex coordinate
+    const HexCoord playerCoordinate = player.coordinate;
     DrawText(TextFormat("Coordinate: q:%d  r:%d", playerCoordinate.q, playerCoordinate.r), x,
              y + (++row) * 20, 20, DARKGRAY);
 
     // player state
     const char *state_name[] = {"IDLE", "MOVING"};
-    DrawText(TextFormat("State: %s", state_name[playerState]), x, y + (++row) * 20, 20, DARKGRAY);
+    DrawText(TextFormat("State: %s", state_name[player.state]), x, y + (++row) * 20, 20, DARKGRAY);
 
     // player rotation
-    DrawText(TextFormat("Rotation: %d", (int)(playerRotation * RAD2DEG)), x, y + (++row) * 20, 20, DARKGRAY);
+    DrawText(TextFormat("Rotation: %d", (int)(player.rotation * RAD2DEG)), x, y + (++row) * 20, 20, DARKGRAY);
 
     // hex direction
-    DrawText(TextFormat("Hex direction: %d", hexMoveDir), x, y + (++row) * 20, 20, DARKGRAY);
+    DrawText(TextFormat("Hex direction: %d", inputs.hexMoveDir), x, y + (++row) * 20, 20, DARKGRAY);
 }
 
 void DrawDebugInputs(void)
 {
+    const Vector2 playerPosition = player.position;
     const Vector3 pos = {playerPosition.x + GRID_OFFSET_X, 2.0f, playerPosition.y + GRID_OFFSET_Y};
     DrawCircle3D(pos, 1.5f, (Vector3){1.0f, 0, 0}, 90, DARKBLUE);
-    DrawLine3D( pos, (Vector3){pos.x + moveDirection.x * 1.5f, pos.y, pos.z + moveDirection.y * 1.5f}, RED );
-    const float angle = (float)(hexMoveDir + 3) * 1.0471975512f;
+    DrawLine3D( pos, (Vector3){pos.x + inputs.moveVector.x * 1.5f, pos.y, pos.z + inputs.moveVector.y * 1.5f}, RED );
+    const float angle = (float)(inputs.hexMoveDir + 3) * 1.0471975512f;
     DrawLine3D( pos, Vector3Add(pos, (Vector3){sinf(-angle), 0, cosf(angle)}), BLUE );
 }
 
@@ -106,11 +109,13 @@ void UpdateGameplayScreen(void)
 {
     const float frameTime = GetFrameTime();
 
-    ProcessInputs();
+    ProcessInputs(&inputs);
 
+    if (inputs.state != IS_NONE) { MovePlayer(inputs.hexMoveDir); }
     UpdatePlayer(frameTime);
 
     // update camera
+    const Vector2 playerPosition = player.position;
     camera.target = Vector3Lerp(camera.target, (Vector3){playerPosition.x, 0, playerPosition.y}, CAMERA_SPEED * frameTime);
     camera.position = Vector3Add(camera.target, cameraOffset);
 }
@@ -122,19 +127,19 @@ void DrawGameplayScreen(void)
 
     // DrawHexGrid(20, 10);
     DrawHexMapGrid(map);
-    DrawHexWire(playerCoordinate, 0.1f, BLUE); // draw actual player coordinate
+    DrawHexWire(player.coordinate, 0.1f, BLUE); // draw actual player coordinate
 
     // DEBUG
-    DrawHex(touchedCell, -0.2f, RED);
+    DrawHex(inputs.touchedCell, -0.2f, RED);
     DrawDebugInputs();
 
     // draw player
     // DrawModel(playerModel, (Vector3){playerPosition.x + GRID_OFFSET_X, 0, playerPosition.y + GRID_OFFSET_Y} , 2.0f, WHITE);
     DrawModelEx(
-        playerModel,
-        (Vector3){playerPosition.x + GRID_OFFSET_X, 0, playerPosition.y + GRID_OFFSET_Y},
+        player.model,
+        (Vector3){player.position.x + GRID_OFFSET_X, 0, player.position.y + GRID_OFFSET_Y},
         (Vector3){0, 1.0f, 0},
-        playerRotation * RAD2DEG + 90,
+        player.rotation * RAD2DEG + 90,
         (Vector3){2.0f, 2.0f, 2.0f},
         WHITE
     );

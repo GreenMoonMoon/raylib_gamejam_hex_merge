@@ -5,7 +5,8 @@
 #ifndef RAYLIB_GAME_TEMPLATE_INPUT_H
 #define RAYLIB_GAME_TEMPLATE_INPUT_H
 
-extern bool isMoving;
+#include "raylib.h"
+#include "hex.h"
 
 typedef enum InputState {
     IS_NONE,
@@ -14,6 +15,13 @@ typedef enum InputState {
     IS_KEYBOARD_DPAD,
 } InputState;
 
-void ProcessInputs(void);
+typedef struct Inputs {
+    InputState state;
+    Vector2 moveVector;
+    HexDirection hexMoveDir;
+    HexCoord touchedCell;
+} Inputs;
+
+void ProcessInputs(Inputs *inputs);
 
 #endif //RAYLIB_GAME_TEMPLATE_INPUT_H
