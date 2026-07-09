@@ -8,6 +8,8 @@
 #include "raylib.h"
 #include "hex.h"
 
+void DrawHexMapGrid(HexMap map);
+
 void DrawHexGrid(int rows, int columns);
 
 void DrawHex(HexCoord coord, float height, Color color);

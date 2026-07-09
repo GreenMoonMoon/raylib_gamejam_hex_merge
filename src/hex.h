@@ -21,9 +21,11 @@ typedef enum HexDirection {
     HD_NORTH_WEST,
 } HexDirection;
 
-typedef struct HexGrid {
-
-} HexGrid;
+typedef struct HexMap {
+    int sizeQ;
+    int sizeR;
+    int *cells;
+} HexMap;
 
 typedef struct HexCoord {
     int q, r;

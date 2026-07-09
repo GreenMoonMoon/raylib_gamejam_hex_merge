@@ -1,3 +1,5 @@
+#include <stdlib.h>
+
 #include "raylib.h"
 #include "raymath.h"
 #include "screens.h"
@@ -13,6 +15,9 @@
 //----------------------------------------------------------------------------------
 static int framesCounter = 0;
 static int finishScreen = 0;
+
+// scene
+static HexMap map;
 
 // camera
 Camera3D camera;
@@ -36,22 +41,23 @@ static float LerpAngle(const float a, const float b, const float alpha)
 }
 
 static void DrawDebugInfo(const int x, const int y) {
-    // animation frame
-    DrawText(TextFormat("Animation frame: %.2f", playerAnimFrame), x, y, 20, DARKGRAY);
+    int row = 0;
+    // // animation frame
+    // DrawText(TextFormat("Animation frame: %.2f", playerAnimFrame), x, y + (++row) * 20, 20, DARKGRAY);
 
     // hex coordinate
     DrawText(TextFormat("Coordinate: q:%d  r:%d", playerCoordinate.q, playerCoordinate.r), x,
-             y + 20, 20, DARKGRAY);
+             y + (++row) * 20, 20, DARKGRAY);
 
     // player state
     const char *state_name[] = {"IDLE", "MOVING"};
-    DrawText(TextFormat("State: %s", state_name[playerState]), x, y + 40, 20, DARKGRAY);
+    DrawText(TextFormat("State: %s", state_name[playerState]), x, y + (++row) * 20, 20, DARKGRAY);
 
     // player rotation
-    DrawText(TextFormat("Rotation: %d", (int)(playerRotation * RAD2DEG)), x, y + 60, 20, DARKGRAY);
+    DrawText(TextFormat("Rotation: %d", (int)(playerRotation * RAD2DEG)), x, y + (++row) * 20, 20, DARKGRAY);
 
     // hex direction
-    DrawText(TextFormat("Hex direction: %d", hexMoveDir), x, y + 100, 20, DARKGRAY);
+    DrawText(TextFormat("Hex direction: %d", hexMoveDir), x, y + (++row) * 20, 20, DARKGRAY);
 }
 
 void DrawDebugInputs(void)
@@ -84,7 +90,15 @@ void InitGameplayScreen(void)
     LoadPlayer();
 
     // initialize scene
+    map = (HexMap){10, 10};
+    map.cells = calloc(10 * 10, sizeof(int));
 
+    // create obstacles
+    for (int i = 0; i < 6; ++i) {
+        const int q = GetRandomValue(0, 9);
+        const int r = GetRandomValue(0, 9);
+        map.cells[q * map.sizeQ + r] = 1;
+    }
 }
 
 // Gameplay Screen Update logic
@@ -106,7 +120,8 @@ void DrawGameplayScreen(void)
 {
     BeginMode3D(camera);
 
-    DrawHexGrid(20, 10);
+    // DrawHexGrid(20, 10);
+    DrawHexMapGrid(map);
     DrawHexWire(playerCoordinate, 0.1f, BLUE); // draw actual player coordinate
 
     // DEBUG
@@ -133,6 +148,7 @@ void DrawGameplayScreen(void)
 // Gameplay Screen Unload logic
 void UnloadGameplayScreen(void)
 {
+    free(map.cells);
     UnloadPlayer();
 }
 
