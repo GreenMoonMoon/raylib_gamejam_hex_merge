@@ -16,7 +16,7 @@ const Vector2 point_coords[6] = {
     {-0.5f, -0.86603f}
 };
 
-static void rlHexWire(const float x, const float y) {
+static void draw_hex_wire(const float x, const float y) {
     // normalized flat hex cell corners
     for (int i = 0; i < 5; ++i) {
         rlVertex3f(x + point_coords[i].x, 0, y + point_coords[i].y);
@@ -26,7 +26,7 @@ static void rlHexWire(const float x, const float y) {
     rlVertex3f(x + point_coords[0].x, 0, y + point_coords[0].y);
 }
 
-static void rlHexPolygons(const float x, const float y) {
+static void draw_hex_polygons(const float x, const float y) {
     rlVertex3f(x + point_coords[0].x, 0, y + point_coords[0].y);
     rlVertex3f(x + point_coords[1].x, 0, y + point_coords[1].y);
     rlVertex3f(x + point_coords[2].x, 0, y + point_coords[2].y);
@@ -44,29 +44,25 @@ static void rlHexPolygons(const float x, const float y) {
     rlVertex3f(x + point_coords[5].x, 0, y + point_coords[5].y);
 }
 
-void DrawHexMapGrid(const HexMap map) {
+void DrawHexMapGrid(const Chunk map) {
     rlPushMatrix();
     rlBegin(RL_LINES);
     rlColor4ub(0, 0, 0, 255);
 
-
-    for (int r = 0; r < map.sizeR; ++r) {
-        for (int q = 0; q < map.sizeQ; ++q) {
-            const Vector2 pos = HexCoordToPosition((HexCoord){q - (r/2), r});
-            rlHexWire(pos.x, pos.y);
+    for (int r = 0; r < CHUNK_RADIUS; ++r) {
+        for (int q = 0; q < r; ++q) {
+            const Vector2 pos = HCAToPosition(map.coord);
+            draw_hex_wire(pos.x, pos.y);
         }
     }
 
-    rlEnd();
-
-    rlBegin(RL_TRIANGLES);
     // for (int r = 0; r < map.sizeR; ++r) {
     //     for (int q = 0; q < map.sizeQ; ++q) {
-    //         if (map.cells[q * map.sizeQ + r] != 1) { continue; }
-    //         const Vector2 pos = HexCoordToPosition((HexCoord){q, r});
-    //         rlHexPolygons(pos.x + GRID_OFFSET_X, pos.y + GRID_OFFSET_Y);
+    //         const Vector2 pos = HexCoordToPosition((HexCoord){q - r / 2, r});
+    //         rlHexWire(pos.x, pos.y);
     //     }
     // }
+
     rlEnd();
     rlPopMatrix();
 }
@@ -85,7 +81,7 @@ void DrawHexGrid(const int rows, const int columns) {
             const float x = (float)c * 3 - half_width + row_offset;
             const float y = (float)r * CELL_HEIGHT - half_height;
 
-            rlHexWire(x, y);
+            draw_hex_wire(x, y);
         }
     }
 
@@ -93,27 +89,63 @@ void DrawHexGrid(const int rows, const int columns) {
     rlPopMatrix();
 }
 
-void DrawHex(const HexCoord coord, const float height, const Color color) {
+void DrawHex(const HCAxial coord, const float height, const Color color) {
     rlPushMatrix();
     rlTranslatef(0, height, 0);
     rlBegin(RL_TRIANGLES);
     rlColor4ub(color.r, color.g, color.b, color.a);
 
-    const Vector2 position = HexCoordToPosition(coord);
-    rlHexPolygons(position.x, position.y);
+    const Vector2 position = HCAToPosition(coord);
+    draw_hex_polygons(position.x, position.y);
 
     rlEnd();
     rlPopMatrix();
 }
 
-void DrawHexWire(const HexCoord coord, const float height, const Color color) {
+void DrawHexWire(const HCAxial coord, const float height, const Color color) {
     rlPushMatrix();
     rlTranslatef(0, height, 0);
     rlBegin(RL_LINES);
     rlColor4ub(color.r, color.g, color.b, color.a);
 
-    const Vector2 position = HexCoordToPosition(coord);
-    rlHexWire(position.x, position.y);
+    const Vector2 position = HCAToPosition(coord);
+    draw_hex_wire(position.x, position.y);
+
+    rlEnd();
+    rlPopMatrix();
+}
+
+void DrawChunkBoundaries(const HCAxial coord, const float height, const Color color) {
+    rlPushMatrix();
+    rlTranslatef(0, height, 0);
+
+    rlBegin(RL_LINES);
+    rlColor4ub(color.r, color.g, color.b, color.a);
+
+    const Vector2 n  = HCAToPosition((HCAxial){coord.q - CHUNK_RADIUS, coord.r});
+    const Vector2 ne = HCAToPosition((HCAxial){coord.q - CHUNK_RADIUS, coord.r + CHUNK_RADIUS});
+    const Vector2 se = HCAToPosition((HCAxial){coord.q, coord.r + CHUNK_RADIUS});
+    const Vector2 s  = HCAToPosition((HCAxial){coord.q + CHUNK_RADIUS, coord.r});
+    const Vector2 sw = HCAToPosition((HCAxial){coord.q + CHUNK_RADIUS, coord.r - CHUNK_RADIUS});
+    const Vector2 nw = HCAToPosition((HCAxial){coord.q, coord.r - CHUNK_RADIUS});
+
+    rlVertex3f(n.x, 0, n.y);
+    rlVertex3f(ne.x, 0, ne.y);
+
+    rlVertex3f(ne.x, 0, ne.y);
+    rlVertex3f(se.x, 0, se.y);
+
+    rlVertex3f(se.x, 0, se.y);
+    rlVertex3f(s.x, 0, s.y);
+
+    rlVertex3f(s.x, 0, s.y);
+    rlVertex3f(sw.x, 0, sw.y);
+
+    rlVertex3f(sw.x, 0, sw.y);
+    rlVertex3f(nw.x, 0, nw.y);
+
+    rlVertex3f(nw.x, 0, nw.y);
+    rlVertex3f(n.x, 0, n.y);
 
     rlEnd();
     rlPopMatrix();

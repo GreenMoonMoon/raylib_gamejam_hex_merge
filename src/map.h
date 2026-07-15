@@ -7,39 +7,48 @@
 
 #include "hex.h"
 
-#define CELLTYPE_CAN_INTERACT 0x1
-#define CELLTYPE_CAN_BUILD 0x2
-#define CELLTYPE_SOURCE 0x4
-#define CELLTYPE_OBSTACLE 0xf
+#define CHUNK_RADIUS 10
 
-typedef struct HexCell {
-    HexCoord coord;
+// cell flags
+#define TF_CAN_INTERACT 0x1
+#define TF_CAN_BUILD 0x2
+#define TF_SOURCE 0x4
+#define TF_OBSTACLE 0xf
+
+// #define QR_INDEX(M_ptr, Q, R) ((Q) * (M_ptr)->sizeQ + (R))
+// #define HEX_COORD_INDEX(M_ptr, C) ((C).q * (M_ptr)->sizeQ + (C).r)
+// #define INDEX_HEX_COORD(M_ptr, I) (HexCoord){(I) / (M_ptr)->sizeQ, (I) % (M_ptr)->sizeQ}
+
+typedef struct Tile {
+    HCAxial coord;
     unsigned int type;
-} HexCell;
+} Tile;
 
-// TODO: rename to HexChunk?
-typedef struct HexMap {
-    int sizeQ;
-    int sizeR;
+typedef struct Chunk {
+    HCAxial coord;
+    Tile *layers[5];
+} Chunk;
 
-    HexCell *layers[5];
-} HexMap;
-extern HexMap *currentMap;
+/// A sort of polar coordinate for chunks
+typedef struct ChunkCoord {
+    char angle;
+    char distance;
+} ChunkCoord;
 
-HexMap generate_map(void);
+// typedef struct Map {
+//     Chunk *chunk_list;
+// } Map;
 
-void delete_map(HexMap *map);
+Chunk generate_chunk(HCAxial coord);
 
-HexCoord GetMapNeighbor(HexCoord coord, HexDirection neighborDirection);
+void delete_chunk(const Chunk *chunk);
 
-HexCell *GetMapCell(const HexMap *map, HexCoord coord);
+HCAxial GetMapNeighbor(HCAxial coord, HexDirection neighborDirection);
 
-/// @param coord cell coordinate to test
-/// @return true if there is a collision
-bool CheckMapCollision(const HexMap *map, HexCoord coord);
+Tile *get_chunk_tile(const Chunk *chunk, HCAxial coord);
 
-// HexCoord PathNextMapCoordinate(HexCoord from, HexCoord to);
+bool check_chunk_collision(const Chunk *chunk, HCAxial coord);
 
-bool IsMapCellFree(HexMap *map, HexCoord coord);
+bool is_tile_free(Chunk *chunk, HCAxial coord);
 
 #endif //RAYLIB_GAMEJAM_ENTRY_MAP_H

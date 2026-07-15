@@ -15,11 +15,6 @@
 #define SQRT_3 1.73205080757f
 #define SQRT_3_2 0.866025403785f
 
-#define OUT_OF_BOUND(M_ptr, C) ((C).q < 0 || (C).q >= (M_ptr)->sizeQ || (C).r < 0 || (C).r >= (M_ptr)->sizeR)
-#define QR_INDEX(M_ptr, Q, R) ((Q) * (M_ptr)->sizeQ + (R))
-#define HEX_COORD_INDEX(M_ptr, C) ((C).q * (M_ptr)->sizeQ + (C).r)
-#define INDEX_HEX_COORD(M_ptr, I) (HexCoord){(I) / (M_ptr)->sizeQ, (I) % (M_ptr)->sizeQ}
-
 typedef enum HexDirection {
     HD_NORTH,
     HD_NORTH_EAST,
@@ -30,28 +25,32 @@ typedef enum HexDirection {
     HD_COUNT
 } HexDirection;
 
-
-typedef struct HexCoord {
+/// Hexagonal Coordinate Axial
+typedef struct HCAxial {
     int q, r;
-} HexCoord;
+} HCAxial;
 
-extern const HexCoord hexDirections[];
+extern const HCAxial hexDirections[];
 
-HexCoord HexCoordAdd(HexCoord a, HexCoord b);
+HCAxial HCAAdd(HCAxial a, HCAxial b);
 
-HexCoord HexCoordSubtract(HexCoord a, HexCoord b);
+HCAxial HCASubtract(HCAxial a, HCAxial b);
 
 /// Rounding fractional hex coordinate
 /// based on Jacob Rus implementation https://observablehq.com/@jrus/hexround
 /// @param q fractional q
 /// @param r fractional r
 /// @return q and r rounded to HexCoord
-HexCoord HexCoordRound(float q, float r);
+HCAxial HCARound(float q, float r);
 
-bool HexCoordEqual(HexCoord a, HexCoord b);
+bool HCAEqual(HCAxial a, HCAxial b);
 
-Vector2 HexCoordToPosition(HexCoord coord);
+int HCALength(HCAxial coord);
 
-HexCoord PositionToHexCoord(Vector2 position);
+int HCADistance(HCAxial a, HCAxial b);
+
+Vector2 HCAToPosition(HCAxial coord);
+
+HCAxial PositionToHCA(Vector2 position);
 
 #endif //RAYLIB_GAME_TEMPLATE_HEX_H

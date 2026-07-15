@@ -9,12 +9,14 @@
 #include "hex.h"
 #include "map.h"
 
-void DrawHexMapGrid(HexMap map);
+void DrawHexMapGrid(Chunk map);
 
 void DrawHexGrid(int rows, int columns);
 
-void DrawHex(HexCoord coord, float height, Color color);
+void DrawHex(HCAxial coord, float height, Color color);
 
-void DrawHexWire(HexCoord coord, float height, Color color);
+void DrawHexWire(HCAxial coord, float height, Color color);
+
+void DrawChunkBoundaries(HCAxial coord, float height, Color color);
 
 #endif //RAYLIB_GAME_TEMPLATE_DRAW_UTILS_H

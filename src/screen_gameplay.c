@@ -18,8 +18,8 @@ static int finishScreen = 0;
 static PlayMode playMode = PLAYMODE_DEFAULT;
 
 // scene
-static HexMap map;
-static HexCoord selectedCell;
+static Chunk map;
+static HCAxial selectedCell;
 
 // camera
 Camera3D camera;
@@ -37,22 +37,21 @@ Player player;
 // Gameplay Screen Functions Definition
 //----------------------------------------------------------------------------------
 
-static float LerpAngle(const float a, const float b, const float alpha)
-{
+static float lerp_angle(const float a, const float b, const float alpha) {
 #define TAU 6.28318530718
     const float sa = fmodf(fmodf(b - a, TAU) + 3.0f * PI, TAU) - PI;
     return a + sa * alpha;
 }
 
-static void DrawDebugInfo(const int x, const int y) {
+static void ddraw_info(const int x, const int y) {
     int row = 0;
-    // play mode
-    const char *playModeStr[] = {
-        "INVALID",
-        "Default",
-        "Build"
-    };
-    DrawText(TextFormat("MODE: %s", playModeStr[playMode]), x, y + (++row) * 20, 20, DARKGRAY);
+    // // play mode
+    // const char *playModeStr[] = {
+    //     "INVALID",
+    //     "Default",
+    //     "Build"
+    // };
+    // DrawText(TextFormat("MODE: %s", playModeStr[playMode]), x, y + (++row) * 20, 20, DARKGRAY);
 
     // // animation frame
     // DrawText(TextFormat("Animation frame: %.2f", playerAnimFrame), x, y + (++row) * 20, 20, DARKGRAY);
@@ -72,8 +71,7 @@ static void DrawDebugInfo(const int x, const int y) {
     // DrawText(TextFormat("Hex direction: %d", inputs.hexMoveDir), x, y + (++row) * 20, 20, DARKGRAY);
 }
 
-void DrawDebugInputs(void)
-{
+void ddraw_inputs(void) {
     const Vector2 playerPosition = player.position;
     const Vector3 gizmoPosition = {playerPosition.x , 2.0f, playerPosition.y};
 
@@ -81,9 +79,13 @@ void DrawDebugInputs(void)
     DrawLine3D( gizmoPosition, (Vector3){gizmoPosition.x + inputs.move_vector.x * 1.5f, gizmoPosition.y, gizmoPosition.z + inputs.move_vector.y * 1.5f}, RED );
 }
 
-// Gameplay Screen Initialization logic
-void InitGameplayScreen(void)
-{
+void ddraw_chunk_info(const Chunk chunk) {
+    const Vector2 wpos = HCAToPosition(chunk.coord);
+    const Vector2 spos = GetWorldToScreen((Vector3){wpos.x, 1.0f, wpos.y}, camera);
+    DrawText(TextFormat("{%d, %d}", chunk.coord.q, chunk.coord.r), spos.x, spos.y, 20, BLACK);
+}
+
+void InitGameplayScreen(void) {
     framesCounter = 0;
     finishScreen = 0;
 
@@ -103,8 +105,7 @@ void InitGameplayScreen(void)
     player = CreatePlayer();
 
     // initialize scene
-    map = generate_map();
-    currentMap = &map;
+    map = generate_chunk((HCAxial){0});
 }
 
 void UpdateGameplayScreen(void) {
@@ -126,9 +127,9 @@ void UpdateGameplayScreen(void) {
         }
     } else {
         if (inputs.interacts) {
-            const HexCell *cell = GetMapCell(currentMap, HexCoordAdd(player.coordinate, hexDirections[player.target_direction]));
-            if ((cell->type & CELLTYPE_CAN_INTERACT) != 0) {
-                if ((cell->type & CELLTYPE_CAN_BUILD) != 0) {
+            const Tile *cell = get_chunk_tile(&map, HCAAdd(player.coordinate, hexDirections[player.target_direction]));
+            if ((cell->type & TF_CAN_INTERACT) != 0) {
+                if ((cell->type & TF_CAN_BUILD) != 0) {
                     show_build_menu = true;
                 }
             }
@@ -137,8 +138,9 @@ void UpdateGameplayScreen(void) {
 
     // update player
     MovePlayer(&player, inputs.move_vector, frame_time);
-    selectedCell = inputs.selected_cell;
     UpdatePlayer(&player, frame_time);
+
+    selectedCell = inputs.selected_cell;
 
     // update camera
     const Vector2 playerPosition = player.position;
@@ -151,21 +153,22 @@ void DrawGameplayScreen(void) {
     BeginMode3D(camera);
 
     // DrawHexGrid(20, 10);
-    DrawHexMapGrid(map);
+    // DrawHexMapGrid(map);
+    DrawChunkBoundaries(map.coord, 0.1f, BLACK);
     DrawHexWire(player.coordinate, 0.1f, BLUE); // draw actual player coordinate
 
-    // TODO: build a display setup for quick rendering?
-    for (int i = 0; i < map.sizeQ * map.sizeR; ++i) {
-        if ((map.layers[0][i].type & (CELLTYPE_CAN_INTERACT | CELLTYPE_CAN_BUILD)) != 0) {
-            const Vector2 position = HexCoordToPosition(currentMap->layers[0][i].coord);
-            DrawCube((Vector3){position.x, 0, position.y}, 0.5f, 0.5f, 0.5f, RED);
-        }
-    }
+    // // TODO: build a display setup for quick rendering?
+    // for (int i = 0; i < map.sizeQ * map.sizeR; ++i) {
+    //     if ((map.layers[0][i].type & (CELLTYPE_CAN_INTERACT | CELLTYPE_CAN_BUILD)) != 0) {
+    //         const Vector2 position = HexCoordToPosition(map.layers[0][i].coord);
+    //         DrawCube((Vector3){position.x, 0, position.y}, 0.5f, 0.5f, 0.5f, RED);
+    //     }
+    // }
 
     // DEBUG
-    DrawHex(HexCoordAdd(player.coordinate, hexDirections[player.target_direction]), -0.1f, GREEN);
+    DrawHex(HCAAdd(player.coordinate, hexDirections[player.target_direction]), -0.1f, GREEN);
     DrawHex(selectedCell, -0.2f, ORANGE);
-    DrawDebugInputs();
+    ddraw_inputs();
 
     // draw player
     // DrawModel(playerModel, (Vector3){playerPosition.x + GRID_OFFSET_X, 0, playerPosition.y + GRID_OFFSET_Y} , 2.0f, WHITE);
@@ -189,18 +192,17 @@ void DrawGameplayScreen(void) {
     }
 
     // DEBUG
-    DrawDebugInfo(10, 30);
+    ddraw_info(10, 30);
+    ddraw_chunk_info(map);
 }
 
 // Gameplay Screen Unload logic
-void UnloadGameplayScreen(void)
-{
-    // DeleteHexMap(map);
+void UnloadGameplayScreen(void) {
+    delete_chunk(&map);
     UnloadPlayerResources();
 }
 
 // Gameplay Screen should finish?
-int FinishGameplayScreen(void)
-{
+int FinishGameplayScreen(void) {
     return finishScreen;
 }
