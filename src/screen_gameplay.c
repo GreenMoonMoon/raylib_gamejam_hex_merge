@@ -110,30 +110,28 @@ void InitGameplayScreen(void)
     currentMap = &map;
 }
 
-// Gameplay Screen Update logic
-void UpdateGameplayScreen(void)
-{
-    const float frameTime = GetFrameTime();
+void UpdateGameplayScreen(void) {
+    const float frame_time = GetFrameTime();
 
-    inputs = ProcessInputs(player.coordinate);
-    if (inputs.hasTargeted) { selectedCell = inputs.selectedCell; }
+    inputs = ProcessInputs(inputs, player.coordinate);
+    MovePlayer(&player, inputs.moveVector, frame_time);
 
-    // FIXME: this seems a bit convoluted...
-    if (inputs.changeMode != PLAYMODE_NONE) {
-        if (inputs.changeMode == playMode) {
-            playMode = PLAYMODE_DEFAULT;
-        } else {
-            playMode = inputs.changeMode;
-        }
-    }
-
+    // if (inputs.hasTargeted) { selectedCell = inputs.selectedCell; }
+    // // FIXME: this seems a bit convoluted...
+    // if (inputs.changeMode != PLAYMODE_NONE) {
+    //     if (inputs.changeMode == playMode) {
+    //         playMode = PLAYMODE_DEFAULT;
+    //     } else {
+    //         playMode = inputs.changeMode;
+    //     }
+    // }
 
     // update player
-    UpdatePlayer(&player, inputs, frameTime);
+    UpdatePlayer(&player, frame_time);
 
     // update camera
     const Vector2 playerPosition = player.position;
-    camera.target = Vector3Lerp(camera.target, (Vector3){playerPosition.x, 0, playerPosition.y}, CAMERA_SPEED * frameTime);
+    camera.target = Vector3Lerp(camera.target, (Vector3){playerPosition.x, 0, playerPosition.y}, CAMERA_SPEED * frame_time);
     camera.position = Vector3Add(camera.target, cameraOffset);
 }
 
@@ -156,7 +154,7 @@ void DrawGameplayScreen(void)
 
     // DEBUG
     DrawHex(selectedCell, -0.2f, RED);
-    // DrawDebugInputs();
+    DrawDebugInputs();
 
     // draw player
     // DrawModel(playerModel, (Vector3){playerPosition.x + GRID_OFFSET_X, 0, playerPosition.y + GRID_OFFSET_Y} , 2.0f, WHITE);

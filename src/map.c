@@ -50,6 +50,10 @@ bool CheckMapCollision(const HexCoord coord) {
     return false;
 }
 
+bool IsMapCellFree(HexMap *map, HexCoord coord) {
+    return true;
+}
+
 HexCoord PathNextMapCoordinate(const HexCoord from, const HexCoord to) {
     struct Cell {
         int from;

@@ -7,6 +7,7 @@
 #include "map.h"
 
 #define MOVE_TIME 0.25f
+#define MOVE_SPEED 5.0f
 #define DEFAULT_ANIM_SPEED 24
 #define STEP_SOUND_DELAY 0.35f
 
@@ -20,8 +21,8 @@ static Sound stepSound = { 0 };
 static float stepSoundTimer = 0;
 
 // used for move interpolation
-static Vector2 lastPlayerPosition;
-static Vector2 nextPlayerPosition;
+static Vector2 last_player_position;
+static Vector2 next_player_position;
 static float moveFrame;
 
 static void stopPlayer(Player *player) {
@@ -57,95 +58,52 @@ Player CreatePlayer(void)
 {
     const Player player = {
         .state = PS_IDLE,
+        .next_state = PS_IDLE,
         .model = playerModel,
         .animations = playerAnimations,
         .currentAnimation = 1,
         .animationFrame = 0,
         .animationSpeed = DEFAULT_ANIM_SPEED,
+        .can_move = true,
         .coordinate = (HexCoord){0, 0},
-        .targetCoordinate = (HexCoord){0, 0},
+        .target_direction = HD_NORTH,
         .position = HexCoordToPosition((HexCoord){0, 0}),
         .rotation = PI
     };
     return player;
 }
 
-void UpdatePlayer(Player *player, const Inputs inputs, const float frameTime)
-{
+void UpdatePlayer(Player *player, const float frame_time) {
     switch (player->state) {
         case PS_MOVING:
-            // play step sound
-            stepSoundTimer -= frameTime;
-            if (stepSoundTimer <= 0) {
-                PlaySound(stepSound);
-                stepSoundTimer = STEP_SOUND_DELAY;
-            }
-
-            if (moveFrame < MOVE_TIME) { // if the movement isn't finished, update position
-                moveFrame += frameTime;
-                player->position = Vector2Lerp(lastPlayerPosition, nextPlayerPosition, moveFrame / MOVE_TIME);
-            } else {
-                moveFrame = 0; // reset movement
-
-                // if movement is finished check if the inputs ask for a movement
-                if (inputs.shouldMove) {
-                    const HexCoord nextCoordinate = GetMapNeighbor(player->coordinate, inputs.hexMoveDir);
-                    if (!CheckMapCollision(nextCoordinate)) {
-                        lastPlayerPosition = HexCoordToPosition(player->coordinate);
-                        player->coordinate = nextCoordinate;
-                        nextPlayerPosition = HexCoordToPosition(player->coordinate);
-
-                        player->rotation = Vector2LineAngle(lastPlayerPosition, nextPlayerPosition);
-                    } else { stopPlayer(player); }
-                } else if (inputs.hasTargeted) {
-                    // if (!HexCoordEqual(player->coordinate, player->targetCoordinate)) {
-                    //     const HexCoord nextCoordinate = PathNextMapCoordinate(player->coordinate, player->targetCoordinate);
-                    //
-                    //     lastPlayerPosition = HexCoordToPosition(player->coordinate);
-                    //     player->coordinate = nextCoordinate;
-                    //     nextPlayerPosition = HexCoordToPosition(player->coordinate);
-                    //
-                    //     player->rotation = Vector2LineAngle(lastPlayerPosition, nextPlayerPosition);
-                    // } else {
-                    //     stopPlayer(player);
-                    // }
-                } else { stopPlayer(player); }
+            switch (player->next_state) {
+                case PS_IDLE:
+                    player->state = PS_IDLE;
+                    player->currentAnimation = 1;
+                    player->animationSpeed = DEFAULT_ANIM_SPEED;
+                    break;
+                case PS_MOVING:
+                    // play step sound
+                    stepSoundTimer -= frame_time;
+                    if (stepSoundTimer <= 0) {
+                        PlaySound(stepSound);
+                        stepSoundTimer = STEP_SOUND_DELAY;
+                    }
+                    break;
             }
             break;
         case PS_IDLE:
-            if (inputs.shouldMove) {
-                const HexCoord nextCoordinate = GetMapNeighbor(player->coordinate, inputs.hexMoveDir);
-                if (!CheckMapCollision(nextCoordinate)) {
+            switch (player->next_state) {
+                case PS_MOVING:
                     player->state = PS_MOVING;
-
-                    // set the running animation
-                    player->currentAnimation = 3;
-                    player->animationSpeed = 48; // double speed
                     player->animationFrame = 0;
-
-                    lastPlayerPosition = HexCoordToPosition(player->coordinate);
-                    player->coordinate = nextCoordinate;
-                    nextPlayerPosition = HexCoordToPosition(player->coordinate);
-
-                    player->rotation = Vector2LineAngle(lastPlayerPosition, nextPlayerPosition);
-                }
-            } else if (inputs.hasTargeted) {
-                // player->state = PS_MOVING;
-                //
-                // // set the running animation
-                // player->currentAnimation = 3;
-                // player->animationSpeed = 48; // double speed
-                // player->animationFrame = 0;
-                //
-                // player->targetCoordinate = inputs.touchedCell;
-                // const HexCoord nextCoordinate = PathNextMapCoordinate(player->coordinate, player->targetCoordinate);
-                //
-                // lastPlayerPosition = HexCoordToPosition(player->coordinate);
-                // player->coordinate = nextCoordinate;
-                // nextPlayerPosition = HexCoordToPosition(player->coordinate);
-                //
-                // player->rotation = Vector2LineAngle(lastPlayerPosition, nextPlayerPosition);
+                    player->currentAnimation = 3;
+                    player->animationSpeed = DEFAULT_ANIM_SPEED * 2.0f;
+                    break;
+                default:
+                    break;
             }
+            break;
         default:
             break;
     }
@@ -153,8 +111,22 @@ void UpdatePlayer(Player *player, const Inputs inputs, const float frameTime)
     // update player model
     // -- update animation
     player->animationFrame = fmodf(
-        player->animationFrame + frameTime * player->animationSpeed,
+        player->animationFrame + frame_time * player->animationSpeed,
         (float)player->animations[player->currentAnimation].keyframeCount
     );
     UpdateModelAnimation(player->model, player->animations[player->currentAnimation], player->animationFrame);
 }
+
+void MovePlayer(Player *player, const Vector2 movement, const float frame_time) {
+    if (Vector2LengthSqr(movement) > 0.1f && player->can_move) {
+        player->next_state = PS_MOVING;
+        const Vector2 next_position = Vector2Add(player->position, Vector2Scale(movement, frame_time * MOVE_SPEED));
+        player->rotation = Vector2LineAngle(next_position, player->position) + PI;
+        player->position = next_position;
+
+        player->coordinate = PositionToHexCoord(player->position);
+    } else {
+        player->next_state = PS_IDLE;
+    }
+}
+

@@ -23,7 +23,7 @@ typedef enum PlayMode {
 
 typedef struct Inputs {
     // InputState state;
-    bool shouldMove;
+    bool move;
     bool hasTargeted;
     Vector2 moveVector;
     HexDirection hexMoveDir;
@@ -31,6 +31,6 @@ typedef struct Inputs {
     PlayMode changeMode;
 } Inputs;
 
-Inputs ProcessInputs(HexCoord playerCoordinate);
+Inputs ProcessInputs(Inputs last_inputs, HexCoord playerCoordinate);
 
 #endif //RAYLIB_GAME_TEMPLATE_INPUT_H

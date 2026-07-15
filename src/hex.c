@@ -47,8 +47,9 @@ Vector2 HexCoordToPosition(const HexCoord coord) {
 }
 
 HexCoord PositionToHexCoord(const Vector2 position) {
-    const float fractional_q = SQRT_3 / 3.0f * position.y - 1.0f / 3.0f * position.x;
-    const float fractional_r = 2.0f / 3.0f * position.x;
+    const Vector2 pos = {position.x - GRID_OFFSET_X, position.y - GRID_OFFSET_Y};
+    const float fractional_q = SQRT_3 / 3.0f * pos.y - 1.0f / 3.0f * pos.x;
+    const float fractional_r = 2.0f / 3.0f * pos.x;
 
     return HexCoordRound(fractional_q, fractional_r);
 }

@@ -16,13 +16,18 @@ typedef enum PlayerState {
 
 typedef struct Player {
     PlayerState state;
+    PlayerState next_state;
+
     Model model;
     ModelAnimation *animations;
     int currentAnimation;
     float animationFrame;
     float animationSpeed;
+
+    bool can_move;
     HexCoord coordinate;
-    HexCoord targetCoordinate;
+    HexDirection target_direction;
+
     Vector2 position;
     float rotation;
 } Player;
@@ -33,6 +38,8 @@ void UnloadPlayerResources(void);
 
 Player CreatePlayer(void);
 
-void UpdatePlayer(Player *player, Inputs inputs, float frameTime);
+void UpdatePlayer(Player *player, float frame_time);
+
+void MovePlayer(Player *player, Vector2 movement, float frame_time);
 
 #endif //RAYLIB_GAME_TEMPLATE_PLAYER_H

@@ -36,4 +36,6 @@ bool CheckMapCollision(HexCoord coord);
 
 // HexCoord PathNextMapCoordinate(HexCoord from, HexCoord to);
 
+bool IsMapCellFree(HexMap *map, HexCoord coord);
+
 #endif //RAYLIB_GAMEJAM_ENTRY_MAP_H

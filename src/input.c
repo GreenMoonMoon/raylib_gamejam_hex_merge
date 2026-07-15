@@ -24,7 +24,7 @@ static Vector2 GetScreenToGround(const Vector2 screenPosition) {
     return (Vector2){worldPosition.x, worldPosition.z};
 }
 
-static void ProcessTouchInputs(Inputs *inputs, HexCoord playerCoordinate) {
+static void ProcessTouchInputs(Inputs *inputs, const Inputs last_inputs, const HexCoord playerCoordinate) {
     // GESTURES
     const int currentGesture = GetGestureDetected();
     const Vector2 touchPosition = GetTouchPosition(0);
@@ -36,7 +36,7 @@ static void ProcessTouchInputs(Inputs *inputs, HexCoord playerCoordinate) {
         // if it is a new touch event, check if the player is trying to drag the player character or select a destination
         if (lastGesture == GESTURE_NONE) {
             // get the cell coordinate from the touch position
-            inputs->selectedCell = PositionToHexCoord((Vector2){touchWorldPosition.x - GRID_OFFSET_X, touchWorldPosition.y - GRID_OFFSET_Y});
+            inputs->selectedCell = PositionToHexCoord((Vector2){touchWorldPosition.x, touchWorldPosition.y});
             if (HexCoordEqual(inputs->selectedCell, playerCoordinate)) {
                 state = IS_TOUCH_DRAG;
             } else {
@@ -59,8 +59,7 @@ static void ProcessTouchInputs(Inputs *inputs, HexCoord playerCoordinate) {
     lastGesture = currentGesture;
 }
 
-static void ProcessKeyboardInputs(Inputs *inputs, HexCoord playerCoordinate) {
-    // KEYBOARD
+static void ProcessKeyboardInputs(Inputs *inputs, const Inputs last_inputs, const HexCoord playerCoordinate) {
     // // TODO: buffer 2 or 3 frame inputs, then calculate the angle and divide by 6 directions to use in a switch statement
     Vector2 keyMoveInput = {
         IsKeyDown(KEY_D) - IsKeyDown(KEY_A),
@@ -69,9 +68,10 @@ static void ProcessKeyboardInputs(Inputs *inputs, HexCoord playerCoordinate) {
 
     if (Vector2LengthSqr(keyMoveInput) > MOVE_INPUT_CUTOFF) {
         state = IS_KEYBOARD_DPAD;
+        inputs->move = true;
 
         keyMoveInput = Vector2Normalize(keyMoveInput);
-        inputs->moveVector = Vector2Lerp(inputs->moveVector, keyMoveInput, 0.25f);
+        inputs->moveVector = Vector2Lerp(last_inputs.moveVector, keyMoveInput, 0.25f);
     } else if (state == IS_KEYBOARD_DPAD) {
         state = IS_NONE;
         inputs->moveVector = (Vector2){0};
@@ -80,14 +80,14 @@ static void ProcessKeyboardInputs(Inputs *inputs, HexCoord playerCoordinate) {
     // target a cell
     if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
         const Vector2 clickWorldPosition = GetScreenToGround(GetMousePosition());
-        inputs->selectedCell = PositionToHexCoord((Vector2){clickWorldPosition.x - GRID_OFFSET_X, clickWorldPosition.y - GRID_OFFSET_Y});
+        inputs->selectedCell = PositionToHexCoord((Vector2){clickWorldPosition.x, clickWorldPosition.y});
         inputs->hasTargeted = true;
     }
 
     switch (state) {
         case IS_TOUCH_DRAG:
         case IS_KEYBOARD_DPAD:
-            inputs->shouldMove = true;
+            inputs->move = true;
             inputs->hexMoveDir = (int)roundf(atan2f(-inputs->moveVector.x, inputs->moveVector.y) / M_PI_3) + 3;
             inputs->hexMoveDir = inputs->hexMoveDir % 6;
             break;
@@ -110,17 +110,18 @@ static void ProcessKeyboardInputs(Inputs *inputs, HexCoord playerCoordinate) {
     }
 }
 
-static void ProcessGamepadInputs(Inputs *inputs, HexCoord playerCoordinate) {
+static void ProcessGamepadInputs(Inputs *inputs, const Inputs last_inputs, const HexCoord playerCoordinate) {
 }
 
-Inputs ProcessInputs(const HexCoord playerCoordinate) {
+Inputs ProcessInputs(const Inputs last_inputs, const HexCoord playerCoordinate) {
     state = IS_NONE;
+
     Inputs inputs = {0};
-    // ProcessTouchInputs(&inputs, playerCoordinate);
+    // ProcessTouchInputs(&inputs, last_inputs, playerCoordinate);
 
-    ProcessKeyboardInputs(&inputs, playerCoordinate);
+    ProcessKeyboardInputs(&inputs, last_inputs, playerCoordinate);
 
-    // ProcessGamepadInputs(&inputs, playerCoordinate);
+    // ProcessGamepadInputs(&inputs, last_inputs, playerCoordinate);
 
     return inputs;
 }
