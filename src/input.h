@@ -31,6 +31,6 @@ typedef struct Inputs {
     PlayMode changeMode;
 } Inputs;
 
-Inputs ProcessInputs(Inputs last_inputs, HexCoord playerCoordinate);
+void ProcessInputs(Inputs *inputs);
 
 #endif //RAYLIB_GAME_TEMPLATE_INPUT_H

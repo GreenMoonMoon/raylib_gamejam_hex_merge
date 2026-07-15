@@ -6,6 +6,8 @@
 #include "raymath.h"
 #include "map.h"
 
+#define M_PI_3 1.0471975512f
+
 #define MOVE_TIME 0.25f
 #define MOVE_SPEED 5.0f
 #define DEFAULT_ANIM_SPEED 24
@@ -125,6 +127,8 @@ void MovePlayer(Player *player, const Vector2 movement, const float frame_time) 
         player->position = next_position;
 
         player->coordinate = PositionToHexCoord(player->position);
+
+        player->target_direction = ((int)roundf(atan2f(-movement.x, movement.y) / M_PI_3) + 3) % HD_COUNT;
     } else {
         player->next_state = PS_IDLE;
     }

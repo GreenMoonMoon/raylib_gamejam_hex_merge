@@ -113,7 +113,7 @@ void InitGameplayScreen(void)
 void UpdateGameplayScreen(void) {
     const float frame_time = GetFrameTime();
 
-    inputs = ProcessInputs(inputs, player.coordinate);
+    ProcessInputs(&inputs);
     MovePlayer(&player, inputs.moveVector, frame_time);
 
     // if (inputs.hasTargeted) { selectedCell = inputs.selectedCell; }
@@ -153,7 +153,8 @@ void DrawGameplayScreen(void)
     }
 
     // DEBUG
-    DrawHex(selectedCell, -0.2f, RED);
+    DrawHex(HexCoordAdd(player.coordinate, hexDirections[player.target_direction]), -0.1f, GREEN);
+    DrawHex(selectedCell, -0.2f, ORANGE);
     DrawDebugInputs();
 
     // draw player

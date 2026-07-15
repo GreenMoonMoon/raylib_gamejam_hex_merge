@@ -24,7 +24,7 @@ static Vector2 GetScreenToGround(const Vector2 screenPosition) {
     return (Vector2){worldPosition.x, worldPosition.z};
 }
 
-static void ProcessTouchInputs(Inputs *inputs, const Inputs last_inputs, const HexCoord playerCoordinate) {
+static void ProcessTouchInputs(Inputs *inputs, const HexCoord playerCoordinate) {
     // GESTURES
     const int currentGesture = GetGestureDetected();
     const Vector2 touchPosition = GetTouchPosition(0);
@@ -59,7 +59,7 @@ static void ProcessTouchInputs(Inputs *inputs, const Inputs last_inputs, const H
     lastGesture = currentGesture;
 }
 
-static void ProcessKeyboardInputs(Inputs *inputs, const Inputs last_inputs, const HexCoord playerCoordinate) {
+static void ProcessKeyboardInputs(Inputs *inputs) {
     // // TODO: buffer 2 or 3 frame inputs, then calculate the angle and divide by 6 directions to use in a switch statement
     Vector2 keyMoveInput = {
         IsKeyDown(KEY_D) - IsKeyDown(KEY_A),
@@ -67,13 +67,9 @@ static void ProcessKeyboardInputs(Inputs *inputs, const Inputs last_inputs, cons
     };
 
     if (Vector2LengthSqr(keyMoveInput) > MOVE_INPUT_CUTOFF) {
-        state = IS_KEYBOARD_DPAD;
-        inputs->move = true;
-
         keyMoveInput = Vector2Normalize(keyMoveInput);
-        inputs->moveVector = Vector2Lerp(last_inputs.moveVector, keyMoveInput, 0.25f);
-    } else if (state == IS_KEYBOARD_DPAD) {
-        state = IS_NONE;
+        inputs->moveVector = Vector2Lerp(inputs->moveVector, keyMoveInput, 0.25f);
+    } else {
         inputs->moveVector = (Vector2){0};
     }
 
@@ -84,19 +80,6 @@ static void ProcessKeyboardInputs(Inputs *inputs, const Inputs last_inputs, cons
         inputs->hasTargeted = true;
     }
 
-    switch (state) {
-        case IS_TOUCH_DRAG:
-        case IS_KEYBOARD_DPAD:
-            inputs->move = true;
-            inputs->hexMoveDir = (int)roundf(atan2f(-inputs->moveVector.x, inputs->moveVector.y) / M_PI_3) + 3;
-            inputs->hexMoveDir = inputs->hexMoveDir % 6;
-            break;
-        case IS_TOUCH_SELECT:
-            inputs->hasTargeted = true;
-            if (HexCoordEqual(inputs->selectedCell, playerCoordinate)) { state = IS_NONE; }
-        case IS_NONE:
-            break;
-    }
     lastKeyMoveInput = keyMoveInput;
 
     if (IsKeyPressed(KEY_B)) {
@@ -110,18 +93,11 @@ static void ProcessKeyboardInputs(Inputs *inputs, const Inputs last_inputs, cons
     }
 }
 
-static void ProcessGamepadInputs(Inputs *inputs, const Inputs last_inputs, const HexCoord playerCoordinate) {
+static void ProcessGamepadInputs(Inputs *inputs) {
 }
 
-Inputs ProcessInputs(const Inputs last_inputs, const HexCoord playerCoordinate) {
+void ProcessInputs(Inputs *inputs) {
     state = IS_NONE;
 
-    Inputs inputs = {0};
-    // ProcessTouchInputs(&inputs, last_inputs, playerCoordinate);
-
-    ProcessKeyboardInputs(&inputs, last_inputs, playerCoordinate);
-
-    // ProcessGamepadInputs(&inputs, last_inputs, playerCoordinate);
-
-    return inputs;
+    ProcessKeyboardInputs(inputs);
 }
