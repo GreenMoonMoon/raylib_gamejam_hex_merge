@@ -78,7 +78,7 @@ void DrawDebugInputs(void)
     const Vector3 gizmoPosition = {playerPosition.x , 2.0f, playerPosition.y};
 
     DrawCircle3D(gizmoPosition, 1.5f, (Vector3){1.0f, 0, 0}, 90, DARKBLUE);
-    DrawLine3D( gizmoPosition, (Vector3){gizmoPosition.x + inputs.moveVector.x * 1.5f, gizmoPosition.y, gizmoPosition.z + inputs.moveVector.y * 1.5f}, RED );
+    DrawLine3D( gizmoPosition, (Vector3){gizmoPosition.x + inputs.move_vector.x * 1.5f, gizmoPosition.y, gizmoPosition.z + inputs.move_vector.y * 1.5f}, RED );
 }
 
 // Gameplay Screen Initialization logic
@@ -110,21 +110,22 @@ void InitGameplayScreen(void)
 void UpdateGameplayScreen(void) {
     const float frame_time = GetFrameTime();
 
+    // reset transient values
+    inputs.interacts = false;
+    inputs.close = false;
+    inputs.toggle_build = false;
     ProcessInputs(&inputs);
 
     if (inputs.toggle_build) {
-        inputs.toggle_build = false;
         show_build_menu = !show_build_menu;
     }
 
     if (show_build_menu) {
         if (inputs.close) {
-            inputs.close = false;
             show_build_menu = false;
         }
     } else {
         if (inputs.interacts) {
-            inputs.interacts = false;
             const HexCell *cell = GetMapCell(currentMap, HexCoordAdd(player.coordinate, hexDirections[player.target_direction]));
             if ((cell->type & CELLTYPE_CAN_INTERACT) != 0) {
                 if ((cell->type & CELLTYPE_CAN_BUILD) != 0) {
@@ -135,8 +136,8 @@ void UpdateGameplayScreen(void) {
     }
 
     // update player
-    MovePlayer(&player, inputs.moveVector, frame_time);
-    selectedCell = inputs.selectedCell;
+    MovePlayer(&player, inputs.move_vector, frame_time);
+    selectedCell = inputs.selected_cell;
     UpdatePlayer(&player, frame_time);
 
     // update camera
@@ -146,8 +147,7 @@ void UpdateGameplayScreen(void) {
 }
 
 // Gameplay Screen Draw logic
-void DrawGameplayScreen(void)
-{
+void DrawGameplayScreen(void) {
     BeginMode3D(camera);
 
     // DrawHexGrid(20, 10);

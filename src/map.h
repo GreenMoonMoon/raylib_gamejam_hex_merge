@@ -32,7 +32,7 @@ void delete_map(HexMap *map);
 
 HexCoord GetMapNeighbor(HexCoord coord, HexDirection neighborDirection);
 
-HexCell *GetMapCell(HexMap *map, HexCoord coord);
+HexCell *GetMapCell(const HexMap *map, HexCoord coord);
 
 /// @param coord cell coordinate to test
 /// @return true if there is a collision

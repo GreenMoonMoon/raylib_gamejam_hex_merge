@@ -22,9 +22,10 @@ typedef enum PlayMode {
 } PlayMode;
 
 typedef struct Inputs {
-    Vector2 moveVector;
-    HexCoord selectedCell;
-    PlayMode changeMode;
+    HexCoord selected_cell;
+    Vector2 move_vector;
+    PlayMode change_mode;
+
     bool interacts;
     bool close;
     bool toggle_build;

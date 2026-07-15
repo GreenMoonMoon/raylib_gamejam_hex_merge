@@ -44,8 +44,8 @@ HexCoord GetMapNeighbor(const HexCoord coord, const HexDirection neighborDirecti
     return HexCoordAdd(coord, hexDirections[neighborDirection]);
 }
 
-HexCell * GetMapCell(HexMap *map, HexCoord coord) {
-
+HexCell * GetMapCell(const HexMap *map, const HexCoord coord) {
+    return &map->layers[0][HEX_COORD_INDEX(map, coord)];
 }
 
 bool CheckMapCollision(const HexMap *map, const HexCoord coord) {
