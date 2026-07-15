@@ -22,13 +22,10 @@ typedef enum PlayMode {
 } PlayMode;
 
 typedef struct Inputs {
-    // InputState state;
-    bool move;
-    bool hasTargeted;
     Vector2 moveVector;
-    HexDirection hexMoveDir;
     HexCoord selectedCell;
     PlayMode changeMode;
+    bool interacts;
 } Inputs;
 
 void ProcessInputs(Inputs *inputs);

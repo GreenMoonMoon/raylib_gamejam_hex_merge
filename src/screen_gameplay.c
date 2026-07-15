@@ -80,8 +80,6 @@ void DrawDebugInputs(void)
 
     DrawCircle3D(gizmoPosition, 1.5f, (Vector3){1.0f, 0, 0}, 90, DARKBLUE);
     DrawLine3D( gizmoPosition, (Vector3){gizmoPosition.x + inputs.moveVector.x * 1.5f, gizmoPosition.y, gizmoPosition.z + inputs.moveVector.y * 1.5f}, RED );
-    const float angle = (float)(inputs.hexMoveDir + 3) * 1.0471975512f;
-    DrawLine3D( gizmoPosition, Vector3Add(gizmoPosition, (Vector3){sinf(-angle), 0, cosf(angle)}), BLUE );
 }
 
 // Gameplay Screen Initialization logic
@@ -115,6 +113,8 @@ void UpdateGameplayScreen(void) {
 
     ProcessInputs(&inputs);
     MovePlayer(&player, inputs.moveVector, frame_time);
+
+    selectedCell = inputs.selectedCell;
 
     // if (inputs.hasTargeted) { selectedCell = inputs.selectedCell; }
     // // FIXME: this seems a bit convoluted...

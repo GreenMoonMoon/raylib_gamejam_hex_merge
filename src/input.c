@@ -77,10 +77,13 @@ static void ProcessKeyboardInputs(Inputs *inputs) {
     if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
         const Vector2 clickWorldPosition = GetScreenToGround(GetMousePosition());
         inputs->selectedCell = PositionToHexCoord((Vector2){clickWorldPosition.x, clickWorldPosition.y});
-        inputs->hasTargeted = true;
     }
 
     lastKeyMoveInput = keyMoveInput;
+
+    if (IsKeyPressed(KEY_E)) {
+        inputs->interacts = true;
+    }
 
     if (IsKeyPressed(KEY_B)) {
         // TODO: enter build mode
