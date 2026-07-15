@@ -49,24 +49,24 @@ void DrawHexMapGrid(const HexMap map) {
     rlBegin(RL_LINES);
     rlColor4ub(0, 0, 0, 255);
 
+
     for (int r = 0; r < map.sizeR; ++r) {
         for (int q = 0; q < map.sizeQ; ++q) {
-            if (map.cells[q * map.sizeQ + r] > 0) { continue; }
-            const Vector2 pos = HexCoordToPosition((HexCoord){q, r});
-            rlHexWire(pos.x + GRID_OFFSET_X, pos.y + GRID_OFFSET_Y);
+            const Vector2 pos = HexCoordToPosition((HexCoord){q - (r/2), r});
+            rlHexWire(pos.x, pos.y);
         }
     }
 
     rlEnd();
 
     rlBegin(RL_TRIANGLES);
-    for (int r = 0; r < map.sizeR; ++r) {
-        for (int q = 0; q < map.sizeQ; ++q) {
-            if (map.cells[q * map.sizeQ + r] != 1) { continue; }
-            const Vector2 pos = HexCoordToPosition((HexCoord){q, r});
-            rlHexPolygons(pos.x + GRID_OFFSET_X, pos.y + GRID_OFFSET_Y);
-        }
-    }
+    // for (int r = 0; r < map.sizeR; ++r) {
+    //     for (int q = 0; q < map.sizeQ; ++q) {
+    //         if (map.cells[q * map.sizeQ + r] != 1) { continue; }
+    //         const Vector2 pos = HexCoordToPosition((HexCoord){q, r});
+    //         rlHexPolygons(pos.x + GRID_OFFSET_X, pos.y + GRID_OFFSET_Y);
+    //     }
+    // }
     rlEnd();
     rlPopMatrix();
 }
@@ -100,7 +100,7 @@ void DrawHex(const HexCoord coord, const float height, const Color color) {
     rlColor4ub(color.r, color.g, color.b, color.a);
 
     const Vector2 position = HexCoordToPosition(coord);
-    rlHexPolygons(position.x + GRID_OFFSET_X, position.y + GRID_OFFSET_Y);
+    rlHexPolygons(position.x, position.y);
 
     rlEnd();
     rlPopMatrix();
@@ -113,7 +113,7 @@ void DrawHexWire(const HexCoord coord, const float height, const Color color) {
     rlColor4ub(color.r, color.g, color.b, color.a);
 
     const Vector2 position = HexCoordToPosition(coord);
-    rlHexWire(position.x + GRID_OFFSET_X, position.y + GRID_OFFSET_Y);
+    rlHexWire(position.x, position.y);
 
     rlEnd();
     rlPopMatrix();

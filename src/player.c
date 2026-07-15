@@ -4,6 +4,7 @@
 
 #include "player.h"
 #include "raymath.h"
+#include "map.h"
 
 #define MOVE_TIME 0.25f
 #define DEFAULT_ANIM_SPEED 24
@@ -87,7 +88,7 @@ void UpdatePlayer(Player *player, const Inputs inputs, const float frameTime)
                 moveFrame = 0; // reset movement
 
                 // if movement is finished check if the inputs ask for a movement
-                if (inputs.state == IS_TOUCH_DRAG || inputs.state == IS_KEYBOARD_DPAD) {
+                if (inputs.shouldMove) {
                     const HexCoord nextCoordinate = GetMapNeighbor(player->coordinate, inputs.hexMoveDir);
                     if (!CheckMapCollision(nextCoordinate)) {
                         lastPlayerPosition = HexCoordToPosition(player->coordinate);
@@ -96,7 +97,7 @@ void UpdatePlayer(Player *player, const Inputs inputs, const float frameTime)
 
                         player->rotation = Vector2LineAngle(lastPlayerPosition, nextPlayerPosition);
                     } else { stopPlayer(player); }
-                } else if (inputs.state == IS_TOUCH_SELECT) {
+                } else if (inputs.hasTargeted) {
                     // if (!HexCoordEqual(player->coordinate, player->targetCoordinate)) {
                     //     const HexCoord nextCoordinate = PathNextMapCoordinate(player->coordinate, player->targetCoordinate);
                     //
@@ -112,7 +113,7 @@ void UpdatePlayer(Player *player, const Inputs inputs, const float frameTime)
             }
             break;
         case PS_IDLE:
-            if (inputs.state == IS_TOUCH_DRAG || inputs.state == IS_KEYBOARD_DPAD) {
+            if (inputs.shouldMove) {
                 const HexCoord nextCoordinate = GetMapNeighbor(player->coordinate, inputs.hexMoveDir);
                 if (!CheckMapCollision(nextCoordinate)) {
                     player->state = PS_MOVING;
@@ -128,7 +129,7 @@ void UpdatePlayer(Player *player, const Inputs inputs, const float frameTime)
 
                     player->rotation = Vector2LineAngle(lastPlayerPosition, nextPlayerPosition);
                 }
-            } else if (inputs.state == IS_TOUCH_SELECT) {
+            } else if (inputs.hasTargeted) {
                 // player->state = PS_MOVING;
                 //
                 // // set the running animation

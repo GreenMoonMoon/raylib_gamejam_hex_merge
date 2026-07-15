@@ -4,9 +4,11 @@
 #include "raymath.h"
 #include "screens.h"
 #include "hex.h"
+#include "map.h"
 #include "input.h"
 #include "player.h"
 #include "draw_utils.h"
+#include "extern/stb_ds.h"
 
 #define CAMERA_SPEED 4.0f
 
@@ -16,8 +18,11 @@
 static int framesCounter = 0;
 static int finishScreen = 0;
 
+static PlayMode playMode = PLAYMODE_DEFAULT;
+
 // scene
 static HexMap map;
+static HexCoord selectedCell;
 
 // camera
 Camera3D camera;
@@ -42,23 +47,30 @@ static float LerpAngle(const float a, const float b, const float alpha)
 
 static void DrawDebugInfo(const int x, const int y) {
     int row = 0;
+    // play mode
+    const char *playModeStr[] = {
+        "INVALID",
+        "Default",
+        "Build"
+    };
+    DrawText(TextFormat("MODE: %s", playModeStr[playMode]), x, y + (++row) * 20, 20, DARKGRAY);
+
     // // animation frame
     // DrawText(TextFormat("Animation frame: %.2f", playerAnimFrame), x, y + (++row) * 20, 20, DARKGRAY);
 
     // hex coordinate
-    const HexCoord playerCoordinate = player.coordinate;
-    DrawText(TextFormat("Coordinate: q:%d  r:%d", playerCoordinate.q, playerCoordinate.r), x,
-             y + (++row) * 20, 20, DARKGRAY);
+    // const HexCoord playerCoordinate = player.coordinate;
+    // DrawText(TextFormat("Coordinate: q:%d  r:%d", playerCoordinate.q, playerCoordinate.r), x, y + (++row) * 20, 20, DARKGRAY);
 
     // player state
-    const char *state_name[] = {"IDLE", "MOVING"};
-    DrawText(TextFormat("State: %s", state_name[player.state]), x, y + (++row) * 20, 20, DARKGRAY);
+    // const char *state_name[] = {"IDLE", "MOVING"};
+    // DrawText(TextFormat("State: %s", state_name[player.state]), x, y + (++row) * 20, 20, DARKGRAY);
 
     // player rotation
-    DrawText(TextFormat("Rotation: %d", (int)(player.rotation * RAD2DEG)), x, y + (++row) * 20, 20, DARKGRAY);
+    // DrawText(TextFormat("Rotation: %d", (int)(player.rotation * RAD2DEG)), x, y + (++row) * 20, 20, DARKGRAY);
 
     // hex direction
-    DrawText(TextFormat("Hex direction: %d", inputs.hexMoveDir), x, y + (++row) * 20, 20, DARKGRAY);
+    // DrawText(TextFormat("Hex direction: %d", inputs.hexMoveDir), x, y + (++row) * 20, 20, DARKGRAY);
 }
 
 void DrawDebugInputs(void)
@@ -94,16 +106,8 @@ void InitGameplayScreen(void)
     player = CreatePlayer();
 
     // initialize scene
-    map = (HexMap){10, 10};
-    map.cells = calloc(10 * 10, sizeof(HexMapCell));
+    map = generate_map();
     currentMap = &map;
-
-    // create obstacles
-    for (int i = 0; i < 6; ++i) {
-        const int q = GetRandomValue(0, 9);
-        const int r = GetRandomValue(0, 9);
-        map.cells[q * map.sizeQ + r] = 1;
-    }
 }
 
 // Gameplay Screen Update logic
@@ -111,7 +115,20 @@ void UpdateGameplayScreen(void)
 {
     const float frameTime = GetFrameTime();
 
-    ProcessInputs(&inputs, player.coordinate);
+    inputs = ProcessInputs(player.coordinate);
+    if (inputs.hasTargeted) { selectedCell = inputs.selectedCell; }
+
+    // FIXME: this seems a bit convoluted...
+    if (inputs.changeMode != PLAYMODE_NONE) {
+        if (inputs.changeMode == playMode) {
+            playMode = PLAYMODE_DEFAULT;
+        } else {
+            playMode = inputs.changeMode;
+        }
+    }
+
+
+    // update player
     UpdatePlayer(&player, inputs, frameTime);
 
     // update camera
@@ -129,15 +146,23 @@ void DrawGameplayScreen(void)
     DrawHexMapGrid(map);
     DrawHexWire(player.coordinate, 0.1f, BLUE); // draw actual player coordinate
 
+    // TODO: build a display setup for quick rendering?
+    for (int i = 0; i < arrlen(currentMap->layers[0]); ++i) {
+        if ((currentMap->layers[0][i].type & CELLTYPE_SOURCE) != 0) {
+            const Vector2 position = HexCoordToPosition(currentMap->layers[0][1].coord);
+            DrawCube((Vector3){position.x, 0, position.y}, 0.5f, 0.5f, 0.5f, RED);
+        }
+    }
+
     // DEBUG
-    DrawHex(inputs.touchedCell, -0.2f, RED);
-    DrawDebugInputs();
+    DrawHex(selectedCell, -0.2f, RED);
+    // DrawDebugInputs();
 
     // draw player
     // DrawModel(playerModel, (Vector3){playerPosition.x + GRID_OFFSET_X, 0, playerPosition.y + GRID_OFFSET_Y} , 2.0f, WHITE);
     DrawModelEx(
         player.model,
-        (Vector3){player.position.x + GRID_OFFSET_X, 0, player.position.y + GRID_OFFSET_Y},
+        (Vector3){player.position.x, 0, player.position.y},
         (Vector3){0, 1.0f, 0},
         player.rotation * RAD2DEG + 90,
         (Vector3){2.0f, 2.0f, 2.0f},
@@ -153,7 +178,7 @@ void DrawGameplayScreen(void)
 // Gameplay Screen Unload logic
 void UnloadGameplayScreen(void)
 {
-    free(map.cells);
+    // DeleteHexMap(map);
     UnloadPlayerResources();
 }
 

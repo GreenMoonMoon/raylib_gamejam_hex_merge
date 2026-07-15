@@ -15,13 +15,22 @@ typedef enum InputState {
     IS_KEYBOARD_DPAD,
 } InputState;
 
+typedef enum PlayMode {
+    PLAYMODE_NONE,
+    PLAYMODE_DEFAULT,
+    PLAYMODE_BUILD,
+} PlayMode;
+
 typedef struct Inputs {
-    InputState state;
+    // InputState state;
+    bool shouldMove;
+    bool hasTargeted;
     Vector2 moveVector;
     HexDirection hexMoveDir;
-    HexCoord touchedCell;
+    HexCoord selectedCell;
+    PlayMode changeMode;
 } Inputs;
 
-void ProcessInputs(Inputs *inputs, HexCoord playerCoordinate);
+Inputs ProcessInputs(HexCoord playerCoordinate);
 
 #endif //RAYLIB_GAME_TEMPLATE_INPUT_H

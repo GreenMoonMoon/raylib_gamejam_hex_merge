@@ -12,6 +12,13 @@
 #define GRID_OFFSET_X 0.5f
 #define GRID_OFFSET_Y 0.86603f
 
+#define SQRT_3 1.73205080757f
+#define SQRT_3_2 0.866025403785f
+
+#define OUT_OF_BOUND(C) ((C).q < 0 || (C).q >= currentMap->sizeQ || (C).r < 0 || (C).r >= currentMap->sizeR)
+#define HEX_COORD_INDEX(C) ((C).q * currentMap->sizeQ + (C).r)
+#define INDEX_HEX_COORD(I) (HexCoord){(I) / currentMap->sizeQ, (I) % currentMap->sizeQ}
+
 typedef enum HexDirection {
     HD_NORTH,
     HD_NORTH_EAST,
@@ -22,20 +29,12 @@ typedef enum HexDirection {
     HD_COUNT
 } HexDirection;
 
-typedef int HexMapCell;
-
-typedef struct HexMap {
-    int sizeQ;
-    int sizeR;
-    HexMapCell *cells;
-} HexMap;
 
 typedef struct HexCoord {
     int q, r;
 } HexCoord;
 
 extern const HexCoord hexDirections[];
-extern HexMap *currentMap;
 
 HexCoord HexCoordAdd(HexCoord a, HexCoord b);
 
@@ -53,14 +52,5 @@ bool HexCoordEqual(HexCoord a, HexCoord b);
 Vector2 HexCoordToPosition(HexCoord coord);
 
 HexCoord PositionToHexCoord(Vector2 position);
-
-HexCoord GetMapNeighbor(HexCoord coord, HexDirection neighborDirection);
-
-///
-/// @param coord cell coordinate to test
-/// @return true if there is a collision
-bool CheckMapCollision(HexCoord coord);
-
-// HexCoord PathNextMapCoordinate(HexCoord from, HexCoord to);
 
 #endif //RAYLIB_GAME_TEMPLATE_HEX_H

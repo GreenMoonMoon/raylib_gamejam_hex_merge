@@ -7,6 +7,7 @@
 
 #include "raylib.h"
 #include "hex.h"
+#include "map.h"
 
 void DrawHexMapGrid(HexMap map);
 
