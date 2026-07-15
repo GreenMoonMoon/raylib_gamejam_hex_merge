@@ -1,5 +1,3 @@
-#include <stdlib.h>
-
 #include "raylib.h"
 #include "raymath.h"
 #include "screens.h"
@@ -8,7 +6,6 @@
 #include "input.h"
 #include "player.h"
 #include "draw_utils.h"
-#include "extern/stb_ds.h"
 
 #define CAMERA_SPEED 4.0f
 
@@ -30,6 +27,8 @@ static Vector3 cameraOffset;
 
 // inputs
 static Inputs inputs;
+static bool show_build_menu = false;
+static int build_menu_cursor = 0;
 
 // player
 Player player;
@@ -76,7 +75,7 @@ static void DrawDebugInfo(const int x, const int y) {
 void DrawDebugInputs(void)
 {
     const Vector2 playerPosition = player.position;
-    const Vector3 gizmoPosition = {playerPosition.x + GRID_OFFSET_X, 2.0f, playerPosition.y + GRID_OFFSET_Y};
+    const Vector3 gizmoPosition = {playerPosition.x , 2.0f, playerPosition.y};
 
     DrawCircle3D(gizmoPosition, 1.5f, (Vector3){1.0f, 0, 0}, 90, DARKBLUE);
     DrawLine3D( gizmoPosition, (Vector3){gizmoPosition.x + inputs.moveVector.x * 1.5f, gizmoPosition.y, gizmoPosition.z + inputs.moveVector.y * 1.5f}, RED );
@@ -112,21 +111,32 @@ void UpdateGameplayScreen(void) {
     const float frame_time = GetFrameTime();
 
     ProcessInputs(&inputs);
-    MovePlayer(&player, inputs.moveVector, frame_time);
 
-    selectedCell = inputs.selectedCell;
+    if (inputs.toggle_build) {
+        inputs.toggle_build = false;
+        show_build_menu = !show_build_menu;
+    }
 
-    // if (inputs.hasTargeted) { selectedCell = inputs.selectedCell; }
-    // // FIXME: this seems a bit convoluted...
-    // if (inputs.changeMode != PLAYMODE_NONE) {
-    //     if (inputs.changeMode == playMode) {
-    //         playMode = PLAYMODE_DEFAULT;
-    //     } else {
-    //         playMode = inputs.changeMode;
-    //     }
-    // }
+    if (show_build_menu) {
+        if (inputs.close) {
+            inputs.close = false;
+            show_build_menu = false;
+        }
+    } else {
+        if (inputs.interacts) {
+            inputs.interacts = false;
+            const HexCell *cell = GetMapCell(currentMap, HexCoordAdd(player.coordinate, hexDirections[player.target_direction]));
+            if ((cell->type & CELLTYPE_CAN_INTERACT) != 0) {
+                if ((cell->type & CELLTYPE_CAN_BUILD) != 0) {
+                    show_build_menu = true;
+                }
+            }
+        }
+    }
 
     // update player
+    MovePlayer(&player, inputs.moveVector, frame_time);
+    selectedCell = inputs.selectedCell;
     UpdatePlayer(&player, frame_time);
 
     // update camera
@@ -145,9 +155,9 @@ void DrawGameplayScreen(void)
     DrawHexWire(player.coordinate, 0.1f, BLUE); // draw actual player coordinate
 
     // TODO: build a display setup for quick rendering?
-    for (int i = 0; i < arrlen(currentMap->layers[0]); ++i) {
-        if ((currentMap->layers[0][i].type & CELLTYPE_SOURCE) != 0) {
-            const Vector2 position = HexCoordToPosition(currentMap->layers[0][1].coord);
+    for (int i = 0; i < map.sizeQ * map.sizeR; ++i) {
+        if ((map.layers[0][i].type & (CELLTYPE_CAN_INTERACT | CELLTYPE_CAN_BUILD)) != 0) {
+            const Vector2 position = HexCoordToPosition(currentMap->layers[0][i].coord);
             DrawCube((Vector3){position.x, 0, position.y}, 0.5f, 0.5f, 0.5f, RED);
         }
     }
@@ -169,6 +179,14 @@ void DrawGameplayScreen(void)
     );
 
     EndMode3D();
+
+    if (show_build_menu) {
+        DrawRectangleGradientV(20, 20, 200, 400, GRAY, DARKGRAY);
+        DrawRectangleGradientV(30, 30, 85, 85, DARKBLUE, BLUE);
+
+        // draw cursor
+        DrawRectangleLines(30, 30, 85, 85, ORANGE);
+    }
 
     // DEBUG
     DrawDebugInfo(10, 30);

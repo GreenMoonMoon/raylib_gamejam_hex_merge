@@ -7,20 +7,22 @@
 
 #include "hex.h"
 
-typedef struct HexMapCell {
+#define CELLTYPE_CAN_INTERACT 0x1
+#define CELLTYPE_CAN_BUILD 0x2
+#define CELLTYPE_SOURCE 0x4
+#define CELLTYPE_OBSTACLE 0xf
+
+typedef struct HexCell {
     HexCoord coord;
-    int type;
-} HexMapCell;
+    unsigned int type;
+} HexCell;
 
-#define CELLTYPE_SOURCE 0x01
-#define CELLTYPE_OBSTACLE 0x0f
-
+// TODO: rename to HexChunk?
 typedef struct HexMap {
     int sizeQ;
     int sizeR;
 
-    HexMapCell *layers[5];
-    // HexMapCell *cells;
+    HexCell *layers[5];
 } HexMap;
 extern HexMap *currentMap;
 
@@ -30,9 +32,11 @@ void delete_map(HexMap *map);
 
 HexCoord GetMapNeighbor(HexCoord coord, HexDirection neighborDirection);
 
+HexCell *GetMapCell(HexMap *map, HexCoord coord);
+
 /// @param coord cell coordinate to test
 /// @return true if there is a collision
-bool CheckMapCollision(HexCoord coord);
+bool CheckMapCollision(const HexMap *map, HexCoord coord);
 
 // HexCoord PathNextMapCoordinate(HexCoord from, HexCoord to);
 

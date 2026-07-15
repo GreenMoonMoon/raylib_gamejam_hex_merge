@@ -26,6 +26,8 @@ typedef struct Inputs {
     HexCoord selectedCell;
     PlayMode changeMode;
     bool interacts;
+    bool close;
+    bool toggle_build;
 } Inputs;
 
 void ProcessInputs(Inputs *inputs);

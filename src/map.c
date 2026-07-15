@@ -4,7 +4,6 @@
 
 #include "map.h"
 #include <stdlib.h>
-#include "raymath.h"
 #include "extern/stb_ds.h"
 
 HexMap *currentMap;
@@ -18,14 +17,15 @@ HexMap generate_map(void) {
     };
 
     // create inlets
+    map.layers[0] = malloc(sizeof(HexCell) * 10 * 10);
+    memset(map.layers[0], 0, sizeof(HexCell) * 10 * 10);
     for (int i = 0; i < 6; ++i) {
         const int q = GetRandomValue(1, 9);
         const int r = GetRandomValue(1, 9);
-        const HexMapCell cell = {
+        map.layers[0][QR_INDEX(&map, q, r)] = (HexCell) {
             .coord = {q, r},
-            .type = CELLTYPE_SOURCE | CELLTYPE_OBSTACLE
+            .type = CELLTYPE_CAN_INTERACT | CELLTYPE_CAN_BUILD
         };
-        arrput(map.layers[0], cell);
     }
 
     return map;
@@ -44,9 +44,12 @@ HexCoord GetMapNeighbor(const HexCoord coord, const HexDirection neighborDirecti
     return HexCoordAdd(coord, hexDirections[neighborDirection]);
 }
 
-bool CheckMapCollision(const HexCoord coord) {
-    if (OUT_OF_BOUND(coord)) { return true; }
-    // return currentMap->cells[HEX_COORD_INDEX(coord)] != 0;
+HexCell * GetMapCell(HexMap *map, HexCoord coord) {
+
+}
+
+bool CheckMapCollision(const HexMap *map, const HexCoord coord) {
+    if (OUT_OF_BOUND(map, coord)) { return true; }
     return false;
 }
 
@@ -54,7 +57,7 @@ bool IsMapCellFree(HexMap *map, HexCoord coord) {
     return true;
 }
 
-HexCoord PathNextMapCoordinate(const HexCoord from, const HexCoord to) {
+HexCoord PathNextMapCoordinate(const HexMap *map, const HexCoord from, const HexCoord to) {
     struct Cell {
         int from;
         bool visited;
@@ -64,8 +67,8 @@ HexCoord PathNextMapCoordinate(const HexCoord from, const HexCoord to) {
     int fi = 0;
     struct Cell *cameFrom = calloc(currentMap->sizeQ * currentMap->sizeR, sizeof(struct Cell));
 
-    const int toIndex = HEX_COORD_INDEX(to);
-    const int fromIndex = HEX_COORD_INDEX(from);
+    const int toIndex = HEX_COORD_INDEX(map, to);
+    const int fromIndex = HEX_COORD_INDEX(map, from);
 
     int current = fromIndex;
     cameFrom[current] = (struct Cell){fromIndex, true}; // initial cell
@@ -79,12 +82,12 @@ HexCoord PathNextMapCoordinate(const HexCoord from, const HexCoord to) {
             break;
         }
 
-        const HexCoord currentCoord = INDEX_HEX_COORD(current);
+        const HexCoord currentCoord = INDEX_HEX_COORD(map, current);
         for (int i = HD_COUNT - 1; i >= 0; --i) {
             const HexCoord neighbor = GetMapNeighbor(currentCoord, i);
-            if (OUT_OF_BOUND(neighbor)) { continue; }
+            if (OUT_OF_BOUND(map, neighbor)) { continue; }
 
-            const int neighborIndex = HEX_COORD_INDEX(neighbor);
+            const int neighborIndex = HEX_COORD_INDEX(map, neighbor);
             if (!cameFrom[neighborIndex].visited) {
                 cameFrom[neighborIndex].visited = true;
                 cameFrom[neighborIndex].from = current;
@@ -99,7 +102,7 @@ HexCoord PathNextMapCoordinate(const HexCoord from, const HexCoord to) {
             prevIndex = cameFrom[prevIndex].from;
         }
         free(cameFrom);
-        return INDEX_HEX_COORD(prevIndex);
+        return INDEX_HEX_COORD(map, prevIndex);
     }
 
     free(cameFrom);

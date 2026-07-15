@@ -87,7 +87,11 @@ static void ProcessKeyboardInputs(Inputs *inputs) {
 
     if (IsKeyPressed(KEY_B)) {
         // TODO: enter build mode
-        inputs->changeMode = PLAYMODE_BUILD;
+        inputs->toggle_build = true;
+    }
+
+    if (IsKeyPressed(KEY_BACKSPACE)) {
+        inputs->close = true;
     }
 
     if (IsKeyPressed(KEY_PAUSE)) {
@@ -101,6 +105,5 @@ static void ProcessGamepadInputs(Inputs *inputs) {
 
 void ProcessInputs(Inputs *inputs) {
     state = IS_NONE;
-
     ProcessKeyboardInputs(inputs);
 }

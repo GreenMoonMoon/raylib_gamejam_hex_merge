@@ -4,8 +4,6 @@
 
 #include "hex.h"
 #include <math.h>
-#include <stdlib.h>
-#include "extern/stb_ds.h"
 
 const HexCoord hexDirections[6] = {
     {-1, 0},

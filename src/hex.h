@@ -15,9 +15,10 @@
 #define SQRT_3 1.73205080757f
 #define SQRT_3_2 0.866025403785f
 
-#define OUT_OF_BOUND(C) ((C).q < 0 || (C).q >= currentMap->sizeQ || (C).r < 0 || (C).r >= currentMap->sizeR)
-#define HEX_COORD_INDEX(C) ((C).q * currentMap->sizeQ + (C).r)
-#define INDEX_HEX_COORD(I) (HexCoord){(I) / currentMap->sizeQ, (I) % currentMap->sizeQ}
+#define OUT_OF_BOUND(M_ptr, C) ((C).q < 0 || (C).q >= (M_ptr)->sizeQ || (C).r < 0 || (C).r >= (M_ptr)->sizeR)
+#define QR_INDEX(M_ptr, Q, R) ((Q) * (M_ptr)->sizeQ + (R))
+#define HEX_COORD_INDEX(M_ptr, C) ((C).q * (M_ptr)->sizeQ + (C).r)
+#define INDEX_HEX_COORD(M_ptr, I) (HexCoord){(I) / (M_ptr)->sizeQ, (I) % (M_ptr)->sizeQ}
 
 typedef enum HexDirection {
     HD_NORTH,
