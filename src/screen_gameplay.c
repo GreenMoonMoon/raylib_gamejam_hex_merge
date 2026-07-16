@@ -128,9 +128,11 @@ void UpdateGameplayScreen(void) {
     } else {
         if (inputs.interacts) {
             const Tile *cell = get_chunk_tile(&map, AxialAdd(player.coordinate, hexDirections[player.target_direction]));
-            if ((cell->type & TF_CAN_INTERACT) != 0) {
-                if ((cell->type & TF_CAN_BUILD) != 0) {
-                    show_build_menu = true;
+            if (cell != nullptr) {
+                if ((cell->type & TF_CAN_INTERACT) != 0) {
+                    if ((cell->type & TF_CAN_BUILD) != 0) {
+                        show_build_menu = true;
+                    }
                 }
             }
         }
@@ -156,18 +158,20 @@ void DrawGameplayScreen(void) {
     DrawChunkBoundaries(map.coord, 0.1f, BLACK);
     DrawHexWire(player.coordinate, 0.1f, BLUE); // draw actual player coordinate
 
-    // // TODO: build a display setup for quick rendering?
-    // for (int i = 0; i < map.sizeQ * map.sizeR; ++i) {
-    //     if ((map.layers[0][i].type & (CELLTYPE_CAN_INTERACT | CELLTYPE_CAN_BUILD)) != 0) {
-    //         const Vector2 position = HexCoordToPosition(map.layers[0][i].coord);
-    //         DrawCube((Vector3){position.x, 0, position.y}, 0.5f, 0.5f, 0.5f, RED);
-    //     }
-    // }
+    // TODO: build a display setup for quick rendering?
+    for (int c = 0; c < CHUNK_SIZE; ++c) {
+        for (int r = c % 2; r < CHUNK_SIZE; r += 2) {
+            if ((map.layers[0][CHECKER2INDEX(c, r)].type & TF_CAN_INTERACT) != 0) {
+                const Vector2 position = CheckerToPosition((Checker){c, r});
+                DrawCube((Vector3){position.x, 0, position.y}, 0.5f, 0.5f, 0.5f, RED);
+            }
+        }
+    }
 
     // DEBUG
     DrawHex(AxialAdd(player.coordinate, hexDirections[player.target_direction]), -0.1f, GREEN);
     DrawHex(selectedCell, -0.2f, ORANGE);
-    ddraw_inputs();
+    // ddraw_inputs();
 
     // draw player
     // DrawModel(playerModel, (Vector3){playerPosition.x + GRID_OFFSET_X, 0, playerPosition.y + GRID_OFFSET_Y} , 2.0f, WHITE);

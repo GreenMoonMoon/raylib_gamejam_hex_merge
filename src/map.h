@@ -8,17 +8,17 @@
 #include "hex.h"
 
 #define CHUNK_SIZE 16
+#define HALF_CHUNK_SIZE 8
 #define CHUNK_LAYER_COUNT 1
+
+#define CHECKER2INDEX(C, R) ((C) * HALF_CHUNK_SIZE + (R) / 2)
+#define INDEX2CHECKER(I) ((Checker){(I) / HALF_CHUNK_SIZE, (I) % HALF_CHUNK_SIZE * 2})
 
 // cell flags
 #define TF_CAN_INTERACT 0x1
 #define TF_CAN_BUILD 0x2
 #define TF_SOURCE 0x4
 #define TF_OBSTACLE 0xf
-
-// #define QR_INDEX(M_ptr, Q, R) ((Q) * (M_ptr)->sizeQ + (R))
-// #define HEX_COORD_INDEX(M_ptr, C) ((C).q * (M_ptr)->sizeQ + (C).r)
-// #define INDEX_HEX_COORD(M_ptr, I) (HexCoord){(I) / (M_ptr)->sizeQ, (I) % (M_ptr)->sizeQ}
 
 typedef struct Tile {
     unsigned int type;
