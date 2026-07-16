@@ -99,23 +99,21 @@ void DrawChunkBoundaries(const Checker coord, const float height, const Color co
     rlBegin(RL_LINES);
     rlColor4ub(color.r, color.g, color.b, color.a);
 
-    const float hsize = (float)CHUNK_SIZE;
-    const Vector2 n  = CheckerToPosition((Checker){coord.col - hsize, coord.row - hsize});
-    const Vector2 ne = CheckerToPosition((Checker){coord.col - hsize, coord.row + hsize});
-    const Vector2 se = CheckerToPosition((Checker){coord.col + hsize, coord.row + hsize});
-    const Vector2 s  = CheckerToPosition((Checker){coord.col + hsize, coord.row - hsize});
+    const Vector2 tl = CheckerToPosition((Checker){coord.col, coord.row});
+    const float tile_width = (CHUNK_SIZE - 1) * 1.5f;
+    const float tile_height = (CHUNK_SIZE - 1) * SQRT_3_2;
 
-    rlVertex3f(n.x, 0, n.y);
-    rlVertex3f(ne.x, 0, ne.y);
+    rlVertex3f(tl.x, 0, tl.y);
+    rlVertex3f(tl.x + tile_width, 0, tl.y);
 
-    rlVertex3f(ne.x, 0, ne.y);
-    rlVertex3f(se.x, 0, se.y);
+    rlVertex3f(tl.x + tile_width, 0, tl.y);
+    rlVertex3f(tl.x + tile_width, 0, tl.y + tile_height);
 
-    rlVertex3f(se.x, 0, se.y);
-    rlVertex3f(s.x, 0, s.y);
+    rlVertex3f(tl.x + tile_width, 0, tl.y + tile_height);
+    rlVertex3f(tl.x, 0, tl.y + tile_height);
 
-    rlVertex3f(s.x, 0, s.y);
-    rlVertex3f(n.x, 0, n.y);
+    rlVertex3f(tl.x, 0, tl.y + tile_height);
+    rlVertex3f(tl.x, 0, tl.y);
 
     rlEnd();
     rlPopMatrix();
@@ -128,7 +126,7 @@ void draw_chunk_grid(const Chunk chunk, const Color color) {
 
     const Vector2 origin = CheckerToPosition(chunk.coord);
     for (int c = 0; c < CHUNK_SIZE; ++c) {
-        for (int r = c % 2; r < CHUNK_SIZE * 2; r += 2) {
+        for (int r = c % 2; r < CHUNK_SIZE; r += 2) {
             rlColor4ub(0, 127, 0, 255);
             const Vector2 pos = CheckerToPosition((Checker){c,  r});
             draw_hex_wire(origin.x + pos.x, origin.y + pos.y);

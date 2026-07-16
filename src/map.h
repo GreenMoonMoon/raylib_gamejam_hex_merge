@@ -7,7 +7,7 @@
 
 #include "hex.h"
 
-#define CHUNK_SIZE 10
+#define CHUNK_SIZE 16
 #define CHUNK_LAYER_COUNT 1
 
 // cell flags
