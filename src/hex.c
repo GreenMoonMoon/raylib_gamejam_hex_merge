@@ -6,15 +6,17 @@
 #include <math.h>
 #include <stdlib.h>
 
+#include "raymath.h"
+
 // AXIAL COORDINATE
 
 const Axial hexDirections[6] = {
-    {-1, 0},
-    {-1, 1},
-    {0, 1},
-    {1, 0},
-    {1, -1},
     {0, -1},
+    {1, -1},
+    {1, 0},
+    {0, 1},
+    {-1, 1},
+    {-1, 0},
 };
 
 inline Axial AxialAdd(const Axial a, const Axial b) {
@@ -25,13 +27,11 @@ inline Axial AxialSubtract(const Axial a, const Axial b) {
     return (Axial){a.q - b.q, a.r - b.r};
 }
 
-Axial AxialRound(float q, float r) {
-    const float gq = roundf(q);
-    const float gr = roundf(r);
-    q -= gq;
-    r -= gr;
-    const float dq = roundf(q + 0.5f * r) * (float)(q * q >= r * r);
-    const float dr = roundf(r + 0.5f * q) * (float)(q * q < r * r);
+Axial AxialRound(const float q, const float r) {
+    const float gq = roundf(q), gr = roundf(r);
+    const float fq = q - gq, fr = r - gr;
+    const float dq = roundf(fq + 0.5f * fr) * (float)(fq * fq >= fr * fr);
+    const float dr = roundf(fr + 0.5f * fq) * (float)(fq * fq < fr * fr);
     return (Axial){(int)(gq + dq), (int)(gr + dr)};
 }
 
@@ -56,8 +56,8 @@ inline Vector2 AxialToPosition(const Axial coord) {
 
 Axial PositionToAxial(const Vector2 position) {
     const Vector2 fractional_axial = {
-        0.6666667f *  position.x
-         -0.3333334f * position.x + SQRT_3_3 * position.y,
+        .x = 0.6666667f * position.x,
+        .y = -0.3333334f * position.x + SQRT_3_3 * position.y
     };
     return AxialRound(fractional_axial.x, fractional_axial.y);
 }
@@ -92,14 +92,14 @@ inline Checker PositionToChecker(const Vector2 position) {
 inline Vector2 CheckerToPosition(const Checker coord) {
     return (Vector2) {
         .x = 1.5f * (float)coord.col,
-        .y = 2.0f * SQRT_3_2 * (float)coord.row
+        .y = SQRT_3_2 * (float)coord.row
     };
 }
 
 // CONVERSIONS
 
 inline Checker axial_to_checker(const Axial coord) {
-    return (Checker){.col = coord.q, .row = 2 * coord.q + coord.r};
+    return (Checker){.col = coord.q, .row = 2 * coord.r + coord.q};
 }
 
 inline Axial checker_to_axial(const Checker coord) {

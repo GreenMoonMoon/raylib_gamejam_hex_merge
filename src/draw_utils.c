@@ -126,24 +126,12 @@ void draw_chunk_grid(const Chunk chunk, const Color color) {
     rlBegin(RL_LINES);
     rlColor4ub(color.r, color.g, color.b, color.a);
 
-    // // const Checker origin = CheckerSubtract(chunk.coord, (Checker){CHUNK_SIZE, CHUNK_SIZE / 2});
-    // for (int r = 0; r < CHUNK_SIZE; ++r) {
-    //     for (int c = 0; c < CHUNK_SIZE * 2; ++c) {
-    //         rlColor4ub(127, 0, 0, 255);
-    //         // const Vector2 pos = AxialToPosition(checker_to_axial(CheckerAdd(origin, (Checker){c, r})));
-    //         const Vector2 pos = AxialToPosition(checker_to_axial((Checker){c, r}));
-    //         draw_hex_wire(pos.x, pos.y);
-    //     }
-    // }
-
-    for (int r = 0; r < CHUNK_SIZE; ++r) {
-        for (int q = 0; q < CHUNK_SIZE; ++q) {
-            // rlColor4ub(0, 127, 0, 255);
-            // const Vector2 pos = CheckerToPosition(axial_to_checker((Axial){q, r}));
-            // draw_hex_wire(pos.x, pos.y);
-            rlColor4ub(127, 0, 0, 255);
-            const Vector2 p = AxialToPosition((Axial){q, r});
-            draw_hex_wire(p.x, p.y);
+    const Vector2 origin = CheckerToPosition(chunk.coord);
+    for (int c = 0; c < CHUNK_SIZE; ++c) {
+        for (int r = c % 2; r < CHUNK_SIZE * 2; r += 2) {
+            rlColor4ub(0, 127, 0, 255);
+            const Vector2 pos = CheckerToPosition((Checker){c,  r});
+            draw_hex_wire(origin.x + pos.x, origin.y + pos.y);
         }
     }
 

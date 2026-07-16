@@ -11,7 +11,7 @@
 
 #define SQRT_3 1.73205080757f
 #define SQRT_3_2 0.866025403785f
-#define SQRT_3_3 0.57735026919f
+#define SQRT_3_3 0.57735026919
 
 // AXIAL COORDINATE
 
@@ -55,8 +55,8 @@ Axial PositionToAxial(Vector2 position);
 
 // CHECKER COORDINATE
 
-/// Hexagonal "double width" coordinate where horizontal step size is doubled
-/// more info: https://www.redblobgames.com/grids/hexagons/#line-drawing
+/// Hexagonal "double heigth" coordinate where vertical step size is doubled
+/// more info: https://www.redblobgames.com/grids/hexagons/#coordinates
 typedef struct CheckerCoordinate { // RedBlobGame called it Doubled
     int col, row;
 } Checker;
