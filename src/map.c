@@ -9,16 +9,16 @@
 #define CHUNK_COORD_HASH(C)
 #define CHUNK2AXIAL(C)
 
-Chunk generate_chunk(const Axial coord) {
-    // a single map cell is 10x10
+Chunk generate_chunk(const Checker coord) {
     Chunk chunk = {
         .coord = coord,
         .layers = {0}
     };
 
     // create inlets
-    chunk.layers[0] = malloc(sizeof(Tile) * 10 * 10);
-    memset(chunk.layers[0], 0, sizeof(Tile) * 10 * 10);
+    const size_t msize = sizeof(Tile) * CHUNK_SIZE * (CHUNK_SIZE * 2);
+    chunk.layers[0] = malloc(msize);
+    memset(chunk.layers[0], 0, msize);
 
     // for (int i = 0; i < 6; ++i) {
     //     const int a = GetRandomValue(0, 6);
@@ -33,14 +33,9 @@ Chunk generate_chunk(const Axial coord) {
 }
 
 void delete_chunk(const Chunk *chunk) {
-    for (int i = 0; i < 5; ++i) {
+    for (int i = 0; i < CHUNK_LAYER_COUNT; ++i) {
         if (chunk->layers[i] != nullptr) { free(chunk->layers[i]); }
     }
-}
-
-static int GetMapDistance(const Axial a, const Axial b) {
-    const Axial coord = AxialSubtract(a, b);
-    return (abs(coord.q) + abs(coord.q + coord.r) + abs(coord.r)) / 2;
 }
 
 Axial GetMapNeighbor(const Axial coord, const AxialDirection neighborDirection) {

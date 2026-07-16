@@ -49,17 +49,17 @@ inline int AxialDistance(const Axial a, const Axial b) {
 
 inline Vector2 AxialToPosition(const Axial coord) {
     return (Vector2) {
-        1.5f * (float)coord.r + GRID_OFFSET_X,
-        SQRT_3 * (float)coord.q + SQRT_3_2 * (float)coord.r + GRID_OFFSET_Y
+        1.5f * (float)coord.q,
+        SQRT_3_2 * (float)coord.q + SQRT_3 * (float)coord.r
     };
 }
 
 Axial PositionToAxial(const Vector2 position) {
-    const Vector2 pos = {position.x - GRID_OFFSET_X, position.y - GRID_OFFSET_Y};
-    const float fractional_q = SQRT_3 / 3.0f * pos.y - 1.0f / 3.0f * pos.x;
-    const float fractional_r = 2.0f / 3.0f * pos.x;
-
-    return AxialRound(fractional_q, fractional_r);
+    const Vector2 fractional_axial = {
+        0.6666667f *  position.x
+         -0.3333334f * position.x + SQRT_3_3 * position.y,
+    };
+    return AxialRound(fractional_axial.x, fractional_axial.y);
 }
 
 // CHECKER COORDINATE
@@ -92,7 +92,7 @@ inline Checker PositionToChecker(const Vector2 position) {
 inline Vector2 CheckerToPosition(const Checker coord) {
     return (Vector2) {
         .x = 1.5f * (float)coord.col,
-        .y = SQRT_3_2 * (float)coord.row
+        .y = 2.0f * SQRT_3_2 * (float)coord.row
     };
 }
 

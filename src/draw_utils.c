@@ -44,29 +44,6 @@ static void draw_hex_polygons(const float x, const float y) {
     rlVertex3f(x + point_coords[5].x, 0, y + point_coords[5].y);
 }
 
-void DrawHexMapGrid(const Chunk map) {
-    rlPushMatrix();
-    rlBegin(RL_LINES);
-    rlColor4ub(0, 0, 0, 255);
-
-    for (int r = 0; r < CHUNK_RADIUS; ++r) {
-        for (int q = 0; q < r; ++q) {
-            const Vector2 pos = AxialToPosition(map.coord);
-            draw_hex_wire(pos.x, pos.y);
-        }
-    }
-
-    // for (int r = 0; r < map.sizeR; ++r) {
-    //     for (int q = 0; q < map.sizeQ; ++q) {
-    //         const Vector2 pos = HexCoordToPosition((HexCoord){q - r / 2, r});
-    //         rlHexWire(pos.x, pos.y);
-    //     }
-    // }
-
-    rlEnd();
-    rlPopMatrix();
-}
-
 void DrawHexGrid(const int rows, const int columns) {
     rlPushMatrix();
     rlBegin(RL_LINES);
@@ -115,19 +92,18 @@ void DrawHexWire(const Axial coord, const float height, const Color color) {
     rlPopMatrix();
 }
 
-void DrawChunkBoundaries(const Axial coord, const float height, const Color color) {
+void DrawChunkBoundaries(const Checker coord, const float height, const Color color) {
     rlPushMatrix();
     rlTranslatef(0, height, 0);
 
     rlBegin(RL_LINES);
     rlColor4ub(color.r, color.g, color.b, color.a);
 
-    const Vector2 n  = AxialToPosition((Axial){coord.q - CHUNK_RADIUS, coord.r});
-    const Vector2 ne = AxialToPosition((Axial){coord.q - CHUNK_RADIUS, coord.r + CHUNK_RADIUS});
-    const Vector2 se = AxialToPosition((Axial){coord.q, coord.r + CHUNK_RADIUS});
-    const Vector2 s  = AxialToPosition((Axial){coord.q + CHUNK_RADIUS, coord.r});
-    const Vector2 sw = AxialToPosition((Axial){coord.q + CHUNK_RADIUS, coord.r - CHUNK_RADIUS});
-    const Vector2 nw = AxialToPosition((Axial){coord.q, coord.r - CHUNK_RADIUS});
+    const float hsize = (float)CHUNK_SIZE;
+    const Vector2 n  = CheckerToPosition((Checker){coord.col - hsize, coord.row - hsize});
+    const Vector2 ne = CheckerToPosition((Checker){coord.col - hsize, coord.row + hsize});
+    const Vector2 se = CheckerToPosition((Checker){coord.col + hsize, coord.row + hsize});
+    const Vector2 s  = CheckerToPosition((Checker){coord.col + hsize, coord.row - hsize});
 
     rlVertex3f(n.x, 0, n.y);
     rlVertex3f(ne.x, 0, ne.y);
@@ -139,13 +115,37 @@ void DrawChunkBoundaries(const Axial coord, const float height, const Color colo
     rlVertex3f(s.x, 0, s.y);
 
     rlVertex3f(s.x, 0, s.y);
-    rlVertex3f(sw.x, 0, sw.y);
-
-    rlVertex3f(sw.x, 0, sw.y);
-    rlVertex3f(nw.x, 0, nw.y);
-
-    rlVertex3f(nw.x, 0, nw.y);
     rlVertex3f(n.x, 0, n.y);
+
+    rlEnd();
+    rlPopMatrix();
+}
+
+void draw_chunk_grid(const Chunk chunk, const Color color) {
+    rlPushMatrix();
+    rlBegin(RL_LINES);
+    rlColor4ub(color.r, color.g, color.b, color.a);
+
+    // // const Checker origin = CheckerSubtract(chunk.coord, (Checker){CHUNK_SIZE, CHUNK_SIZE / 2});
+    // for (int r = 0; r < CHUNK_SIZE; ++r) {
+    //     for (int c = 0; c < CHUNK_SIZE * 2; ++c) {
+    //         rlColor4ub(127, 0, 0, 255);
+    //         // const Vector2 pos = AxialToPosition(checker_to_axial(CheckerAdd(origin, (Checker){c, r})));
+    //         const Vector2 pos = AxialToPosition(checker_to_axial((Checker){c, r}));
+    //         draw_hex_wire(pos.x, pos.y);
+    //     }
+    // }
+
+    for (int r = 0; r < CHUNK_SIZE; ++r) {
+        for (int q = 0; q < CHUNK_SIZE; ++q) {
+            // rlColor4ub(0, 127, 0, 255);
+            // const Vector2 pos = CheckerToPosition(axial_to_checker((Axial){q, r}));
+            // draw_hex_wire(pos.x, pos.y);
+            rlColor4ub(127, 0, 0, 255);
+            const Vector2 p = AxialToPosition((Axial){q, r});
+            draw_hex_wire(p.x, p.y);
+        }
+    }
 
     rlEnd();
     rlPopMatrix();

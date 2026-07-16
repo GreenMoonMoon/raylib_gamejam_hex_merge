@@ -80,9 +80,9 @@ void ddraw_inputs(void) {
 }
 
 void ddraw_chunk_info(const Chunk chunk) {
-    const Vector2 wpos = AxialToPosition(chunk.coord);
+    const Vector2 wpos = CheckerToPosition(chunk.coord);
     const Vector2 spos = GetWorldToScreen((Vector3){wpos.x, 1.0f, wpos.y}, camera);
-    DrawText(TextFormat("{%d, %d}", chunk.coord.q, chunk.coord.r), spos.x, spos.y, 20, BLACK);
+    DrawText(TextFormat("{%d, %d}", chunk.coord.col, chunk.coord.row), spos.x, spos.y, 20, BLACK);
 }
 
 void InitGameplayScreen(void) {
@@ -105,7 +105,7 @@ void InitGameplayScreen(void) {
     player = CreatePlayer();
 
     // initialize scene
-    map = generate_chunk((Axial){0});
+    map = generate_chunk((Checker){0});
 }
 
 void UpdateGameplayScreen(void) {
@@ -152,8 +152,7 @@ void UpdateGameplayScreen(void) {
 void DrawGameplayScreen(void) {
     BeginMode3D(camera);
 
-    // DrawHexGrid(20, 10);
-    // DrawHexMapGrid(map);
+    draw_chunk_grid(map, DARKBLUE);
     DrawChunkBoundaries(map.coord, 0.1f, BLACK);
     DrawHexWire(player.coordinate, 0.1f, BLUE); // draw actual player coordinate
 

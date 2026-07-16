@@ -9,11 +9,9 @@
 
 #include "raylib.h"
 
-#define GRID_OFFSET_X 0.5f
-#define GRID_OFFSET_Y 0.86603f
-
 #define SQRT_3 1.73205080757f
 #define SQRT_3_2 0.866025403785f
+#define SQRT_3_3 0.57735026919f
 
 // AXIAL COORDINATE
 
@@ -29,7 +27,7 @@ typedef enum AxialDirection {
 
 /// Hexagonal Coordinate Axial
 typedef struct AxialCoordinate {
-    int q, r;
+    int q, r; // NOTE: q is diagonal down and r is vertical
 } Axial;
 
 extern const Axial hexDirections[];
@@ -57,7 +55,7 @@ Axial PositionToAxial(Vector2 position);
 
 // CHECKER COORDINATE
 
-/// Hexagonal "doubled" coordinate where vertical step size is doubled
+/// Hexagonal "double width" coordinate where horizontal step size is doubled
 /// more info: https://www.redblobgames.com/grids/hexagons/#line-drawing
 typedef struct CheckerCoordinate { // RedBlobGame called it Doubled
     int col, row;

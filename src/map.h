@@ -7,7 +7,8 @@
 
 #include "hex.h"
 
-#define CHUNK_RADIUS 10
+#define CHUNK_SIZE 10
+#define CHUNK_LAYER_COUNT 1
 
 // cell flags
 #define TF_CAN_INTERACT 0x1
@@ -20,26 +21,15 @@
 // #define INDEX_HEX_COORD(M_ptr, I) (HexCoord){(I) / (M_ptr)->sizeQ, (I) % (M_ptr)->sizeQ}
 
 typedef struct Tile {
-    Axial coord;
     unsigned int type;
 } Tile;
 
 typedef struct Chunk {
-    Axial coord;
-    Tile *layers[5];
+    Checker coord;
+    Tile *layers[CHUNK_LAYER_COUNT];
 } Chunk;
 
-/// A sort of polar coordinate for chunks
-typedef struct ChunkCoord {
-    char angle;
-    char distance;
-} ChunkCoord;
-
-// typedef struct Map {
-//     Chunk *chunk_list;
-// } Map;
-
-Chunk generate_chunk(Axial coord);
+Chunk generate_chunk(Checker coord);
 
 void delete_chunk(const Chunk *chunk);
 

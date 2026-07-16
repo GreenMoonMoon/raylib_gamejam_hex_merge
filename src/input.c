@@ -46,7 +46,7 @@ static void ProcessTouchInputs(Inputs *inputs, const Axial playerCoordinate) {
 
         if (state == IS_TOUCH_DRAG) {
             const Vector2 playerPosition = AxialToPosition(playerCoordinate);
-            const Vector2 dragVector = Vector2Subtract((Vector2){touchWorldPosition.x - GRID_OFFSET_X, touchWorldPosition.y - GRID_OFFSET_Y}, playerPosition);
+            const Vector2 dragVector = Vector2Subtract((Vector2){touchWorldPosition.x, touchWorldPosition.y}, playerPosition);
             const float dragVectorLength = Vector2Length(dragVector);
             if (dragVectorLength > 1.0f) { inputs->move_vector = Vector2Scale(dragVector, 1.0f / dragVectorLength); }
         }
