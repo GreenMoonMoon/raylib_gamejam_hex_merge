@@ -22,7 +22,7 @@ typedef enum PlayMode {
 } PlayMode;
 
 typedef struct Inputs {
-    HCAxial selected_cell;
+    Axial selected_cell;
     Vector2 move_vector;
     PlayMode change_mode;
 

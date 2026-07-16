@@ -67,9 +67,9 @@ Player CreatePlayer(void)
         .animationFrame = 0,
         .animationSpeed = DEFAULT_ANIM_SPEED,
         .can_move = true,
-        .coordinate = (HCAxial){0, 0},
+        .coordinate = (Axial){0, 0},
         .target_direction = HD_NORTH,
-        .position = HCAToPosition((HCAxial){0, 0}),
+        .position = AxialToPosition((Axial){0, 0}),
         .rotation = PI
     };
     return player;
@@ -126,7 +126,7 @@ void MovePlayer(Player *player, const Vector2 movement, const float frame_time) 
         player->rotation = Vector2LineAngle(next_position, player->position) + PI;
         player->position = next_position;
 
-        player->coordinate = PositionToHCA(player->position);
+        player->coordinate = PositionToAxial(player->position);
 
         player->target_direction = ((int)roundf(atan2f(-movement.x, movement.y) / M_PI_3) + 3) % HD_COUNT;
     } else {

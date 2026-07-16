@@ -15,7 +15,9 @@
 #define SQRT_3 1.73205080757f
 #define SQRT_3_2 0.866025403785f
 
-typedef enum HexDirection {
+// AXIAL COORDINATE
+
+typedef enum AxialDirection {
     HD_NORTH,
     HD_NORTH_EAST,
     HD_SOUTH_EAST,
@@ -23,34 +25,60 @@ typedef enum HexDirection {
     HD_SOUTH_WEST,
     HD_NORTH_WEST,
     HD_COUNT
-} HexDirection;
+} AxialDirection;
 
 /// Hexagonal Coordinate Axial
-typedef struct HCAxial {
+typedef struct AxialCoordinate {
     int q, r;
-} HCAxial;
+} Axial;
 
-extern const HCAxial hexDirections[];
+extern const Axial hexDirections[];
 
-HCAxial HCAAdd(HCAxial a, HCAxial b);
+Axial AxialAdd(Axial a, Axial b);
 
-HCAxial HCASubtract(HCAxial a, HCAxial b);
+Axial AxialSubtract(Axial a, Axial b);
 
 /// Rounding fractional hex coordinate
 /// based on Jacob Rus implementation https://observablehq.com/@jrus/hexround
 /// @param q fractional q
 /// @param r fractional r
 /// @return q and r rounded to HexCoord
-HCAxial HCARound(float q, float r);
+Axial AxialRound(float q, float r);
 
-bool HCAEqual(HCAxial a, HCAxial b);
+bool AxialEqual(Axial a, Axial b);
 
-int HCALength(HCAxial coord);
+int AxialLength(Axial coord);
 
-int HCADistance(HCAxial a, HCAxial b);
+int AxialDistance(Axial a, Axial b);
 
-Vector2 HCAToPosition(HCAxial coord);
+Vector2 AxialToPosition(Axial coord);
 
-HCAxial PositionToHCA(Vector2 position);
+Axial PositionToAxial(Vector2 position);
+
+// CHECKER COORDINATE
+
+/// Hexagonal "doubled" coordinate where vertical step size is doubled
+/// more info: https://www.redblobgames.com/grids/hexagons/#line-drawing
+typedef struct CheckerCoordinate { // RedBlobGame called it Doubled
+    int col, row;
+} Checker;
+
+Checker CheckerAbs(Checker coord);
+
+Checker CheckerAdd(Checker a, Checker b);
+
+Checker CheckerSubtract(Checker a, Checker b);
+
+int CheckerDistance(Checker a, Checker b);
+
+Checker PositionToChecker(Vector2 position);
+
+Vector2 CheckerToPosition(Checker coord);
+
+// CONVERSIONS
+
+Checker axial_to_checker(Axial coord);
+
+Axial checker_to_axial(Checker coord);
 
 #endif //RAYLIB_GAME_TEMPLATE_HEX_H

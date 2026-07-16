@@ -25,8 +25,8 @@ typedef struct Player {
     float animationSpeed;
 
     bool can_move;
-    HCAxial coordinate;
-    HexDirection target_direction;
+    Axial coordinate;
+    AxialDirection target_direction;
 
     Vector2 position;
     float rotation;

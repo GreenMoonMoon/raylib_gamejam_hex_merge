@@ -19,7 +19,7 @@ static PlayMode playMode = PLAYMODE_DEFAULT;
 
 // scene
 static Chunk map;
-static HCAxial selectedCell;
+static Axial selectedCell;
 
 // camera
 Camera3D camera;
@@ -80,7 +80,7 @@ void ddraw_inputs(void) {
 }
 
 void ddraw_chunk_info(const Chunk chunk) {
-    const Vector2 wpos = HCAToPosition(chunk.coord);
+    const Vector2 wpos = AxialToPosition(chunk.coord);
     const Vector2 spos = GetWorldToScreen((Vector3){wpos.x, 1.0f, wpos.y}, camera);
     DrawText(TextFormat("{%d, %d}", chunk.coord.q, chunk.coord.r), spos.x, spos.y, 20, BLACK);
 }
@@ -105,7 +105,7 @@ void InitGameplayScreen(void) {
     player = CreatePlayer();
 
     // initialize scene
-    map = generate_chunk((HCAxial){0});
+    map = generate_chunk((Axial){0});
 }
 
 void UpdateGameplayScreen(void) {
@@ -127,7 +127,7 @@ void UpdateGameplayScreen(void) {
         }
     } else {
         if (inputs.interacts) {
-            const Tile *cell = get_chunk_tile(&map, HCAAdd(player.coordinate, hexDirections[player.target_direction]));
+            const Tile *cell = get_chunk_tile(&map, AxialAdd(player.coordinate, hexDirections[player.target_direction]));
             if ((cell->type & TF_CAN_INTERACT) != 0) {
                 if ((cell->type & TF_CAN_BUILD) != 0) {
                     show_build_menu = true;
@@ -166,7 +166,7 @@ void DrawGameplayScreen(void) {
     // }
 
     // DEBUG
-    DrawHex(HCAAdd(player.coordinate, hexDirections[player.target_direction]), -0.1f, GREEN);
+    DrawHex(AxialAdd(player.coordinate, hexDirections[player.target_direction]), -0.1f, GREEN);
     DrawHex(selectedCell, -0.2f, ORANGE);
     ddraw_inputs();
 

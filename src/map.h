@@ -20,12 +20,12 @@
 // #define INDEX_HEX_COORD(M_ptr, I) (HexCoord){(I) / (M_ptr)->sizeQ, (I) % (M_ptr)->sizeQ}
 
 typedef struct Tile {
-    HCAxial coord;
+    Axial coord;
     unsigned int type;
 } Tile;
 
 typedef struct Chunk {
-    HCAxial coord;
+    Axial coord;
     Tile *layers[5];
 } Chunk;
 
@@ -39,16 +39,16 @@ typedef struct ChunkCoord {
 //     Chunk *chunk_list;
 // } Map;
 
-Chunk generate_chunk(HCAxial coord);
+Chunk generate_chunk(Axial coord);
 
 void delete_chunk(const Chunk *chunk);
 
-HCAxial GetMapNeighbor(HCAxial coord, HexDirection neighborDirection);
+Axial GetMapNeighbor(Axial coord, AxialDirection neighborDirection);
 
-Tile *get_chunk_tile(const Chunk *chunk, HCAxial coord);
+Tile *get_chunk_tile(const Chunk *chunk, Axial coord);
 
-bool check_chunk_collision(const Chunk *chunk, HCAxial coord);
+bool check_chunk_collision(const Chunk *chunk, Axial coord);
 
-bool is_tile_free(Chunk *chunk, HCAxial coord);
+bool is_tile_free(Chunk *chunk, Axial coord);
 
 #endif //RAYLIB_GAMEJAM_ENTRY_MAP_H

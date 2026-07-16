@@ -9,7 +9,7 @@
 #define CHUNK_COORD_HASH(C)
 #define CHUNK2AXIAL(C)
 
-Chunk generate_chunk(const HCAxial coord) {
+Chunk generate_chunk(const Axial coord) {
     // a single map cell is 10x10
     Chunk chunk = {
         .coord = coord,
@@ -38,29 +38,29 @@ void delete_chunk(const Chunk *chunk) {
     }
 }
 
-static int GetMapDistance(const HCAxial a, const HCAxial b) {
-    const HCAxial coord = HCASubtract(a, b);
+static int GetMapDistance(const Axial a, const Axial b) {
+    const Axial coord = AxialSubtract(a, b);
     return (abs(coord.q) + abs(coord.q + coord.r) + abs(coord.r)) / 2;
 }
 
-HCAxial GetMapNeighbor(const HCAxial coord, const HexDirection neighborDirection) {
-    return HCAAdd(coord, hexDirections[neighborDirection]);
+Axial GetMapNeighbor(const Axial coord, const AxialDirection neighborDirection) {
+    return AxialAdd(coord, hexDirections[neighborDirection]);
 }
 
-Tile * get_chunk_tile(const Chunk *chunk, const HCAxial coord) {
+Tile * get_chunk_tile(const Chunk *chunk, const Axial coord) {
     // return &map->layers[0][HEX_COORD_INDEX(map, coord)];
     return nullptr;
 }
 
-bool check_chunk_collision(const Chunk *chunk, const HCAxial coord) {
+bool check_chunk_collision(const Chunk *chunk, const Axial coord) {
     // if (OUT_OF_BOUND(map, coord)) { return true; }
     return false;
 }
 
-bool is_tile_free(Chunk *chunk, HCAxial coord) {
+bool is_tile_free(Chunk *chunk, Axial coord) {
     return true;
 }
 
-HCAxial PathNextMapCoordinate(const Chunk *chunk, const HCAxial from, const HCAxial to) {
+Axial PathNextMapCoordinate(const Chunk *chunk, const Axial from, const Axial to) {
     return from;
 }

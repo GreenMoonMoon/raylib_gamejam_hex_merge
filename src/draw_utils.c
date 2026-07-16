@@ -51,7 +51,7 @@ void DrawHexMapGrid(const Chunk map) {
 
     for (int r = 0; r < CHUNK_RADIUS; ++r) {
         for (int q = 0; q < r; ++q) {
-            const Vector2 pos = HCAToPosition(map.coord);
+            const Vector2 pos = AxialToPosition(map.coord);
             draw_hex_wire(pos.x, pos.y);
         }
     }
@@ -89,45 +89,45 @@ void DrawHexGrid(const int rows, const int columns) {
     rlPopMatrix();
 }
 
-void DrawHex(const HCAxial coord, const float height, const Color color) {
+void DrawHex(const Axial coord, const float height, const Color color) {
     rlPushMatrix();
     rlTranslatef(0, height, 0);
     rlBegin(RL_TRIANGLES);
     rlColor4ub(color.r, color.g, color.b, color.a);
 
-    const Vector2 position = HCAToPosition(coord);
+    const Vector2 position = AxialToPosition(coord);
     draw_hex_polygons(position.x, position.y);
 
     rlEnd();
     rlPopMatrix();
 }
 
-void DrawHexWire(const HCAxial coord, const float height, const Color color) {
+void DrawHexWire(const Axial coord, const float height, const Color color) {
     rlPushMatrix();
     rlTranslatef(0, height, 0);
     rlBegin(RL_LINES);
     rlColor4ub(color.r, color.g, color.b, color.a);
 
-    const Vector2 position = HCAToPosition(coord);
+    const Vector2 position = AxialToPosition(coord);
     draw_hex_wire(position.x, position.y);
 
     rlEnd();
     rlPopMatrix();
 }
 
-void DrawChunkBoundaries(const HCAxial coord, const float height, const Color color) {
+void DrawChunkBoundaries(const Axial coord, const float height, const Color color) {
     rlPushMatrix();
     rlTranslatef(0, height, 0);
 
     rlBegin(RL_LINES);
     rlColor4ub(color.r, color.g, color.b, color.a);
 
-    const Vector2 n  = HCAToPosition((HCAxial){coord.q - CHUNK_RADIUS, coord.r});
-    const Vector2 ne = HCAToPosition((HCAxial){coord.q - CHUNK_RADIUS, coord.r + CHUNK_RADIUS});
-    const Vector2 se = HCAToPosition((HCAxial){coord.q, coord.r + CHUNK_RADIUS});
-    const Vector2 s  = HCAToPosition((HCAxial){coord.q + CHUNK_RADIUS, coord.r});
-    const Vector2 sw = HCAToPosition((HCAxial){coord.q + CHUNK_RADIUS, coord.r - CHUNK_RADIUS});
-    const Vector2 nw = HCAToPosition((HCAxial){coord.q, coord.r - CHUNK_RADIUS});
+    const Vector2 n  = AxialToPosition((Axial){coord.q - CHUNK_RADIUS, coord.r});
+    const Vector2 ne = AxialToPosition((Axial){coord.q - CHUNK_RADIUS, coord.r + CHUNK_RADIUS});
+    const Vector2 se = AxialToPosition((Axial){coord.q, coord.r + CHUNK_RADIUS});
+    const Vector2 s  = AxialToPosition((Axial){coord.q + CHUNK_RADIUS, coord.r});
+    const Vector2 sw = AxialToPosition((Axial){coord.q + CHUNK_RADIUS, coord.r - CHUNK_RADIUS});
+    const Vector2 nw = AxialToPosition((Axial){coord.q, coord.r - CHUNK_RADIUS});
 
     rlVertex3f(n.x, 0, n.y);
     rlVertex3f(ne.x, 0, ne.y);

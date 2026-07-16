@@ -24,7 +24,7 @@ static Vector2 GetScreenToGround(const Vector2 screenPosition) {
     return (Vector2){worldPosition.x, worldPosition.z};
 }
 
-static void ProcessTouchInputs(Inputs *inputs, const HCAxial playerCoordinate) {
+static void ProcessTouchInputs(Inputs *inputs, const Axial playerCoordinate) {
     // GESTURES
     const int currentGesture = GetGestureDetected();
     const Vector2 touchPosition = GetTouchPosition(0);
@@ -36,8 +36,8 @@ static void ProcessTouchInputs(Inputs *inputs, const HCAxial playerCoordinate) {
         // if it is a new touch event, check if the player is trying to drag the player character or select a destination
         if (lastGesture == GESTURE_NONE) {
             // get the cell coordinate from the touch position
-            inputs->selected_cell = PositionToHCA((Vector2){touchWorldPosition.x, touchWorldPosition.y});
-            if (HCAEqual(inputs->selected_cell, playerCoordinate)) {
+            inputs->selected_cell = PositionToAxial((Vector2){touchWorldPosition.x, touchWorldPosition.y});
+            if (AxialEqual(inputs->selected_cell, playerCoordinate)) {
                 state = IS_TOUCH_DRAG;
             } else {
                 state = IS_TOUCH_SELECT;
@@ -45,7 +45,7 @@ static void ProcessTouchInputs(Inputs *inputs, const HCAxial playerCoordinate) {
         }
 
         if (state == IS_TOUCH_DRAG) {
-            const Vector2 playerPosition = HCAToPosition(playerCoordinate);
+            const Vector2 playerPosition = AxialToPosition(playerCoordinate);
             const Vector2 dragVector = Vector2Subtract((Vector2){touchWorldPosition.x - GRID_OFFSET_X, touchWorldPosition.y - GRID_OFFSET_Y}, playerPosition);
             const float dragVectorLength = Vector2Length(dragVector);
             if (dragVectorLength > 1.0f) { inputs->move_vector = Vector2Scale(dragVector, 1.0f / dragVectorLength); }
@@ -76,7 +76,7 @@ static void ProcessKeyboardInputs(Inputs *inputs) {
     // target a cell
     if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) || IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
         const Vector2 clickWorldPosition = GetScreenToGround(GetMousePosition());
-        inputs->selected_cell = PositionToHCA((Vector2){clickWorldPosition.x, clickWorldPosition.y});
+        inputs->selected_cell = PositionToAxial((Vector2){clickWorldPosition.x, clickWorldPosition.y});
     }
 
     lastKeyMoveInput = keyMoveInput;
