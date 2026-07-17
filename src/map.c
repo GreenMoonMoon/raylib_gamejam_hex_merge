@@ -17,12 +17,6 @@ Chunk generate_chunk(const Checker coord) {
     chunk.layers[0] = malloc(msize);
     memset(chunk.layers[0], 0, msize);
 
-    // for (int c = 0; c < CHUNK_SIZE; ++c) {
-    //     for (int r = c % 2; r < CHUNK_SIZE; r += 2) {
-    //
-    //     }
-    // }
-
     for (int i = 0; i < 6; ++i) {
         const int c = GetRandomValue(0, CHUNK_SIZE);
         const int r = GetRandomValue(0, CHUNK_SIZE) + c % 2;
@@ -44,9 +38,10 @@ Axial GetMapNeighbor(const Axial coord, const AxialDirection neighborDirection) 
     return AxialAdd(coord, hexDirections[neighborDirection]);
 }
 
-Tile * get_chunk_tile(const Chunk *chunk, const Axial coord) {
-    // return &map->layers[0][HEX_COORD_INDEX(map, coord)];
-    return nullptr;
+Tile * get_chunk_tile(const Chunk *chunk, const Checker coord) {
+    const unsigned int index = CHECKER2INDEX(coord.col, coord.row);
+    if (index >= CHUNK_SIZE * CHUNK_SIZE) { return nullptr; }
+    return &chunk->layers[0][CHECKER2INDEX(coord.col, coord.row)];
 }
 
 bool check_chunk_collision(const Chunk *chunk, const Axial coord) {

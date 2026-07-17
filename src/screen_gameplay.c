@@ -127,7 +127,7 @@ void UpdateGameplayScreen(void) {
         }
     } else {
         if (inputs.interacts) {
-            const Tile *cell = get_chunk_tile(&map, AxialAdd(player.coordinate, hexDirections[player.target_direction]));
+            const Tile *cell = get_chunk_tile(&map, axial_to_checker(AxialAdd(player.coordinate, hexDirections[player.target_direction])));
             if (cell != nullptr) {
                 if ((cell->type & TF_CAN_INTERACT) != 0) {
                     if ((cell->type & TF_CAN_BUILD) != 0) {
@@ -186,6 +186,11 @@ void DrawGameplayScreen(void) {
 
     EndMode3D();
 
+    // DEBUG
+    ddraw_info(10, 30);
+    ddraw_chunk_info(map);
+    DrawFPS(10, 10);
+
     if (show_build_menu) {
         DrawRectangleGradientV(20, 20, 200, 400, GRAY, DARKGRAY);
         DrawRectangleGradientV(30, 30, 85, 85, DARKBLUE, BLUE);
@@ -193,10 +198,6 @@ void DrawGameplayScreen(void) {
         // draw cursor
         DrawRectangleLines(30, 30, 85, 85, ORANGE);
     }
-
-    // DEBUG
-    ddraw_info(10, 30);
-    ddraw_chunk_info(map);
 }
 
 // Gameplay Screen Unload logic

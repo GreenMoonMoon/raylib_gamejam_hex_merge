@@ -35,7 +35,7 @@ void delete_chunk(const Chunk *chunk);
 
 Axial GetMapNeighbor(Axial coord, AxialDirection neighborDirection);
 
-Tile *get_chunk_tile(const Chunk *chunk, Axial coord);
+Tile *get_chunk_tile(const Chunk *chunk, Checker coord);
 
 bool check_chunk_collision(const Chunk *chunk, Axial coord);
 
