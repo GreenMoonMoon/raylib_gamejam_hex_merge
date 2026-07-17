@@ -1,15 +1,3 @@
------------------------------------
-_DISCLAIMER:_
-
-Welcome to the **raylib game template**!
-
-This template provides a base structure to start developing a small raylib game in plain C. The repo is also pre-configured with a default `LICENSE` (zlib/libpng) and a `README.md` (this one) to be properly filled by users. Feel free to change the LICENSE as required.
-
-All the sections defined by `$(Data to Fill)` are expected to be edited and filled properly. It's recommended to delete this disclaimer message after editing this `README.md` file.
-
------------------------------------
-
-## Getting Started with this template
 
 ### Windows: Visual Studio
 
@@ -50,47 +38,27 @@ _Copyright (c) 2014-2026 Ramon Santamaria ([@raysan5](https://github.com/raysan5
 
 -----------------------------------
 
-## $(Game Title)
-
-![$(Game Title)](screenshots/screenshot000.png "$(Game Title)")
-
-### Description
-
-$(Your Game Description)
-
-### Features
-
- - $(Game Feature 01)
- - $(Game Feature 02)
- - $(Game Feature 03)
-
-### Controls
-
+# Hex&Merge
+![Hex&Merge](screenshots/screenshot000.png "Hex&Merge")
+## Description
+Still figuring out what the game will be about:
+- Factory-style game where resources are not the traditional real-world resources we expect from other game in the genre
+- A story driven main campaign where the ultimate goal is **NOT** to launch anything into space (maybe?)
+- Humour... as much as I can come up with
+## Features
+ - Freeform movement
+ - Hexagonal map
+ - Systemic gameplay
+ - 
+## Controls
 Keyboard:
- - $(Game Control 01)
- - $(Game Control 02)
+ - `WASD` move
+ - `E` interact
  - $(Game Control 03)
-
-### Screenshots
-
+## Screenshots
 _TODO: Show your game to the world, animated GIFs recommended!._
-
-### Developers
-
- - $(Developer 01) - $(Role/Tasks Developed)
- - $(Developer 02) - $(Role/Tasks Developed)
- - $(Developer 03) - $(Role/Tasks Developed)
-
+## Developers
+ - GreenMoonMoon - *everyting(for now)*
 ### Links
-
- - YouTube Gameplay: $(YouTube Link)
- - itch.io Release: $(itch.io Game Page)
- - Steam Release: $(Steam Game Page)
-
 ### License
-
-This project sources are licensed under an unmodified zlib/libpng license, which is an OSI-certified, BSD-like license that allows static linking with closed source software. Check [LICENSE](LICENSE) for further details.
-
-$(Additional Licenses)
-
-*Copyright (c) $(Year) $(User Name) ($(User Twitter/GitHub Name))*
+*Copyright (c) 2026 Josue Boisvert*
