@@ -39,57 +39,49 @@ extern Font font;
 extern Music music;
 extern Sound fxCoin;
 
-#ifdef __cplusplus
-extern "C" {            // Prevents name mangling of functions
-#endif
-
 //----------------------------------------------------------------------------------
 // Logo Screen Functions Declaration
 //----------------------------------------------------------------------------------
-void InitLogoScreen(void);
-void UpdateLogoScreen(void);
-void DrawLogoScreen(void);
-void UnloadLogoScreen(void);
-int FinishLogoScreen(void);
+void InitLogoScreen();
+void UpdateLogoScreen();
+void DrawLogoScreen();
+void UnloadLogoScreen();
+int FinishLogoScreen();
 
 //----------------------------------------------------------------------------------
 // Title Screen Functions Declaration
 //----------------------------------------------------------------------------------
-void InitTitleScreen(void);
-void UpdateTitleScreen(void);
-void DrawTitleScreen(void);
-void UnloadTitleScreen(void);
-int FinishTitleScreen(void);
+void InitTitleScreen();
+void UpdateTitleScreen();
+void DrawTitleScreen();
+void UnloadTitleScreen();
+int FinishTitleScreen();
 
 //----------------------------------------------------------------------------------
 // Options Screen Functions Declaration
 //----------------------------------------------------------------------------------
-void InitOptionsScreen(void);
-void UpdateOptionsScreen(void);
-void DrawOptionsScreen(void);
-void UnloadOptionsScreen(void);
-int FinishOptionsScreen(void);
+void InitOptionsScreen();
+void UpdateOptionsScreen();
+void DrawOptionsScreen();
+void UnloadOptionsScreen();
+int FinishOptionsScreen();
 
 //----------------------------------------------------------------------------------
 // Gameplay Screen Functions Declaration
 //----------------------------------------------------------------------------------
-void InitGameplayScreen(void);
-void UpdateGameplayScreen(void);
-void DrawGameplayScreen(void);
-void UnloadGameplayScreen(void);
-int FinishGameplayScreen(void);
+void InitGameplayScreen();
+void UpdateGameplayScreen();
+void DrawGameplayScreen();
+void UnloadGameplayScreen();
+int FinishGameplayScreen();
 
 //----------------------------------------------------------------------------------
 // Ending Screen Functions Declaration
 //----------------------------------------------------------------------------------
-void InitEndingScreen(void);
-void UpdateEndingScreen(void);
-void DrawEndingScreen(void);
-void UnloadEndingScreen(void);
-int FinishEndingScreen(void);
-
-#ifdef __cplusplus
-}
-#endif
+void InitEndingScreen();
+void UpdateEndingScreen();
+void DrawEndingScreen();
+void UnloadEndingScreen();
+int FinishEndingScreen();
 
 #endif // SCREENS_H

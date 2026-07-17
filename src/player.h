@@ -42,4 +42,6 @@ void UpdatePlayer(Player *player, float frame_time);
 
 void MovePlayer(Player *player, Vector2 movement, float frame_time);
 
+void stop_player(Player *player);
+
 #endif //RAYLIB_GAME_TEMPLATE_PLAYER_H

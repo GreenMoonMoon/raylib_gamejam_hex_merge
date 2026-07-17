@@ -15,18 +15,11 @@ typedef enum InputState {
     IS_KEYBOARD_DPAD,
 } InputState;
 
-typedef enum PlayMode {
-    PLAYMODE_NONE,
-    PLAYMODE_DEFAULT,
-    PLAYMODE_BUILD,
-} PlayMode;
-
 typedef struct Inputs {
     Axial selected_cell;
     Vector2 move_vector;
-    PlayMode change_mode;
 
-    bool interacts;
+    bool interact_select;
     bool close;
     bool toggle_build;
 } Inputs;

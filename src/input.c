@@ -82,7 +82,7 @@ static void ProcessKeyboardInputs(Inputs *inputs) {
     lastKeyMoveInput = keyMoveInput;
 
     if (IsKeyPressed(KEY_E)) {
-        inputs->interacts = true;
+        inputs->interact_select = true;
     }
 
     if (IsKeyPressed(KEY_B)) {

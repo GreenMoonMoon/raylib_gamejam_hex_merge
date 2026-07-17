@@ -6,8 +6,16 @@
 #include "input.h"
 #include "player.h"
 #include "draw_utils.h"
+#include "building.h"
 
 #define CAMERA_SPEED 4.0f
+
+typedef enum PlayMode {
+    PLAYMODE_NONE,
+    PLAYMODE_DEFAULT,
+    PLAYMODE_BUILD,
+    PLAYMODE_BUILD_MENU,
+} PlayMode;
 
 //----------------------------------------------------------------------------------
 // Module Variables Definition (local)
@@ -15,7 +23,8 @@
 static int framesCounter = 0;
 static int finishScreen = 0;
 
-static PlayMode playMode = PLAYMODE_DEFAULT;
+static PlayMode play_mode = PLAYMODE_DEFAULT;
+static BuildingType blueprint = BUILDING_WELL;
 
 // scene
 static Chunk map;
@@ -108,38 +117,62 @@ void InitGameplayScreen(void) {
     map = generate_chunk((Checker){0});
 }
 
-void UpdateGameplayScreen(void) {
+void UpdateGameplayScreen() {
     const float frame_time = GetFrameTime();
 
     // reset transient values
-    inputs.interacts = false;
+    inputs.interact_select = false;
     inputs.close = false;
     inputs.toggle_build = false;
     ProcessInputs(&inputs);
 
-    if (inputs.toggle_build) {
-        show_build_menu = !show_build_menu;
-    }
-
-    if (show_build_menu) {
-        if (inputs.close) {
-            show_build_menu = false;
-        }
-    } else {
-        if (inputs.interacts) {
-            const Tile *cell = get_chunk_tile(&map, axial_to_checker(AxialAdd(player.coordinate, hexDirections[player.target_direction])));
-            if (cell != nullptr) {
-                if ((cell->type & TF_CAN_INTERACT) != 0) {
-                    if ((cell->type & TF_CAN_BUILD) != 0) {
-                        show_build_menu = true;
+    switch (play_mode) {
+        case PLAYMODE_DEFAULT:
+            if (inputs.interact_select) {
+                const Tile *cell = get_chunk_tile(&map, axial_to_checker(AxialAdd(player.coordinate, hexDirections[player.target_direction])));
+                if (cell != nullptr) {
+                    if ((cell->type & TF_CAN_INTERACT) != 0) {
+                        if ((cell->type & TF_CAN_BUILD) != 0) {
+                            show_build_menu = true;
+                            play_mode = PLAYMODE_BUILD_MENU;
+                            stop_player(&player);
+                        }
                     }
                 }
             }
-        }
+            if (inputs.toggle_build) {
+                show_build_menu = !show_build_menu;
+                play_mode = PLAYMODE_BUILD_MENU;
+                stop_player(&player);
+            }
+
+            // update player
+            MovePlayer(&player, inputs.move_vector, frame_time);
+            break;
+        case PLAYMODE_BUILD:
+            MovePlayer(&player, inputs.move_vector, frame_time);
+            break;
+        case PLAYMODE_BUILD_MENU:
+            if (inputs.interact_select) {
+                show_build_menu = false;
+                play_mode = PLAYMODE_BUILD;
+                blueprint = BUILDING_WELL;
+            }
+            if (inputs.close) {
+                show_build_menu = false;
+                play_mode = PLAYMODE_DEFAULT;
+            }
+            if (inputs.toggle_build) {
+                show_build_menu = false;
+                play_mode = PLAYMODE_DEFAULT;
+            }
+            break;
+        default:
+            // TODO: manage error, we should always be in a play mode
+            break;
     }
 
     // update player
-    MovePlayer(&player, inputs.move_vector, frame_time);
     UpdatePlayer(&player, frame_time);
 
     selectedCell = inputs.selected_cell;
@@ -151,7 +184,7 @@ void UpdateGameplayScreen(void) {
 }
 
 // Gameplay Screen Draw logic
-void DrawGameplayScreen(void) {
+void DrawGameplayScreen() {
     BeginMode3D(camera);
 
     draw_chunk_grid(map, DARKBLUE);
@@ -169,7 +202,6 @@ void DrawGameplayScreen(void) {
     }
 
     // DEBUG
-    DrawHex(AxialAdd(player.coordinate, hexDirections[player.target_direction]), -0.1f, GREEN);
     DrawHex(selectedCell, -0.2f, ORANGE);
     // ddraw_inputs();
 
@@ -183,6 +215,12 @@ void DrawGameplayScreen(void) {
         (Vector3){2.0f, 2.0f, 2.0f},
         WHITE
     );
+    if (PLAYMODE_BUILD == play_mode) {
+        const Axial player_target = AxialAdd(player.coordinate, hexDirections[player.target_direction]);
+        const Vector2 blueprint_pos = AxialToPosition(player_target);
+        DrawCubeWires((Vector3){blueprint_pos.x, 0, blueprint_pos.y}, 1.0F, 1.0F, 1.0F, GREEN);
+        DrawHexWire(player_target, -0.1f, GREEN);
+    }
 
     EndMode3D();
 
@@ -192,21 +230,25 @@ void DrawGameplayScreen(void) {
     DrawFPS(10, 10);
 
     if (show_build_menu) {
+        // menu background
         DrawRectangleGradientV(20, 20, 200, 400, GRAY, DARKGRAY);
-        DrawRectangleGradientV(30, 30, 85, 85, DARKBLUE, BLUE);
 
-        // draw cursor
+        // buildable icon
+        DrawRectangleGradientV(30, 30, 85, 85, DARKBLUE, BLUE);
+        DrawText(building_names[BUILDING_WELL], 40, 40, 10, WHITE);
+
+        // cursor
         DrawRectangleLines(30, 30, 85, 85, ORANGE);
     }
 }
 
 // Gameplay Screen Unload logic
-void UnloadGameplayScreen(void) {
+void UnloadGameplayScreen() {
     delete_chunk(&map);
     UnloadPlayerResources();
 }
 
 // Gameplay Screen should finish?
-int FinishGameplayScreen(void) {
+int FinishGameplayScreen() {
     return finishScreen;
 }

@@ -134,3 +134,6 @@ void MovePlayer(Player *player, const Vector2 movement, const float frame_time) 
     }
 }
 
+void stop_player(Player *player) {
+    player->next_state = PS_IDLE;
+}
