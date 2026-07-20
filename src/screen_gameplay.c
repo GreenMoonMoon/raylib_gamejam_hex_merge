@@ -131,8 +131,8 @@ void UpdateGameplayScreen() {
             if (inputs.interact_select) {
                 const Tile *cell = get_chunk_tile(&map, axial_to_checker(AxialAdd(player.coordinate, hexDirections[player.target_direction])));
                 if (cell != nullptr) {
-                    if ((cell->type & TF_CAN_INTERACT) != 0) {
-                        if ((cell->type & TF_CAN_BUILD) != 0) {
+                    if ((cell->flags & TF_CAN_INTERACT) != 0) {
+                        if ((cell->flags & TF_CAN_BUILD) != 0) {
                             show_build_menu = true;
                             play_mode = PLAYMODE_BUILD_MENU;
                             stop_player(&player);
@@ -194,7 +194,7 @@ void DrawGameplayScreen() {
     // TODO: build a display setup for quick rendering?
     for (int c = 0; c < CHUNK_SIZE; ++c) {
         for (int r = c % 2; r < CHUNK_SIZE; r += 2) {
-            if ((map.layers[0][CHECKER2INDEX(c, r)].type & TF_CAN_INTERACT) != 0) {
+            if ((map.layers[0][CHECKER2INDEX(c, r)].flags & TF_CAN_INTERACT) != 0) {
                 const Vector2 position = CheckerToPosition((Checker){c, r});
                 DrawCube((Vector3){position.x, 0, position.y}, 0.5f, 0.5f, 0.5f, RED);
             }
@@ -218,7 +218,9 @@ void DrawGameplayScreen() {
     if (PLAYMODE_BUILD == play_mode) {
         const Axial player_target = AxialAdd(player.coordinate, hexDirections[player.target_direction]);
         const Vector2 blueprint_pos = AxialToPosition(player_target);
-        DrawCubeWires((Vector3){blueprint_pos.x, 0, blueprint_pos.y}, 1.0F, 1.0F, 1.0F, GREEN);
+        const Tile *t = get_chunk_tile(&map,axial_to_checker(player_target));
+        const Color color = ((t->flags & TF_SOURCE) > 0) ? GREEN : RED;
+        DrawCylinderWires((Vector3){.x = blueprint_pos.x, .y = 0, .z = blueprint_pos.y}, 0.5f, 0.5f, 1.0f, 8, color);
         DrawHexWire(player_target, -0.1f, GREEN);
     }
 

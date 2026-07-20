@@ -21,7 +21,7 @@ Chunk generate_chunk(const Checker coord) {
         const int c = GetRandomValue(0, CHUNK_SIZE);
         const int r = GetRandomValue(0, CHUNK_SIZE) + c % 2;
         chunk.layers[0][CHECKER2INDEX(c, r)] = (Tile) {
-            .type = TF_CAN_INTERACT | TF_CAN_BUILD
+            .flags = TF_CAN_INTERACT | TF_CAN_BUILD | TF_SOURCE
         };
     }
 

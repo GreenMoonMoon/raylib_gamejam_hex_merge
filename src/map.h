@@ -21,7 +21,7 @@
 #define TF_OBSTACLE 0xf
 
 typedef struct Tile {
-    unsigned int type;
+    unsigned int flags;
 } Tile;
 
 typedef struct Chunk {
