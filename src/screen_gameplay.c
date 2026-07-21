@@ -29,6 +29,11 @@ static BuildingType blueprint = BUILDING_WELL;
 // scene
 static Chunk map;
 static Axial selectedCell;
+static Model pipe_models;
+
+//debug
+Axial pipe_loc;
+Material default_material;
 
 // camera
 Camera3D camera;
@@ -115,6 +120,9 @@ void InitGameplayScreen(void) {
 
     // initialize scene
     map = generate_chunk((Checker){0});
+    pipe_models = LoadModel("./resources/models/pipes.glb");
+    pipe_loc = (Axial){.q = 3, .r = 3};
+    default_material = LoadMaterialDefault();
 }
 
 void UpdateGameplayScreen() {
@@ -202,6 +210,8 @@ void DrawGameplayScreen() {
     }
 
     // DEBUG
+    const Vector2 pos = Vector2Add(AxialToPosition(pipe_loc), (Vector2){0, 0});
+    DrawMesh(pipe_models.meshes[0], default_material, MatrixTranslate(pos.x, 0.25f, pos.y)); // draw pipe
     DrawHex(selectedCell, -0.2f, ORANGE);
     // ddraw_inputs();
 

@@ -20,7 +20,6 @@ FetchContent_MakeAvailable(raylib)
 
 # Our Project
 add_executable(${PROJECT_NAME})
-add_subdirectory(src)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${PROJECT_NAME})
@@ -57,3 +56,28 @@ if (APPLE)
     target_link_libraries(${PROJECT_NAME} "-framework Cocoa")
     target_link_libraries(${PROJECT_NAME} "-framework OpenGL")
 endif()
+
+target_include_directories(${PROJECT_NAME} PRIVATE "./src")
+target_sources(${PROJECT_NAME} PRIVATE
+        src/draw_utils.c
+        src/hex.c
+        src/input.c
+        src/map.c
+        src/player.c
+        src/raylib_game.c
+        src/screen_ending.c
+        src/screen_gameplay.c
+        src/screen_logo.c
+        src/screen_options.c
+        src/screen_title.c)
+
+# copy resource files fi they were changed.
+#add_custom_command(
+#        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/resources/${FILE_PATH}
+#        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/resources/${FILE_PATH}
+#        COMMAND
+#            ${CMAKE_COMMAND} -E copy_if_different
+#            ${CMAKE_CURRENT_SOURCE_DIR}/resources/${FILE_PATH}
+#            ${CMAKE_CURRENT_BINARY_DIR}/resources/${FILE_PATH}
+#)
+#add_custom_target(copy DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${FILE_PATH})
