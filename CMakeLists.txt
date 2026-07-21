@@ -71,7 +71,7 @@ target_sources(${PROJECT_NAME} PRIVATE
         src/screen_options.c
         src/screen_title.c)
 
-# copy resource files fi they were changed.
+# copy resource files if they changed.
 #add_custom_command(
 #        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/resources/${FILE_PATH}
 #        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/resources/${FILE_PATH}

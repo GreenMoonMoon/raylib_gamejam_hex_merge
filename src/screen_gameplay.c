@@ -17,6 +17,48 @@ typedef enum PlayMode {
     PLAYMODE_BUILD_MENU,
 } PlayMode;
 
+// PIPES
+enum PipeModelID {
+    PIPE_BEND,
+    PIPE_DIR_VALVE_MOUNT,
+    PIPE_END,
+    PIPE_5SPLIT,
+    PIPE_JOINT,
+    PIPE_4SPLIT,
+    PIPE_WELL,
+    PIPE_6SPLIT,
+    PIPE_STRAIGHT,
+    PIPE_3SPLIT,
+    PIPE_JOINT_VALVE_MOUNT,
+    PIPE_W_SPLIT,
+    PIPE_X_SPLIT,
+    PIPE_Y_SPLIT,
+    PIPE_VALVE,
+
+    PIPE_COUNT
+};
+char *pipe_names[PIPE_COUNT] = {
+    "Bend",
+    "dir valve mount",
+    "end",
+    "5 split",
+    "joint",
+    "4 split",
+    "well",
+    "6 split",
+    "straight",
+    "3 split",
+    "joint valve mount",
+    "w split",
+    "x split",
+    "y split",
+    "valve"
+};
+static Matrix pipe_transform[3];
+static Color pipe_color;
+
+static Matrix *pipe_transform_list[PIPE_COUNT];
+
 //----------------------------------------------------------------------------------
 // Module Variables Definition (local)
 //----------------------------------------------------------------------------------
@@ -32,8 +74,7 @@ static Axial selectedCell;
 static Model pipe_models;
 
 //debug
-Axial pipe_loc;
-Material default_material;
+static Material default_material;
 
 // camera
 Camera3D camera;
@@ -85,7 +126,7 @@ static void ddraw_info(const int x, const int y) {
     // DrawText(TextFormat("Hex direction: %d", inputs.hexMoveDir), x, y + (++row) * 20, 20, DARKGRAY);
 }
 
-void ddraw_inputs(void) {
+void ddraw_inputs() {
     const Vector2 playerPosition = player.position;
     const Vector3 gizmoPosition = {playerPosition.x , 2.0f, playerPosition.y};
 
@@ -99,7 +140,7 @@ void ddraw_chunk_info(const Chunk chunk) {
     DrawText(TextFormat("{%d, %d}", chunk.coord.col, chunk.coord.row), spos.x, spos.y, 20, BLACK);
 }
 
-void InitGameplayScreen(void) {
+void InitGameplayScreen() {
     framesCounter = 0;
     finishScreen = 0;
 
@@ -121,8 +162,12 @@ void InitGameplayScreen(void) {
     // initialize scene
     map = generate_chunk((Checker){0});
     pipe_models = LoadModel("./resources/models/pipes.glb");
-    pipe_loc = (Axial){.q = 3, .r = 3};
     default_material = LoadMaterialDefault();
+    const Vector2 pipe_pos = Vector2Add(AxialToPosition((Axial){.q = 3, .r = 3}), (Vector2){0, 0});
+    pipe_transform[0] = MatrixTranslate(pipe_pos.x, 0.25f, pipe_pos.y);
+    pipe_transform[1] = MatrixMultiply(MatrixRotateY(PI), pipe_transform[0]);
+    pipe_transform[2] = MatrixMultiply(MatrixRotateY(TAU - PI / 3), pipe_transform[0]);
+    pipe_color = BLUE;
 }
 
 void UpdateGameplayScreen() {
@@ -210,8 +255,13 @@ void DrawGameplayScreen() {
     }
 
     // DEBUG
-    const Vector2 pos = Vector2Add(AxialToPosition(pipe_loc), (Vector2){0, 0});
-    DrawMesh(pipe_models.meshes[0], default_material, MatrixTranslate(pos.x, 0.25f, pos.y)); // draw pipe
+    Color old_color = default_material.maps[MATERIAL_MAP_DIFFUSE].color;
+    default_material.maps[MATERIAL_MAP_DIFFUSE].color = pipe_color;
+    DrawMesh(pipe_models.meshes[PIPE_BEND], default_material, pipe_transform[0]); // draw pipe
+    DrawMesh(pipe_models.meshes[PIPE_END], default_material,  pipe_transform[1]);
+    DrawMesh(pipe_models.meshes[PIPE_END], default_material,  pipe_transform[2]);
+    default_material.maps[MATERIAL_MAP_DIFFUSE].color = old_color;
+
     DrawHex(selectedCell, -0.2f, ORANGE);
     // ddraw_inputs();
 
@@ -219,10 +269,10 @@ void DrawGameplayScreen() {
     // DrawModel(playerModel, (Vector3){playerPosition.x + GRID_OFFSET_X, 0, playerPosition.y + GRID_OFFSET_Y} , 2.0f, WHITE);
     DrawModelEx(
         player.model,
-        (Vector3){player.position.x, 0, player.position.y},
-        (Vector3){0, 1.0f, 0},
+        (Vector3){.x = player.position.x, .y = 0, .z = player.position.y},
+        (Vector3){.x = 0, .y = 1.0f, .z = 0},
         player.rotation * RAD2DEG + 90,
-        (Vector3){2.0f, 2.0f, 2.0f},
+        (Vector3){.x = 2.0f, .y = 2.0f, .z = 2.0f},
         WHITE
     );
     if (PLAYMODE_BUILD == play_mode) {
@@ -246,11 +296,18 @@ void DrawGameplayScreen() {
         DrawRectangleGradientV(20, 20, 200, 400, GRAY, DARKGRAY);
 
         // buildable icon
-        DrawRectangleGradientV(30, 30, 85, 85, DARKBLUE, BLUE);
-        DrawText(building_names[BUILDING_WELL], 40, 40, 10, WHITE);
+        for (int i = 0; i < PIPE_COUNT; ++i) {
+            int row = i / 2;
+            int column = i % 2;
+
+            DrawRectangleGradientV(30 + 85 * column , 30 + 30 * row, 85, 30, DARKBLUE, BLUE);
+            DrawText(pipe_names[i], 40 + 85 * column, 40 + 30 * row, 10, WHITE);
+        }
+
+
 
         // cursor
-        DrawRectangleLines(30, 30, 85, 85, ORANGE);
+        DrawRectangleLines(30, 30, 85, 30, ORANGE);
     }
 }
 
