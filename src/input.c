@@ -62,9 +62,12 @@ static void ProcessTouchInputs(Inputs *inputs, const Axial playerCoordinate) {
 static void ProcessKeyboardInputs(Inputs *inputs) {
     // // TODO: buffer 2 or 3 frame inputs, then calculate the angle and divide by 6 directions to use in a switch statement
     Vector2 keyMoveInput = {
-        IsKeyDown(KEY_D) - IsKeyDown(KEY_A),
-        IsKeyDown(KEY_S) - IsKeyDown(KEY_W)
+        .x = IsKeyDown(KEY_D) - IsKeyDown(KEY_A),
+        .y = IsKeyDown(KEY_S) - IsKeyDown(KEY_W)
     };
+
+    inputs->h = IsKeyPressed(KEY_D) - IsKeyPressed(KEY_A);
+    inputs->v = IsKeyPressed(KEY_S) - IsKeyPressed(KEY_W);
 
     if (Vector2LengthSqr(keyMoveInput) > MOVE_INPUT_CUTOFF) {
         keyMoveInput = Vector2Normalize(keyMoveInput);

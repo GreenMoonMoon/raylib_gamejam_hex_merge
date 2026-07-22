@@ -145,15 +145,15 @@ void InitGameplayScreen() {
     finishScreen = 0;
 
     camera = (Camera3D) {
-        .position = (Vector3){0, 8.0f, 8.0f},
+        .position = (Vector3){.x = 0, .y = 8.0f, .z = 8.0f},
         .target = (Vector3){0},
-        .up = (Vector3){0, 1.0f, 0},
+        .up = (Vector3){.x = 0, .y = 1.0f, .z = 0},
         .fovy = 70.0f,
 
 
         .projection = CAMERA_PERSPECTIVE
     };
-    cameraOffset = (Vector3){0, 8.0f, 8.0f};
+    cameraOffset = (Vector3){.x = 0, .y = 8.0f, .z = 8.0f};
 
     // initialize player
     LoadPlayerResources();
@@ -219,6 +219,14 @@ void UpdateGameplayScreen() {
                 show_build_menu = false;
                 play_mode = PLAYMODE_DEFAULT;
             }
+            if (inputs.h != 0) {
+                build_menu_cursor += inputs.h;
+            }
+            if (inputs.v != 0) {
+                build_menu_cursor += inputs.v * 2;
+            }
+            build_menu_cursor %= PIPE_COUNT;
+            build_menu_cursor = (build_menu_cursor < 0) ? PIPE_COUNT - 1 : build_menu_cursor;
             break;
         default:
             // TODO: manage error, we should always be in a play mode
@@ -293,21 +301,20 @@ void DrawGameplayScreen() {
 
     if (show_build_menu) {
         // menu background
-        DrawRectangleGradientV(20, 20, 200, 400, GRAY, DARKGRAY);
+        const int x = 20, y = 20;
+        DrawRectangleGradientV(x, y, 200, 400, GRAY, DARKGRAY);
 
         // buildable icon
         for (int i = 0; i < PIPE_COUNT; ++i) {
-            int row = i / 2;
-            int column = i % 2;
+            const int row = i / 2;
+            const int column = i % 2;
 
-            DrawRectangleGradientV(30 + 85 * column , 30 + 30 * row, 85, 30, DARKBLUE, BLUE);
+            DrawRectangleGradientV(x + 10 + 85 * column + 5 , y + 10 + 30 * row + 5, 80, 25, DARKBLUE, BLUE);
             DrawText(pipe_names[i], 40 + 85 * column, 40 + 30 * row, 10, WHITE);
         }
 
-
-
         // cursor
-        DrawRectangleLines(30, 30, 85, 30, ORANGE);
+        DrawRectangleLines(x + 10 + (build_menu_cursor % 2) * 85 + 5, y + 10 + (build_menu_cursor / 2) * 30 + 5, 80, 25, ORANGE);
     }
 }
 
