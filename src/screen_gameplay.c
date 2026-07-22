@@ -7,6 +7,7 @@
 #include "player.h"
 #include "draw_utils.h"
 #include "building.h"
+#include "pipes.h"
 #include "extern/stb_ds.h"
 
 #define CAMERA_SPEED 4.0f
@@ -17,48 +18,6 @@ typedef enum PlayMode {
     PLAYMODE_BUILD,
     PLAYMODE_BUILD_MENU,
 } PlayMode;
-
-// PIPES
-enum PipeModelID {
-    PIPE_BEND,
-    PIPE_DIR_VALVE_MOUNT,
-    PIPE_END,
-    PIPE_5SPLIT,
-    PIPE_JOINT,
-    PIPE_4SPLIT,
-    PIPE_WELL,
-    PIPE_6SPLIT,
-    PIPE_STRAIGHT,
-    PIPE_3SPLIT,
-    PIPE_JOINT_VALVE_MOUNT,
-    PIPE_W_SPLIT,
-    PIPE_X_SPLIT,
-    PIPE_Y_SPLIT,
-    PIPE_VALVE,
-
-    PIPE_COUNT
-};
-char *pipe_names[PIPE_COUNT] = {
-    "Bend",
-    "dir valve mount",
-    "end",
-    "5 split",
-    "joint",
-    "4 split",
-    "well",
-    "6 split",
-    "straight",
-    "3 split",
-    "joint valve mount",
-    "w split",
-    "x split",
-    "y split",
-    "valve"
-};
-static Matrix pipe_transform[3];
-static Color pipe_color;
-
-static Matrix *pipe_transform_list[PIPE_COUNT];
 
 //----------------------------------------------------------------------------------
 // Module Variables Definition (local)
@@ -73,11 +32,6 @@ static char blueprint_rot = 0;
 // scene
 static Chunk map;
 static Axial selectedCell;
-static Model pipe_models;
-
-//debug
-static Material default_material;
-static Material default_material_instancing;
 
 // camera
 Camera3D camera;
@@ -164,11 +118,8 @@ void InitGameplayScreen() {
 
     // initialize scene
     map = generate_chunk((Checker){0});
-    pipe_models = LoadModel("./resources/models/pipes.glb");
-    default_material = LoadMaterialDefault();
-    default_material_instancing = LoadMaterialDefault();
-    default_material_instancing.shader = LoadShader("./resources/shaders/default_instancing.vert", "./resources/shaders/default.frag");
-    pipe_color = BLUE;
+
+    load_pipes_resources();
 }
 
 void UpdateGameplayScreen() {
@@ -183,8 +134,8 @@ void UpdateGameplayScreen() {
                 if (cell != nullptr) {
                     if ((cell->flags & TF_CAN_INTERACT) != 0) {
                         if ((cell->flags & TF_CAN_BUILD) != 0) {
-                            show_build_menu = true;
-                            play_mode = PLAYMODE_BUILD_MENU;
+                            play_mode = PLAYMODE_BUILD;
+                            blueprint = PIPE_WELL;
                             stop_player(&player);
                         }
                     }
@@ -207,12 +158,7 @@ void UpdateGameplayScreen() {
                 // build the blueprint
 
                 const Axial player_target = AxialAdd(player.coordinate, hexDirections[player.target_direction]);
-                const Vector2 position = AxialToPosition(player_target);
-                const Matrix transform = MatrixMultiply(
-                    MatrixRotateY(blueprint_rot * (PI / 3)),
-                    MatrixTranslate(position.x, 0.25f, position.y)
-                );
-                arrput(pipe_transform_list[blueprint], transform);
+                instantiate_pipe(blueprint, player_target, blueprint_rot);
 
                 play_mode = PLAYMODE_DEFAULT;
             }
@@ -275,19 +221,13 @@ void DrawGameplayScreen() {
             }
         }
     }
-
-    // DEBUG
-    default_material_instancing.maps[MATERIAL_MAP_DIFFUSE].color = pipe_color;
-    for (int i = 0; i < PIPE_COUNT; ++i) {
-        if (arrlen(pipe_transform_list[i]) == 0) { continue; }
-        DrawMeshInstanced(pipe_models.meshes[i], default_material_instancing, pipe_transform_list[i], arrlen(pipe_transform_list[i]));
-    }
+    draw_pipes();
 
     DrawHex(selectedCell, -0.2f, ORANGE);
+    DrawHex(AxialAdd(player.coordinate, hexDirections[player.target_direction]), 0, GREEN);
     // ddraw_inputs();
 
     // draw player
-    // DrawModel(playerModel, (Vector3){playerPosition.x + GRID_OFFSET_X, 0, playerPosition.y + GRID_OFFSET_Y} , 2.0f, WHITE);
     DrawModelEx(
         player.model,
         (Vector3){.x = player.position.x, .y = 0, .z = player.position.y},
@@ -300,13 +240,7 @@ void DrawGameplayScreen() {
         const Axial player_target = AxialAdd(player.coordinate, hexDirections[player.target_direction]);
         const Vector2 blueprint_pos = AxialToPosition(player_target);
         const Tile *t = get_chunk_tile(&map,axial_to_checker(player_target));
-        const Color old_color = default_material.maps[MATERIAL_MAP_DIFFUSE].color;
-        default_material.maps[MATERIAL_MAP_DIFFUSE].color = ((nullptr == t || t->flags & TF_SOURCE) > 0) ? RED : GREEN;
-        draw_mesh_wire(
-            pipe_models.meshes[blueprint],
-            default_material,
-            MatrixMultiply(MatrixRotateY(blueprint_rot * (PI / 3)), MatrixTranslate(blueprint_pos.x, 0.25f, blueprint_pos.y)));
-        default_material.maps[MATERIAL_MAP_DIFFUSE].color = old_color;
+        draw_pipe_wire(blueprint, blueprint_pos, blueprint_rot, ((nullptr == t || t->flags & TF_SOURCE) > 0) ? RED : GREEN);
     }
 
     EndMode3D();
@@ -327,7 +261,7 @@ void DrawGameplayScreen() {
             const int column = i % 2;
 
             DrawRectangleGradientV(x + 10 + 85 * column + 5 , y + 10 + 30 * row + 5, 80, 25, DARKBLUE, BLUE);
-            DrawText(pipe_names[i], 40 + 85 * column, 40 + 30 * row, 10, WHITE);
+            DrawText(get_pipe_name(i), 40 + 85 * column, 40 + 30 * row, 10, WHITE);
         }
 
         // cursor
@@ -337,6 +271,7 @@ void DrawGameplayScreen() {
 
 // Gameplay Screen Unload logic
 void UnloadGameplayScreen() {
+    unload_pipes_resources();
     delete_chunk(&map);
     UnloadPlayerResources();
 }

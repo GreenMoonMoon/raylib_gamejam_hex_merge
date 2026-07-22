@@ -63,6 +63,7 @@ target_sources(${PROJECT_NAME} PRIVATE
         src/hex.c
         src/input.c
         src/map.c
+        src/pipes.c
         src/player.c
         src/raylib_game.c
         src/screen_ending.c
