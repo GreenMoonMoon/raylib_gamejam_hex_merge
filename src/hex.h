@@ -53,6 +53,8 @@ Vector2 AxialToPosition(Axial coord);
 
 Axial PositionToAxial(Vector2 position);
 
+AxialDirection AxialDirectionToward(Axial axial);
+
 // CHECKER COORDINATE
 
 /// Hexagonal "double heigth" coordinate where vertical step size is doubled

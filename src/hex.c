@@ -62,6 +62,19 @@ Axial PositionToAxial(const Vector2 position) {
     return AxialRound(fractional_axial.x, fractional_axial.y);
 }
 
+AxialDirection AxialDirectionToward(Axial axial) {
+    if (axial.q > 0) {
+        if (axial.r < 0) { return HD_NORTH_EAST; }
+        return HD_SOUTH_EAST;
+    }
+    if(axial.q == 0) {
+        if (axial.r < 0) { return HD_NORTH; }
+        return HD_SOUTH;
+    }
+    if (axial.r > 0) { return HD_SOUTH_WEST; }
+    return HD_NORTH_WEST;
+}
+
 // CHECKER COORDINATE
 
 inline Checker CheckerAbs(const Checker coord) {

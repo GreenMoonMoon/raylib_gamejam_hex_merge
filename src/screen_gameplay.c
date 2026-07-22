@@ -1,3 +1,7 @@
+// TODO: hex tile specific instance rendering ( save on memory passed to the GPU each frame )
+// TODO: shadow map shader
+// TODO: ambient occlusion shader
+
 #include "raylib.h"
 #include "raymath.h"
 #include "screens.h"
@@ -109,6 +113,7 @@ void ddraw_chunk_info(const Chunk chunk) {
 }
 
 void InitGameplayScreen() {
+
     framesCounter = 0;
     finishScreen = 0;
 
@@ -158,8 +163,10 @@ void UpdateGameplayScreen() {
             // TODO: set the blueprint...
         } else {
             if (!AxialEqual(inputs.selected_tile, previous_selected_tile)) {
+                AxialDirection direction = AxialDirectionToward(AxialSubtract(previous_selected_tile, inputs.selected_tile));
                 // get the direction
                 // select the correct pipe for the previous tile
+                // add a pipe_short_end to the list aiming from the previous direction
             }
         }
     }
@@ -262,6 +269,7 @@ void DrawGameplayScreen() {
 
     // Pipes
     draw_pipes();
+    // MOUSE BLUEPRINT MODE
     // draw the blueprint pipe network
     const int bpp_count = arrlen(mouse_bpp_list);
     for (int i = 0; i < bpp_count; ++i) {
