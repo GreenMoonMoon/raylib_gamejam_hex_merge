@@ -16,7 +16,7 @@ typedef enum InputState {
 } InputState;
 
 typedef struct Inputs {
-    Axial selected_cell;
+    Axial selected_tile;
     Vector2 move_vector;
     int h, v;
 
@@ -26,6 +26,8 @@ typedef struct Inputs {
     bool rotate;
 } Inputs;
 
+// TODO: separate between character inputs and menu inputs as a way to group relevant inputs together and process axial
+//  inputs but otherwise just query the buttons state directly.
 void ProcessInputs(Inputs *inputs);
 
 #endif //RAYLIB_GAME_TEMPLATE_INPUT_H

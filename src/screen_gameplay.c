@@ -45,6 +45,17 @@ static int build_menu_cursor = 0;
 // player
 static Player player;
 
+// TODO: contextualize with a drone?
+// Mouse blueprint mode
+static bool mouse_blueprint_mode = false;
+struct BPP {
+    Vector2 position;
+    char rotation;
+    enum PipeModelID id;
+};
+static struct BPP *mouse_bpp_list; // Blueprint Pipe
+static Axial previous_selected_tile;
+
 //----------------------------------------------------------------------------------
 // Gameplay Screen Functions Definition
 //----------------------------------------------------------------------------------
@@ -127,6 +138,33 @@ void UpdateGameplayScreen() {
 
     ProcessInputs(&inputs);
 
+    // process mouse inputs here
+    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+        const Tile *tile = get_chunk_tile(&map, axial_to_checker(inputs.selected_tile));
+        if (!(tile->flags & (TF_CAN_BUILD | TF_SOURCE))) { return; }
+
+        mouse_blueprint_mode = true;
+        const struct BPP bpp = {
+            .position = AxialToPosition(inputs.selected_tile),
+            .rotation = 0,
+            .id = PIPE_WELL
+        };
+        arrput(mouse_bpp_list, bpp);
+        previous_selected_tile = inputs.selected_tile;
+    }
+    if (mouse_blueprint_mode) {
+        if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+            mouse_blueprint_mode = false;
+            // TODO: set the blueprint...
+        } else {
+            if (!AxialEqual(inputs.selected_tile, previous_selected_tile)) {
+                // get the direction
+                // select the correct pipe for the previous tile
+            }
+        }
+    }
+
+
     switch (play_mode) {
         case PLAYMODE_DEFAULT:
             if (inputs.interact_select) {
@@ -150,7 +188,7 @@ void UpdateGameplayScreen() {
             // update player
             MovePlayer(&player, inputs.move_vector, frame_time);
             break;
-        case PLAYMODE_BUILD:
+        case PLAYMODE_BUILD: //TODO: move this mode to the player state
             MovePlayer(&player, inputs.move_vector, frame_time);
 
             if (inputs.rotate) { blueprint_rot = (blueprint_rot + 1) % 6; }
@@ -196,7 +234,7 @@ void UpdateGameplayScreen() {
     // update player
     UpdatePlayer(&player, frame_time);
 
-    selectedCell = inputs.selected_cell;
+    selectedCell = inputs.selected_tile;
 
     // update camera
     const Vector2 playerPosition = player.position;
@@ -221,7 +259,18 @@ void DrawGameplayScreen() {
             }
         }
     }
+
+    // Pipes
     draw_pipes();
+    // draw the blueprint pipe network
+    const int bpp_count = arrlen(mouse_bpp_list);
+    for (int i = 0; i < bpp_count; ++i) {
+        draw_pipe_wire(mouse_bpp_list[i].id, mouse_bpp_list[i].position, mouse_bpp_list[i].rotation, SKYBLUE);
+    }
+    // draw the end mesh
+    if (bpp_count > 0) {
+        draw_pipe_wire(PIPE_END, mouse_bpp_list[bpp_count - 1].position, mouse_bpp_list[bpp_count - 1].rotation, SKYBLUE);
+    }
 
     DrawHex(selectedCell, -0.2f, ORANGE);
     DrawHex(AxialAdd(player.coordinate, hexDirections[player.target_direction]), 0, GREEN);

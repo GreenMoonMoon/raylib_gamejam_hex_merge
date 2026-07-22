@@ -15,6 +15,7 @@ enum PipeModelID {
     PIPE_5SPLIT,
     PIPE_JOINT,
     PIPE_4SPLIT,
+    PIPE_SHORT_END,
     PIPE_WELL,
     PIPE_6SPLIT,
     PIPE_STRAIGHT,

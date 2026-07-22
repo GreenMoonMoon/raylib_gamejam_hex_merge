@@ -36,8 +36,8 @@ static void ProcessTouchInputs(Inputs *inputs, const Axial playerCoordinate) {
         // if it is a new touch event, check if the player is trying to drag the player character or select a destination
         if (lastGesture == GESTURE_NONE) {
             // get the cell coordinate from the touch position
-            inputs->selected_cell = PositionToAxial((Vector2){touchWorldPosition.x, touchWorldPosition.y});
-            if (AxialEqual(inputs->selected_cell, playerCoordinate)) {
+            inputs->selected_tile = PositionToAxial((Vector2){touchWorldPosition.x, touchWorldPosition.y});
+            if (AxialEqual(inputs->selected_tile, playerCoordinate)) {
                 state = IS_TOUCH_DRAG;
             } else {
                 state = IS_TOUCH_SELECT;
@@ -79,7 +79,7 @@ static void ProcessKeyboardInputs(Inputs *inputs) {
     // target a cell
     if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) || IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
         const Vector2 clickWorldPosition = GetScreenToGround(GetMousePosition());
-        inputs->selected_cell = PositionToAxial((Vector2){clickWorldPosition.x, clickWorldPosition.y});
+        inputs->selected_tile = PositionToAxial((Vector2){.x = clickWorldPosition.x, .y = clickWorldPosition.y});
     }
 
     lastKeyMoveInput = keyMoveInput;
