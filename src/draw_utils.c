@@ -136,3 +136,9 @@ void draw_chunk_grid(const Chunk chunk, const Color color) {
     rlEnd();
     rlPopMatrix();
 }
+
+void draw_mesh_wire(const Mesh mesh, const Material material, const Matrix transform) {
+    rlEnableWireMode();
+    DrawMesh(mesh, material, transform);
+    rlDisableWireMode();
+}

@@ -23,6 +23,7 @@ typedef struct Inputs {
     bool interact_select;
     bool close;
     bool toggle_build;
+    bool rotate;
 } Inputs;
 
 void ProcessInputs(Inputs *inputs);

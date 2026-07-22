@@ -89,8 +89,11 @@ static void ProcessKeyboardInputs(Inputs *inputs) {
     }
 
     if (IsKeyPressed(KEY_B)) {
-        // TODO: enter build mode
         inputs->toggle_build = true;
+    }
+
+    if (IsKeyPressed(KEY_R)) {
+        inputs->rotate = true;
     }
 
     if (IsKeyPressed(KEY_BACKSPACE)) {
@@ -107,5 +110,11 @@ static void ProcessGamepadInputs(Inputs *inputs) {
 }
 
 void ProcessInputs(Inputs *inputs) {
+    // reset transient values
+    inputs->interact_select = false;
+    inputs->close = false;
+    inputs->toggle_build = false;
+    inputs->rotate = false;
+
     ProcessKeyboardInputs(inputs);
 }

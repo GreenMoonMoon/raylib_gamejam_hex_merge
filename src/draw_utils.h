@@ -19,4 +19,6 @@ void DrawChunkBoundaries(Checker coord, float height, Color color);
 
 void draw_chunk_grid(Chunk chunk, Color color);
 
+void draw_mesh_wire(Mesh mesh, Material material, Matrix transform);
+
 #endif //RAYLIB_GAME_TEMPLATE_DRAW_UTILS_H
