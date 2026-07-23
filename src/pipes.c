@@ -38,7 +38,7 @@ struct BPP {
     unsigned int rotation;
     enum PipeModelID id;
 };
-static struct BPP pipe_tool_start_bpp, pipe_tool_end_bpp;
+static struct BPP pipe_tool_start_bpp;
 static struct BPP *pipe_tool_bpp_list;
 static Axial previous_tile;
 
@@ -96,7 +96,6 @@ void start_pipe_tool(const Axial start_tile, const char hex_direction) {
         .rotation = hex_direction,
         .id = PIPE_WELL_OPEN
     };
-    pipe_tool_end_bpp.id = PIPE_NONE;
     previous_tile = start_tile;
 }
 
@@ -105,38 +104,39 @@ bool update_pipe_tool(const Axial next_tile) {
     if (distance != 1) { return false; }
 
     const AxialDirection direction = AxialDirectionToward(AxialSubtract(previous_tile, next_tile));
-    const AxialDirection dd = ((direction - pipe_tool_end_bpp.rotation) + 6) % 6;
-    if (dd == 4 || dd == 2) { return false; }
-    if (pipe_tool_end_bpp.id == PIPE_NONE) {
+    if (arrlen(pipe_tool_bpp_list) == 0) {
         // set the end
-        pipe_tool_end_bpp = (struct BPP){
+        const struct BPP bpp = {
             .position = AxialToPosition(next_tile),
             .rotation = direction,
             .id = PIPE_SHORT_END
         };
+        arrput(pipe_tool_bpp_list, bpp);
         // update the well
         pipe_tool_start_bpp.id = PIPE_WELL_CONNECTED;
         pipe_tool_start_bpp.rotation = direction;
     } else {
-        struct BPP bpp = {.position = pipe_tool_end_bpp.position };
+        const AxialDirection dd = ((direction - arrlast(pipe_tool_bpp_list).rotation) + 6) % 6;
+        if (dd == 4 || dd == 2) { return false; }
         switch (dd) {
             case 1:
-                bpp.rotation = (pipe_tool_end_bpp.rotation + 4) % 6;
-                bpp.id = PIPE_BEND;
+                arrlast(pipe_tool_bpp_list).rotation = (arrlast(pipe_tool_bpp_list).rotation + 4) % 6;
+                arrlast(pipe_tool_bpp_list).id = PIPE_BEND;
                 break;
             case 5:
-                bpp.rotation = pipe_tool_end_bpp.rotation;
-                bpp.id = PIPE_BEND;
+                arrlast(pipe_tool_bpp_list).id = PIPE_BEND;
                 break;
             default:
-                bpp.rotation = pipe_tool_end_bpp.rotation;
-                bpp.id = PIPE_STRAIGHT;
+                arrlast(pipe_tool_bpp_list).id = PIPE_STRAIGHT;
                 break;
         }
-        arrput(pipe_tool_bpp_list, bpp);
 
-        pipe_tool_end_bpp.position = AxialToPosition(next_tile);
-        pipe_tool_end_bpp.rotation = direction;
+        const struct BPP bpp  = {
+            .position = AxialToPosition(next_tile),
+            .rotation = direction,
+            .id = PIPE_SHORT_END
+        };
+        arrput(pipe_tool_bpp_list, bpp);
     }
 
     previous_tile = next_tile;
@@ -147,7 +147,7 @@ Blueprint commit_pipe_tool() {
     Blueprint bp = create_blueprint();
     arrput(bp.bpp_list, pipe_tool_start_bpp);
     for (int i = 0; i < arrlen(pipe_tool_bpp_list); ++i) { arrput(bp.bpp_list, pipe_tool_bpp_list[i]); }
-    if (pipe_tool_end_bpp.id != PIPE_NONE) { arrput(bp.bpp_list, pipe_tool_end_bpp); }
+    // if (pipe_tool_end_bpp.id != PIPE_NONE) { arrput(bp.bpp_list, pipe_tool_end_bpp); }
 
     // clear pipe_tool
     arrsetlen(pipe_tool_bpp_list, 0);
@@ -161,9 +161,9 @@ void draw_pipe_tool() {
     for (int i = 0; i < bpp_count; ++i) {
         draw_pipe_wire(pipe_tool_bpp_list[i].id, pipe_tool_bpp_list[i].position, pipe_tool_bpp_list[i].rotation, SKYBLUE);
     }
-    if (pipe_tool_end_bpp.id != PIPE_NONE) {
-        draw_pipe_wire(pipe_tool_end_bpp.id, pipe_tool_end_bpp.position, pipe_tool_end_bpp.rotation, SKYBLUE);
-    }
+    // if (pipe_tool_end_bpp.id != PIPE_NONE) {
+    //     draw_pipe_wire(pipe_tool_end_bpp.id, pipe_tool_end_bpp.position, pipe_tool_end_bpp.rotation, SKYBLUE);
+    // }
 }
 
 void draw_pipe_blueprint(const Blueprint blueprint) {
