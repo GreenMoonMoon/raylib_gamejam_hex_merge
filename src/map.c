@@ -17,7 +17,7 @@ Chunk generate_chunk(const Checker coord) {
     chunk.layers[0] = malloc(msize);
     memset(chunk.layers[0], 0, msize);
 
-    chunk.layers[0][0].flags |= TF_STACK & TF_CAN_INTERACT;
+    chunk.layers[0][0].flags |= (TF_STACK | TF_CAN_INTERACT);
 
     for (int i = 0; i < 6; ++i) {
         const int c = GetRandomValue(0, CHUNK_SIZE);

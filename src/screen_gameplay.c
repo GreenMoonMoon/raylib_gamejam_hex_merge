@@ -1,6 +1,8 @@
 // TODO: hex tile specific instance rendering ( save on memory passed to the GPU each frame )
 // TODO: shadow map shader
 // TODO: ambient occlusion shader
+// TODO: build blueprint
+// TODO: hop over pipes animations
 
 #include "raylib.h"
 #include "raymath.h"
@@ -246,12 +248,13 @@ void DrawGameplayScreen() {
     // TODO: build a display setup for quick rendering?
     for (int c = 0; c < CHUNK_SIZE; ++c) {
         for (int r = c % 2; r < CHUNK_SIZE; r += 2) {
-            if ((map.layers[0][CHECKER2INDEX(c, r)].flags & TF_CAN_INTERACT) != 0) {
-                const Vector2 position = CheckerToPosition((Checker){.col = c, .row = r});
-                DrawCube((Vector3){.x = position.x, .y = 0, .z = position.y}, 0.5f, 0.5f, 0.5f, RED);
-            } else if ((map.layers[0][CHECKER2INDEX(c, r)].flags & TF_STACK)) {
+            const Tile tile = map.layers[0][CHECKER2INDEX(c, r)];
+            if (tile.flags & TF_STACK) {
                 const Vector2 position = CheckerToPosition((Checker){.col = c, .row = r});
                 DrawCube((Vector3){.x = position.x, .y = 0, .z = position.y}, 0.5f, 0.5f, 0.5f, GRAY);
+            } else if (tile.flags & TF_CAN_INTERACT) {
+                const Vector2 position = CheckerToPosition((Checker){.col = c, .row = r});
+                DrawCube((Vector3){.x = position.x, .y = 0, .z = position.y}, 0.5f, 0.5f, 0.5f, RED);
             }
         }
     }
