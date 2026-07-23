@@ -3,6 +3,7 @@
 // TODO: ambient occlusion shader
 // TODO: build blueprint
 // TODO: hop over pipes animations
+// TODO: simplify blueprints with a single "blueprint" that can render all buildables
 
 #include "raylib.h"
 #include "raymath.h"
@@ -140,10 +141,12 @@ void UpdateGameplayScreen() {
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
         const Tile *tile = get_chunk_tile(&map, inputs.selected_tile);
         if (!(tile->flags & (TF_CAN_BUILD | TF_SOURCE))) { return; }
-
+        if ((tile->flags & TF_BLUEPRINT) != 0) { return; } // DEBUG
         mouse_pipe_tool = true;
         const AxialDirection dir = ((int)roundf(Vector2LineAngle(inputs.mouse_position, AxialToPosition(inputs.selected_tile)) / (PI / 3)) + 2) % HD_COUNT;
         start_pipe_tool(inputs.selected_tile, dir);
+        const Checker checker = axial_to_checker(inputs.selected_tile);
+        map.layers[0][CHECKER2INDEX(checker.col, checker.row)].flags |= TF_BLUEPRINT;
     }
     if (mouse_pipe_tool) {
         if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {

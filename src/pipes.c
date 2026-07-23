@@ -147,7 +147,6 @@ Blueprint commit_pipe_tool() {
     Blueprint bp = create_blueprint();
     arrput(bp.bpp_list, pipe_tool_start_bpp);
     for (int i = 0; i < arrlen(pipe_tool_bpp_list); ++i) { arrput(bp.bpp_list, pipe_tool_bpp_list[i]); }
-    // if (pipe_tool_end_bpp.id != PIPE_NONE) { arrput(bp.bpp_list, pipe_tool_end_bpp); }
 
     // clear pipe_tool
     arrsetlen(pipe_tool_bpp_list, 0);
@@ -161,9 +160,6 @@ void draw_pipe_tool() {
     for (int i = 0; i < bpp_count; ++i) {
         draw_pipe_wire(pipe_tool_bpp_list[i].id, pipe_tool_bpp_list[i].position, pipe_tool_bpp_list[i].rotation, SKYBLUE);
     }
-    // if (pipe_tool_end_bpp.id != PIPE_NONE) {
-    //     draw_pipe_wire(pipe_tool_end_bpp.id, pipe_tool_end_bpp.position, pipe_tool_end_bpp.rotation, SKYBLUE);
-    // }
 }
 
 void draw_pipe_blueprint(const Blueprint blueprint) {
