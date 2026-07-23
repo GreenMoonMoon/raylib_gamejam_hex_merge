@@ -51,13 +51,14 @@ static Player player;
 
 // TODO: contextualize with a drone?
 // Mouse blueprint mode
-static bool mouse_blueprint_mode = false;
+static bool mouse_pipe_tool = false;
 struct BPP {
     Vector2 position;
     char rotation;
     enum PipeModelID id;
 };
-static struct BPP *mouse_bpp_list; // Blueprint Pipe
+static struct BPP pipe_tool_start_bpp, pipe_tool_end_bpp;
+static struct BPP *pipe_tool_bpp_list; // Blueprint Pipe
 static Axial previous_selected_tile;
 
 //----------------------------------------------------------------------------------
@@ -148,25 +149,75 @@ void UpdateGameplayScreen() {
         const Tile *tile = get_chunk_tile(&map, axial_to_checker(inputs.selected_tile));
         if (!(tile->flags & (TF_CAN_BUILD | TF_SOURCE))) { return; }
 
-        mouse_blueprint_mode = true;
-        const struct BPP bpp = {
-            .position = AxialToPosition(inputs.selected_tile),
-            .rotation = 0,
-            .id = PIPE_WELL
+        //Start the pipe tool
+        const Vector2 position = AxialToPosition(inputs.selected_tile);
+        const AxialDirection dir = ((int)roundf(Vector2LineAngle(inputs.mouse_position, position) / (PI / 3)) + 2) % HD_COUNT;
+
+        mouse_pipe_tool = true;
+        pipe_tool_start_bpp = (struct BPP){
+            .position = position,
+            .rotation = dir,
+            .id = PIPE_WELL_OPEN
         };
-        arrput(mouse_bpp_list, bpp);
+        pipe_tool_end_bpp.id = PIPE_NONE;
         previous_selected_tile = inputs.selected_tile;
     }
-    if (mouse_blueprint_mode) {
+    if (mouse_pipe_tool) {
         if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
-            mouse_blueprint_mode = false;
+            mouse_pipe_tool = false;
             // TODO: set the blueprint...
         } else {
             if (!AxialEqual(inputs.selected_tile, previous_selected_tile)) {
-                AxialDirection direction = AxialDirectionToward(AxialSubtract(previous_selected_tile, inputs.selected_tile));
-                // get the direction
-                // select the correct pipe for the previous tile
-                // add a pipe_short_end to the list aiming from the previous direction
+                Tile *tile = get_chunk_tile(&map, axial_to_checker(inputs.selected_tile));
+                const int distance = AxialDistance(previous_selected_tile, inputs.selected_tile);
+                if (tile->flags == 0 && distance == 1) {
+                    const AxialDirection direction = AxialDirectionToward(AxialSubtract(previous_selected_tile, inputs.selected_tile));
+
+                    if (pipe_tool_end_bpp.id == PIPE_NONE) {
+                        // set the end
+                        pipe_tool_end_bpp = (struct BPP){
+                            .position = AxialToPosition(inputs.selected_tile),
+                            // .rotation = (direction + 3) % HD_COUNT,
+                            .rotation = direction,
+                            .id = PIPE_SHORT_END
+                        };
+                        // update the well
+                        pipe_tool_start_bpp.id = PIPE_WELL_CONNECTED;
+                        pipe_tool_start_bpp.rotation = direction;
+                    } else {
+                        struct BPP bpp = {.position = pipe_tool_end_bpp.position };
+                        const AxialDirection dd = ((direction - pipe_tool_end_bpp.rotation) + 6) % 6;
+                        TraceLog(LOG_DEBUG, "dd: %d", dd);
+                        switch (dd) {
+                            case 1:
+                                bpp.rotation = (pipe_tool_end_bpp.rotation + 4) % 6;
+                                bpp.id = PIPE_BEND;
+                                break;
+                            case 2:
+                                bpp.rotation = (pipe_tool_end_bpp.rotation + 3) % 6;
+                                bpp.id = PIPE_SPLIT_BRANCH;
+                                break;
+                            case 4:
+                                bpp.rotation = (pipe_tool_end_bpp.rotation + 4) % 6;
+                                bpp.id = PIPE_SPLIT_BRANCH;
+                                break;
+                            case 5:
+                                bpp.rotation = pipe_tool_end_bpp.rotation;
+                                bpp.id = PIPE_BEND;
+                                break;
+                            default:
+                                bpp.rotation = pipe_tool_end_bpp.rotation;
+                                bpp.id = PIPE_STRAIGHT;
+                                break;
+                        }
+                        arrput(pipe_tool_bpp_list, bpp);
+                        tile->flags |= TF_BLUEPRINT;
+
+                        pipe_tool_end_bpp.position = AxialToPosition(inputs.selected_tile);
+                        pipe_tool_end_bpp.rotation = direction;
+                    }
+                    previous_selected_tile = inputs.selected_tile;
+                }
             }
         }
     }
@@ -180,7 +231,7 @@ void UpdateGameplayScreen() {
                     if ((cell->flags & TF_CAN_INTERACT) != 0) {
                         if ((cell->flags & TF_CAN_BUILD) != 0) {
                             play_mode = PLAYMODE_BUILD;
-                            blueprint = PIPE_WELL;
+                            blueprint = PIPE_WELL_OPEN;
                             stop_player(&player);
                         }
                     }
@@ -271,13 +322,13 @@ void DrawGameplayScreen() {
     draw_pipes();
     // MOUSE BLUEPRINT MODE
     // draw the blueprint pipe network
-    const int bpp_count = arrlen(mouse_bpp_list);
+    draw_pipe_wire(pipe_tool_start_bpp.id, pipe_tool_start_bpp.position, pipe_tool_start_bpp.rotation, SKYBLUE);
+    const int bpp_count = arrlen(pipe_tool_bpp_list);
     for (int i = 0; i < bpp_count; ++i) {
-        draw_pipe_wire(mouse_bpp_list[i].id, mouse_bpp_list[i].position, mouse_bpp_list[i].rotation, SKYBLUE);
+        draw_pipe_wire(pipe_tool_bpp_list[i].id, pipe_tool_bpp_list[i].position, pipe_tool_bpp_list[i].rotation, SKYBLUE);
     }
-    // draw the end mesh
-    if (bpp_count > 0) {
-        draw_pipe_wire(PIPE_END, mouse_bpp_list[bpp_count - 1].position, mouse_bpp_list[bpp_count - 1].rotation, SKYBLUE);
+    if (pipe_tool_end_bpp.id != PIPE_NONE) {
+        draw_pipe_wire(pipe_tool_end_bpp.id, pipe_tool_end_bpp.position, pipe_tool_end_bpp.rotation, SKYBLUE);
     }
 
     DrawHex(selectedCell, -0.2f, ORANGE);

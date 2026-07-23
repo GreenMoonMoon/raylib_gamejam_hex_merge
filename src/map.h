@@ -18,6 +18,7 @@
 #define TF_CAN_INTERACT 0x1
 #define TF_CAN_BUILD 0x2
 #define TF_SOURCE 0x4
+#define TF_BLUEPRINT 0x8
 #define TF_OBSTACLE 0xf
 
 typedef struct Tile {

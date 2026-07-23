@@ -41,7 +41,7 @@ Axial GetMapNeighbor(const Axial coord, const AxialDirection neighborDirection) 
 Tile * get_chunk_tile(const Chunk *chunk, const Checker coord) {
     const unsigned int index = CHECKER2INDEX(coord.col, coord.row);
     if (index >= CHUNK_SIZE * CHUNK_SIZE) { return nullptr; }
-    return &chunk->layers[0][CHECKER2INDEX(coord.col, coord.row)];
+    return &chunk->layers[0][index];
 }
 
 bool check_chunk_collision(const Chunk *chunk, const Axial coord) {

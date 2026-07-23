@@ -18,6 +18,7 @@ typedef enum InputState {
 typedef struct Inputs {
     Axial selected_tile;
     Vector2 move_vector;
+    Vector2 mouse_position;
     int h, v;
 
     bool interact_select;

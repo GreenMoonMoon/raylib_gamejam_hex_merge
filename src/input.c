@@ -78,8 +78,8 @@ static void ProcessKeyboardInputs(Inputs *inputs) {
 
     // target a cell
     if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) || IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
-        const Vector2 clickWorldPosition = GetScreenToGround(GetMousePosition());
-        inputs->selected_tile = PositionToAxial((Vector2){.x = clickWorldPosition.x, .y = clickWorldPosition.y});
+        inputs->mouse_position = GetScreenToGround(GetMousePosition());
+        inputs->selected_tile = PositionToAxial(inputs->mouse_position);
     }
 
     lastKeyMoveInput = keyMoveInput;
