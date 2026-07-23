@@ -7,7 +7,6 @@
 
 #include "raylib.h"
 #include "hex.h"
-#include "input.h"
 
 typedef enum PlayerState {
     PS_IDLE,

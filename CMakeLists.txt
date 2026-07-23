@@ -65,6 +65,7 @@ target_sources(${PROJECT_NAME} PRIVATE
         src/map.c
         src/pipes.c
         src/player.c
+        src/building.c
         src/raylib_game.c
         src/screen_ending.c
         src/screen_gameplay.c

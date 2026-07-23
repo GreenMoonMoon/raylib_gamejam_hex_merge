@@ -5,18 +5,14 @@
 #ifndef RAYLIB_GAMEJAM_ENTRY_BUILDING_H
 #define RAYLIB_GAMEJAM_ENTRY_BUILDING_H
 
-typedef enum BuildingType {
-    BUILDING_WELL,
+struct BPP;
 
-    BUILDING_COUNT,
-} BuildingType;
+typedef struct Blueprint {
+    struct BPP *bpp_list;
+} Blueprint;
 
-const char *building_names[] = {
-    "well",
-};
+Blueprint create_blueprint();
 
-typedef struct Building {
-    BuildingType type;
-} Building;
+void delete_blueprint(Blueprint *blueprint);
 
 #endif //RAYLIB_GAMEJAM_ENTRY_BUILDING_H
