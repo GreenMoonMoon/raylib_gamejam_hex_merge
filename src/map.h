@@ -20,6 +20,7 @@
 #define TF_SOURCE 0x4
 #define TF_BLUEPRINT 0x8
 #define TF_OBSTACLE 0xf
+#define TF_STACK 0x10
 
 typedef struct Tile {
     unsigned int flags;

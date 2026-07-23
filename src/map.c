@@ -17,9 +17,14 @@ Chunk generate_chunk(const Checker coord) {
     chunk.layers[0] = malloc(msize);
     memset(chunk.layers[0], 0, msize);
 
+    chunk.layers[0][0].flags |= TF_STACK & TF_CAN_INTERACT;
+
     for (int i = 0; i < 6; ++i) {
         const int c = GetRandomValue(0, CHUNK_SIZE);
         const int r = GetRandomValue(0, CHUNK_SIZE) + c % 2;
+        const int index = CHECKER2INDEX(c, r);
+        if (chunk.layers[0][index].flags != 0) { continue; }
+
         chunk.layers[0][CHECKER2INDEX(c, r)] = (Tile) {
             .flags = TF_CAN_INTERACT | TF_CAN_BUILD | TF_SOURCE
         };

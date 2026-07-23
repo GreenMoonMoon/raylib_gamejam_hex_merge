@@ -162,11 +162,15 @@ void UpdateGameplayScreen() {
             if (inputs.interact_select) {
                 const Tile *cell = get_chunk_tile(&map, AxialAdd(player.coordinate, hexDirections[player.target_direction]));
                 if (cell != nullptr) {
-                    if ((cell->flags & TF_CAN_INTERACT) != 0) {
-                        if ((cell->flags & TF_CAN_BUILD) != 0) {
+                    if (cell->flags & TF_CAN_INTERACT) {
+                        if (cell->flags & TF_CAN_BUILD) {
                             play_mode = PLAYMODE_BUILD;
                             stop_player(&player);
+                        } else if (cell->flags & TF_STACK) {
+                            // TODO: grab a "resource"
                         }
+                    } else if (cell->flags & TF_BLUEPRINT) {
+                        // TODO: if the player hold a "resources" place it and instantiate that part of the blueprint
                     }
                 }
             }
@@ -245,6 +249,9 @@ void DrawGameplayScreen() {
             if ((map.layers[0][CHECKER2INDEX(c, r)].flags & TF_CAN_INTERACT) != 0) {
                 const Vector2 position = CheckerToPosition((Checker){.col = c, .row = r});
                 DrawCube((Vector3){.x = position.x, .y = 0, .z = position.y}, 0.5f, 0.5f, 0.5f, RED);
+            } else if ((map.layers[0][CHECKER2INDEX(c, r)].flags & TF_STACK)) {
+                const Vector2 position = CheckerToPosition((Checker){.col = c, .row = r});
+                DrawCube((Vector3){.x = position.x, .y = 0, .z = position.y}, 0.5f, 0.5f, 0.5f, GRAY);
             }
         }
     }
