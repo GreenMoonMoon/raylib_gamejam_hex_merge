@@ -10,7 +10,7 @@
 
 struct PipeTransform {
     Vector3 position;
-    char rotation;
+    float rotation;
 };
 
 static const char *pipe_names[PIPE_COUNT] = {
@@ -55,8 +55,8 @@ void load_pipes_resources() {
     pipe_models = LoadModel("./resources/models/pipes.glb");
     default_material_instancing = LoadMaterialDefault();
     default_material_instancing.shader = LoadShader("./resources/shaders/default_instancing_pipes.vert", "./resources/shaders/default.frag");
-    default_material_instancing_pos_loc = GetShaderLocation(default_material_instancing.shader, "instance_position");
-    default_material_instancing_rot_loc = GetShaderLocation(default_material_instancing.shader, "instance_rotation");
+    default_material_instancing_pos_loc = GetShaderLocationAttrib(default_material_instancing.shader, "instance_position");
+    default_material_instancing_rot_loc = GetShaderLocationAttrib(default_material_instancing.shader, "instance_rotation");
 
     pipe_color = BLUE;
 
@@ -161,15 +161,15 @@ bool update_pipe_tool(const Axial next_tile) {
 void commit_pipe_tool_to_blueprints(PipeBlueprint *blueprints) {
     const Vector2 start_position = AxialToPosition(pipe_tool_start_bpp.coordinate);
     const struct PipeTransform start_transform = {
-        .position = (Vector3){.x = start_position.x, .y = 0, .z = start_position.y},
-        .rotation = pipe_tool_start_bpp.rotation
+        .position = (Vector3){.x = start_position.x, .y = 0.25f, .z = start_position.y},
+        .rotation = (float)pipe_tool_start_bpp.rotation * M_PI_3
     };
     arrput(blueprints->instance_lists[pipe_tool_start_bpp.id], start_transform);
     for (int i = 0; i < arrlen(pipe_tool_bpp_list); ++i) {
         const struct Vector2 position = AxialToPosition(pipe_tool_bpp_list[i].coordinate);
         const struct PipeTransform transform = {
-            .position = (Vector3){.x = position.x, .y = 0, .z = position.y},
-            .rotation = pipe_tool_bpp_list[i].rotation
+            .position = (Vector3){.x = position.x, .y = 0.25f, .z = position.y},
+            .rotation = (float)pipe_tool_bpp_list[i].rotation * M_PI_3
         };
         arrput(blueprints->instance_lists[pipe_tool_bpp_list[i].id], transform);
     }
@@ -255,7 +255,7 @@ static void draw_pipe_instances(const enum PipeModelID id, const struct PipeTran
     }
     if (default_material_instancing_rot_loc != -1) {
         rlEnableVertexAttribute(default_material_instancing_rot_loc);
-        rlSetVertexAttribute(default_material_instancing_rot_loc, 1, RL_UNSIGNED_BYTE, 0, sizeof(struct PipeTransform), sizeof(Vector3));
+        rlSetVertexAttribute(default_material_instancing_rot_loc, 1, RL_FLOAT, 0, sizeof(struct PipeTransform), sizeof(Vector3));
         rlSetVertexAttributeDivisor(default_material_instancing_rot_loc, 1);
     }
 
@@ -396,11 +396,12 @@ static void draw_pipe_instances(const enum PipeModelID id, const struct PipeTran
     // Disable shader program
     rlDisableShader();
 
-    // Remove instance transforms buffer
+    // Remove instance transforms buffe    // MatrixTranslate()
+    // MatrixRotateY()
+    // MatrixMultiply()
+
     rlUnloadVertexBuffer(instances_vbo_id);
     // RL_FREE(instanceTransform);
-    // MatrixTranslate()
-    // MatrixRotateY()
 }
 
 void draw_pipe_blueprint(const PipeBlueprint *blueprint) {

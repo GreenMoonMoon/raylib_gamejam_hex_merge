@@ -7,8 +7,8 @@ in vec3 vertexNormal;
 in vec4 vertexColor;
 
 //in mat4 instanceTransform;
-in int instance_rotation;
 in vec3 instance_position;
+in float instance_rotation;
 
 
 // Input uniform values
@@ -22,17 +22,16 @@ out vec4 fragColor;
 out vec3 fragNormal;
 
 // NOTE: Add your custom variables here
-#define M_PI_3 1.0471975512
 
 void main()
 {
-    float cosres = cos(instance_rotation * M_PI_3);
-    float sinres = sin(instance_rotation * M_PI_3);
+    float cosres = cos(instance_rotation);
+    float sinres = sin(instance_rotation);
     mat4 instanceTransform = mat4(
-            vec4(cosres, 0, -sinres, instance_position.x),
-            vec4(0, 1, 0, instance_position.y),
-            vec4(sinres, 0, cosres, instance_position.z),
-            vec4(0, 0, 0, 1)
+            vec4(cosres, 0, -sinres, 0),
+            vec4(0, 1, 0, 0),
+            vec4(sinres, 0, cosres, 0),
+            vec4(instance_position, 1)
     );
 
     // Send vertex attributes to fragment shader
