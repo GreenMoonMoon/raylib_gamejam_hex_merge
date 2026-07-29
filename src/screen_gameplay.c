@@ -52,7 +52,9 @@ static int build_menu_cursor = 0;
 static Player player;
 
 static bool mouse_pipe_tool = false;
-static Blueprint *blueprint_list;
+static Blueprint blueprints;
+
+// static
 
 //----------------------------------------------------------------------------------
 // Gameplay Screen Functions Definition
@@ -151,8 +153,7 @@ void UpdateGameplayScreen() {
     if (mouse_pipe_tool) {
         if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
             mouse_pipe_tool = false;
-            const Blueprint bp = commit_pipe_tool();
-            arrput(blueprint_list, bp);
+            commit_pipe_tool_to_blueprints(&blueprints.pipes);
         } else {
             Tile *tile = get_chunk_tile(&map, inputs.selected_tile);
             if (tile != nullptr && tile->flags == 0) {
@@ -173,9 +174,12 @@ void UpdateGameplayScreen() {
                             stop_player(&player);
                         } else if (cell->flags & TF_STACK) {
                             // TODO: grab a "resource"
+                            player.hold_resources = true;
                         }
                     } else if (cell->flags & TF_BLUEPRINT) {
                         // TODO: if the player hold a "resources" place it and instantiate that part of the blueprint
+
+                        player.hold_resources = false;
                     }
                 }
             }
@@ -269,9 +273,7 @@ void DrawGameplayScreen() {
     if (mouse_pipe_tool) { draw_pipe_tool(); }
 
     // draw blueprints
-    for (int i = 0; i < arrlen(blueprint_list); ++i) {
-        draw_pipe_blueprint(blueprint_list[i]);
-    }
+    draw_pipe_blueprint(&blueprints.pipes);
 
     DrawHex(selectedCell, -0.2f, ORANGE);
     DrawHex(AxialAdd(player.coordinate, hexDirections[player.target_direction]), 0, GREEN);
@@ -286,6 +288,9 @@ void DrawGameplayScreen() {
         (Vector3){.x = 2.0f, .y = 2.0f, .z = 2.0f},
         WHITE
     );
+    if (player.hold_resources) {
+        DrawCube((Vector3){.x = player.position.x, .y = 2.0f, .z = player.position.y}, 0.25f, 0.25f, 0.25f, GRAY);
+    }
     if (PLAYMODE_BUILD == play_mode) {
         const Axial player_target = AxialAdd(player.coordinate, hexDirections[player.target_direction]);
         const Vector2 blueprint_pos = AxialToPosition(player_target);
@@ -322,10 +327,7 @@ void DrawGameplayScreen() {
 // Gameplay Screen Unload logic
 void UnloadGameplayScreen() {
     // delete all blueprints
-    if (blueprint_list != nullptr) {
-        for (int i = 0; i < arrlen(blueprint_list); ++i) { delete_blueprint(&blueprint_list[i]); }
-        arrfree(blueprint_list);
-    }
+    delete_blueprint(&blueprints);
     unload_pipes_resources();
     delete_chunk(&map);
     UnloadPlayerResources();

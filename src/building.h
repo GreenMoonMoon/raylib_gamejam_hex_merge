@@ -5,10 +5,10 @@
 #ifndef RAYLIB_GAMEJAM_ENTRY_BUILDING_H
 #define RAYLIB_GAMEJAM_ENTRY_BUILDING_H
 
-struct BPP;
+#include "pipes.h"
 
 typedef struct Blueprint {
-    struct BPP *bpp_list;
+    PipeBlueprint pipes;
 } Blueprint;
 
 Blueprint create_blueprint();

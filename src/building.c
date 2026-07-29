@@ -3,17 +3,12 @@
 //
 
 #include "building.h"
-#include "extern/stb_ds.h"
 
 Blueprint create_blueprint() {
-    const Blueprint bp = {
-        .bpp_list = nullptr
-    };
+    const Blueprint bp = {0};
     return bp;
 }
 
 void delete_blueprint(Blueprint *blueprint) {
-    if (blueprint->bpp_list != nullptr) {
-        arrfree(blueprint->bpp_list);
-    }
+    delete_pipe_blueprint(&blueprint->pipes);
 }

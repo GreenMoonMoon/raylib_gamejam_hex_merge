@@ -7,7 +7,6 @@
 
 #include "raylib.h"
 #include "hex.h"
-#include "building.h"
 
 enum PipeModelID {
     PIPE_BEND,
@@ -32,13 +31,17 @@ enum PipeModelID {
     PIPE_NONE
 };
 
+typedef struct PipeBlueprint {
+    struct PipeTransform *instance_lists[PIPE_COUNT];
+} PipeBlueprint;
+
 void load_pipes_resources();
 
 void unload_pipes_resources();
 
 void draw_pipes();
 
-void draw_pipe_wire(enum PipeModelID id, Vector2 position, char rotation, Color color);
+void draw_pipe_wire(enum PipeModelID id, Vector3 position, char rotation, Color color);
 
 void instantiate_pipe(enum PipeModelID id, Axial coord, char rotation);
 
@@ -48,10 +51,12 @@ void start_pipe_tool(Axial start_tile, char hex_direction);
 
 bool update_pipe_tool(Axial next_tile);
 
-Blueprint commit_pipe_tool();
+void commit_pipe_tool_to_blueprints(PipeBlueprint *blueprints);
 
 void draw_pipe_tool();
 
-void draw_pipe_blueprint(Blueprint blueprint);
+void draw_pipe_blueprint(const PipeBlueprint *blueprint);
+
+void delete_pipe_blueprint(PipeBlueprint *blueprint);
 
 #endif //RAYLIB_GAMEJAM_ENTRY_PIPES_H

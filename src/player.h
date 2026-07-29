@@ -14,16 +14,22 @@ typedef enum PlayerState {
 } PlayerState;
 
 typedef struct Player {
+    // state machine
+    bool can_move;
     PlayerState state;
     PlayerState next_state;
 
+    // inventory, equipment and slots
+    bool hold_resources; // DEBUG
+
+    // model
     Model model;
     ModelAnimation *animations;
     int currentAnimation;
     float animationFrame;
     float animationSpeed;
 
-    bool can_move;
+    // coordinate
     Axial coordinate;
     AxialDirection target_direction;
 
