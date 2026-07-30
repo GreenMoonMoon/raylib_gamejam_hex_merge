@@ -1,9 +1,7 @@
-// TODO: hex tile specific instance rendering ( save on memory passed to the GPU each frame )
 // TODO: shadow map shader
 // TODO: ambient occlusion shader
 // TODO: build blueprint
 // TODO: hop over pipes animations
-// TODO: simplify blueprints with a single "blueprint" that can render all buildables
 
 #include "raylib.h"
 #include "raymath.h"
@@ -13,7 +11,6 @@
 #include "input.h"
 #include "player.h"
 #include "draw_utils.h"
-#include "building.h"
 #include "pipes.h"
 #include "extern/stb_ds.h"
 
@@ -52,7 +49,7 @@ static int build_menu_cursor = 0;
 static Player player;
 
 static bool mouse_pipe_tool = false;
-static Blueprint blueprints;
+struct PipeBlueprint pipe_blueprints;
 
 // static
 
@@ -153,7 +150,7 @@ void UpdateGameplayScreen() {
     if (mouse_pipe_tool) {
         if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
             mouse_pipe_tool = false;
-            commit_pipe_tool_to_blueprints(&blueprints.pipes);
+            commit_pipe_tool_to_blueprints(&pipe_blueprints);
         } else {
             Tile *tile = get_chunk_tile(&map, inputs.selected_tile);
             if (tile != nullptr && tile->flags == 0) {
@@ -273,7 +270,7 @@ void DrawGameplayScreen() {
     if (mouse_pipe_tool) { draw_pipe_tool(); }
 
     // draw blueprints
-    draw_pipe_blueprint(&blueprints.pipes);
+    draw_pipe_blueprint(&pipe_blueprints);
 
     DrawHex(selectedCell, -0.2f, ORANGE);
     DrawHex(AxialAdd(player.coordinate, hexDirections[player.target_direction]), 0, GREEN);
@@ -327,7 +324,7 @@ void DrawGameplayScreen() {
 // Gameplay Screen Unload logic
 void UnloadGameplayScreen() {
     // delete all blueprints
-    delete_blueprint(&blueprints);
+    delete_pipe_blueprint(&pipe_blueprints);
     unload_pipes_resources();
     delete_chunk(&map);
     UnloadPlayerResources();

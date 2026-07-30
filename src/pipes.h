@@ -43,6 +43,8 @@ void draw_pipes();
 
 void draw_pipe_wire(enum PipeModelID id, Vector3 position, char rotation, Color color);
 
+void draw_pipe(enum PipeModelID id, Vector3 position, char rotation, Color color);
+
 void instantiate_pipe(enum PipeModelID id, Axial coord, char rotation);
 
 const char *get_pipe_name(enum PipeModelID id);

@@ -82,7 +82,17 @@ void draw_pipe_wire(const enum PipeModelID id, const Vector3 position, const cha
     draw_mesh_wire(
         pipe_models.meshes[id],
         default_material,
-        MatrixMultiply(MatrixRotateY((float)rotation * (PI / 3)), MatrixTranslate(position.x, position.y + 0.25f, position.z)));
+        MatrixMultiply(MatrixRotateY((float)rotation * (PI / 3)), MatrixTranslate(position.x, position.y, position.z)));
+    default_material.maps[MATERIAL_MAP_DIFFUSE].color = old_color;
+}
+
+void draw_pipe(const enum PipeModelID id, const Vector3 position, const char rotation, const Color color) {
+    const Color old_color = default_material.maps[MATERIAL_MAP_DIFFUSE].color;
+    default_material.maps[MATERIAL_MAP_DIFFUSE].color = color;
+    DrawMesh(
+        pipe_models.meshes[id],
+        default_material,
+        MatrixMultiply(MatrixRotateY((float)rotation * (PI / 3)), MatrixTranslate(position.x, position.y, position.z)));
     default_material.maps[MATERIAL_MAP_DIFFUSE].color = old_color;
 }
 
@@ -180,11 +190,11 @@ void commit_pipe_tool_to_blueprints(PipeBlueprint *blueprints) {
 
 void draw_pipe_tool() {
     const Vector2 start_position = AxialToPosition(pipe_tool_start_bpp.coordinate);
-    draw_pipe_wire(pipe_tool_start_bpp.id, (Vector3){start_position.x, 0, start_position.y}, pipe_tool_start_bpp.rotation, SKYBLUE);
+    draw_pipe_wire(pipe_tool_start_bpp.id, (Vector3){start_position.x, 0.25f, start_position.y}, pipe_tool_start_bpp.rotation, SKYBLUE);
     const int bpp_count = arrlen(pipe_tool_bpp_list);
     for (int i = 0; i < bpp_count; ++i) {
         const Vector2 position = AxialToPosition(pipe_tool_bpp_list[i].coordinate);
-        draw_pipe_wire(pipe_tool_bpp_list[i].id, (Vector3){position.x, 0, position.y}, pipe_tool_bpp_list[i].rotation, SKYBLUE);
+        draw_pipe_wire(pipe_tool_bpp_list[i].id, (Vector3){position.x, 0.25f, position.y}, pipe_tool_bpp_list[i].rotation, SKYBLUE);
     }
 }
 
@@ -192,7 +202,7 @@ static void draw_pipe_instances(const enum PipeModelID id, const struct PipeTran
     const Mesh mesh = pipe_models.meshes[id];
 
     rlEnableShader(material.shader.id);
-
+    // rlEnableWireMode();
 
     // Send required data to shader (matrices, values)
     //-----------------------------------------------------
@@ -402,17 +412,12 @@ static void draw_pipe_instances(const enum PipeModelID id, const struct PipeTran
 
     rlUnloadVertexBuffer(instances_vbo_id);
     // RL_FREE(instanceTransform);
+    // rlDisableWireMode();
 }
 
 void draw_pipe_blueprint(const PipeBlueprint *blueprint) {
     for (int i = 0; i < PIPE_COUNT; ++i) {
-        if (arrlen(blueprint->instance_lists[i]) > 2) {
-            draw_pipe_instances(i, blueprint->instance_lists[i], default_material_instancing);
-        } else {
-            for (int j = 0; j < arrlen(blueprint->instance_lists[i]); ++j) {
-                draw_pipe_wire(i, blueprint->instance_lists[i][j].position, blueprint->instance_lists[i][j].rotation, SKYBLUE);
-            }
-        }
+        draw_pipe_instances(i, blueprint->instance_lists[i], default_material_instancing);
     }
 }
 

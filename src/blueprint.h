@@ -5,14 +5,16 @@
 #ifndef RAYLIB_GAMEJAM_ENTRY_BUILDING_H
 #define RAYLIB_GAMEJAM_ENTRY_BUILDING_H
 
-#include "pipes.h"
+#include "raylib.h"
+
+typedef struct MeshTransform {
+    Vector3 position;
+    float rotation;
+} MeshTransform;
 
 typedef struct Blueprint {
-    PipeBlueprint pipes;
+    int id;
+    // TODO: how to keep resources count...
 } Blueprint;
-
-Blueprint create_blueprint();
-
-void delete_blueprint(Blueprint *blueprint);
 
 #endif //RAYLIB_GAMEJAM_ENTRY_BUILDING_H
