@@ -24,6 +24,8 @@
 
 typedef struct Tile {
     unsigned int flags;
+    // enum PipeModelID pipe_id;
+    int pipe_id;
 } Tile;
 
 typedef struct Chunk {

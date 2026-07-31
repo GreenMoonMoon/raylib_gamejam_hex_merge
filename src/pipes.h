@@ -9,6 +9,7 @@
 #include "hex.h"
 
 enum PipeModelID {
+    PIPE_NONE,
     PIPE_BEND,
     PIPE_JOINT,
     PIPE_JOINT_VALVE_MOUNT,
@@ -28,7 +29,6 @@ enum PipeModelID {
     PIPE_WELL_CONNECTED,
 
     PIPE_COUNT,
-    PIPE_NONE
 };
 
 typedef struct PipeBlueprint {
@@ -49,9 +49,9 @@ void instantiate_pipe(enum PipeModelID id, Axial coord, char rotation);
 
 const char *get_pipe_name(enum PipeModelID id);
 
-void start_pipe_tool(Axial start_tile, char hex_direction);
+void start_pipe_tool(Axial start_tile, enum PipeModelID start_pipe_id, char hex_direction);
 
-bool update_pipe_tool(Axial next_tile);
+enum PipeModelID update_pipe_tool(Axial next_tile, enum PipeModelID next_tile_pipe_id);
 
 void commit_pipe_tool_to_blueprints(PipeBlueprint *blueprints);
 

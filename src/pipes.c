@@ -3,6 +3,9 @@
 //
 
 #include "pipes.h"
+
+#include <unistd.h>
+
 #include "raymath.h"
 #include "rlgl.h"
 #include "draw_utils.h"
@@ -47,7 +50,6 @@ struct BPP {
     unsigned int rotation;
     enum PipeModelID id;
 };
-static struct BPP pipe_tool_start_bpp;
 static struct BPP *pipe_tool_bpp_list;
 static Axial previous_tile;
 
@@ -109,74 +111,76 @@ const char * get_pipe_name(const enum PipeModelID id) {
     return pipe_names[id];
 }
 
-void start_pipe_tool(const Axial start_tile, const char hex_direction) {
-    //Start the pipe tool
-    // const Vector2 position = AxialToPosition(start_tile);
-
-    pipe_tool_start_bpp = (struct BPP){
-        // .position = position,
-        .coordinate = start_tile,
-        .rotation = hex_direction,
-        .id = PIPE_WELL_OPEN
-    };
-    previous_tile = start_tile;
+void start_pipe_tool(const Axial start_tile, const enum PipeModelID start_pipe_id, const char hex_direction) {
+    if (PIPE_NONE == start_pipe_id) {
+        const struct BPP bpp = {
+            .coordinate = start_tile,
+            .rotation = hex_direction,
+            .id = PIPE_WELL_OPEN
+        };
+        arrput(pipe_tool_bpp_list, bpp);
+        previous_tile = start_tile;
+    } else {
+        const struct BPP bpp = {
+            .coordinate = start_tile,
+            .rotation = hex_direction,
+            .id = PIPE_SPLIT_BRANCH
+        };
+        arrput(pipe_tool_bpp_list, bpp);
+        previous_tile = start_tile;
+    }
 }
 
-bool update_pipe_tool(const Axial next_tile) {
+enum PipeModelID update_pipe_tool(const Axial next_tile, const enum PipeModelID next_tile_pipe_id) {
     const int distance = AxialDistance(previous_tile, next_tile);
-    if (distance != 1) { return false; }
-
-    const AxialDirection direction = AxialDirectionToward(AxialSubtract(previous_tile, next_tile));
-    if (arrlen(pipe_tool_bpp_list) == 0) {
-        // set the end
-        const struct BPP bpp = {
-            // .position = AxialToPosition(next_tile),
-            .coordinate = next_tile,
-            .rotation = direction,
-            .id = PIPE_SHORT_END
-        };
-        arrput(pipe_tool_bpp_list, bpp);
-        // update the well
-        pipe_tool_start_bpp.id = PIPE_WELL_CONNECTED;
-        pipe_tool_start_bpp.rotation = direction;
-    } else {
-        const AxialDirection dd = ((direction - arrlast(pipe_tool_bpp_list).rotation) + 6) % 6;
-        if (dd == 4 || dd == 2) { return false; }
-        switch (dd) {
-            case 1:
-                arrlast(pipe_tool_bpp_list).rotation = (arrlast(pipe_tool_bpp_list).rotation + 4) % 6;
-                arrlast(pipe_tool_bpp_list).id = PIPE_BEND;
-                break;
-            case 5:
-                arrlast(pipe_tool_bpp_list).id = PIPE_BEND;
-                break;
-            default:
-                arrlast(pipe_tool_bpp_list).id = PIPE_STRAIGHT;
-                break;
-        }
-
-        const struct BPP bpp  = {
-            // .position = AxialToPosition(next_tile),
-            .coordinate = next_tile,
-            .rotation = direction,
-            .id = PIPE_SHORT_END
-        };
-        arrput(pipe_tool_bpp_list, bpp);
+    if (distance != 1) {
+        // use line drawing or walk the tiles ?
+        return PIPE_NONE;
     }
 
+    const AxialDirection direction = AxialDirectionToward(AxialSubtract(previous_tile, next_tile));
+    if (arrlen(pipe_tool_bpp_list) <= 1) {
+        if (PIPE_WELL_OPEN == arrlast(pipe_tool_bpp_list).id) {
+            // update the well
+            arrlast(pipe_tool_bpp_list).id = PIPE_WELL_CONNECTED;
+            arrlast(pipe_tool_bpp_list).rotation = direction;
+        }
+    } else {
+        const AxialDirection dd = ((direction - arrlast(pipe_tool_bpp_list).rotation) + 6) % 6;
+        if (PIPE_NONE == next_tile_pipe_id) {
+            if (dd == 4 || dd == 2) { return PIPE_NONE; }
+            switch (dd) {
+                case 1:
+                    arrlast(pipe_tool_bpp_list).rotation = (arrlast(pipe_tool_bpp_list).rotation + 4) % 6;
+                    arrlast(pipe_tool_bpp_list).id = PIPE_BEND;
+                    break;
+                case 5:
+                    arrlast(pipe_tool_bpp_list).id = PIPE_BEND;
+                    break;
+                default:
+                    arrlast(pipe_tool_bpp_list).id = PIPE_STRAIGHT;
+                    break;
+            }
+        } else {
+            return PIPE_NONE;
+        }
+    }
+
+    // set the end
+    const struct BPP bpp = {
+        .coordinate = next_tile,
+        .rotation = direction,
+        .id = PIPE_SHORT_END
+    };
+    arrput(pipe_tool_bpp_list, bpp);
+
     previous_tile = next_tile;
-    return true;
+    return arrlast(pipe_tool_bpp_list).id;
 }
 
 void commit_pipe_tool_to_blueprints(PipeBlueprint *blueprints) {
-    const Vector2 start_position = AxialToPosition(pipe_tool_start_bpp.coordinate);
-    const struct PipeTransform start_transform = {
-        .position = (Vector3){.x = start_position.x, .y = 0.25f, .z = start_position.y},
-        .rotation = (float)pipe_tool_start_bpp.rotation * M_PI_3
-    };
-    arrput(blueprints->instance_lists[pipe_tool_start_bpp.id], start_transform);
     for (int i = 0; i < arrlen(pipe_tool_bpp_list); ++i) {
-        const struct Vector2 position = AxialToPosition(pipe_tool_bpp_list[i].coordinate);
+        const Vector2 position = AxialToPosition(pipe_tool_bpp_list[i].coordinate);
         const struct PipeTransform transform = {
             .position = (Vector3){.x = position.x, .y = 0.25f, .z = position.y},
             .rotation = (float)pipe_tool_bpp_list[i].rotation * M_PI_3
@@ -189,8 +193,6 @@ void commit_pipe_tool_to_blueprints(PipeBlueprint *blueprints) {
 }
 
 void draw_pipe_tool() {
-    const Vector2 start_position = AxialToPosition(pipe_tool_start_bpp.coordinate);
-    draw_pipe_wire(pipe_tool_start_bpp.id, (Vector3){start_position.x, 0.25f, start_position.y}, pipe_tool_start_bpp.rotation, SKYBLUE);
     const int bpp_count = arrlen(pipe_tool_bpp_list);
     for (int i = 0; i < bpp_count; ++i) {
         const Vector2 position = AxialToPosition(pipe_tool_bpp_list[i].coordinate);

@@ -139,11 +139,12 @@ void UpdateGameplayScreen() {
     // process mouse inputs here
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
         const Tile *tile = get_chunk_tile(&map, inputs.selected_tile);
-        if (!(tile->flags & (TF_CAN_BUILD | TF_SOURCE))) { return; }
-        if ((tile->flags & TF_BLUEPRINT) != 0) { return; } // DEBUG
+
+        if (!(tile->flags & (TF_CAN_BUILD | TF_SOURCE | TF_BLUEPRINT))) { return; } // check on which tile pipe_tool can be started
+
         mouse_pipe_tool = true;
         const AxialDirection dir = ((int)roundf(Vector2LineAngle(inputs.mouse_position, AxialToPosition(inputs.selected_tile)) / (PI / 3)) + 2) % HD_COUNT;
-        start_pipe_tool(inputs.selected_tile, dir);
+        start_pipe_tool(inputs.selected_tile, tile->pipe_id, dir);
         const Checker checker = axial_to_checker(inputs.selected_tile);
         map.layers[0][CHECKER2INDEX(checker.col, checker.row)].flags |= TF_BLUEPRINT;
     }
@@ -153,8 +154,13 @@ void UpdateGameplayScreen() {
             commit_pipe_tool_to_blueprints(&pipe_blueprints);
         } else {
             Tile *tile = get_chunk_tile(&map, inputs.selected_tile);
-            if (tile != nullptr && tile->flags == 0) {
-                if (update_pipe_tool(inputs.selected_tile)) { tile->flags |= TF_BLUEPRINT; }
+            // if (tile != nullptr && tile->flags == 0) {
+            if (tile != nullptr) {
+                const enum PipeModelID id = update_pipe_tool(inputs.selected_tile, tile->pipe_id);
+                if (id != PIPE_NONE) {
+                    tile->flags |= TF_BLUEPRINT;
+                    tile->pipe_id = id;
+                }
             }
         }
     }

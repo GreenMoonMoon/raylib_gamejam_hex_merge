@@ -83,3 +83,5 @@ target_sources(${PROJECT_NAME} PRIVATE
 #            ${CMAKE_CURRENT_BINARY_DIR}/resources/${FILE_PATH}
 #)
 #add_custom_target(copy DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${FILE_PATH})
+
+add_subdirectory(tests)
