@@ -55,6 +55,8 @@ enum PipeModelID update_pipe_tool(Axial next_tile, enum PipeModelID next_tile_pi
 
 void commit_pipe_tool_to_blueprints(PipeBlueprint *blueprints);
 
+void draw_pipe_tool_debug_info();
+
 void draw_pipe_tool();
 
 void draw_pipe_blueprint(const PipeBlueprint *blueprint);

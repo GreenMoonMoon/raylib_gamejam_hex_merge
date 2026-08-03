@@ -200,6 +200,15 @@ void draw_pipe_tool() {
     }
 }
 
+extern Camera3D camera;
+void draw_pipe_tool_debug_info() {
+    if (pipe_tool_bpp_list == nullptr) { return; }
+    const Vector2 position = AxialToPosition(arrlast(pipe_tool_bpp_list).coordinate);
+    const Vector2 screen_position = GetWorldToScreen((Vector3){position.x, 1.0f, position.y}, camera);
+
+    DrawText(TextFormat("ID: %d R: %d", arrlast(pipe_tool_bpp_list).id, arrlast(pipe_tool_bpp_list).rotation), screen_position.x ,screen_position.y, 20, BLACK);
+}
+
 static void draw_pipe_instances(const enum PipeModelID id, const struct PipeTransform *transform_list, const Material material) {
     const Mesh mesh = pipe_models.meshes[id];
 

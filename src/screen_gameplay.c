@@ -307,6 +307,7 @@ void DrawGameplayScreen() {
     ddraw_info(10, 30);
     ddraw_chunk_info(map);
     DrawFPS(10, 10);
+    draw_pipe_tool_debug_info();
 
     if (show_build_menu) {
         // menu background
