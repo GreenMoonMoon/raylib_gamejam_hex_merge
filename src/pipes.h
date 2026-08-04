@@ -31,8 +31,14 @@ enum PipeModelID {
     PIPE_COUNT,
 };
 
+
+typedef struct PipeTransform {
+    Vector3 position;
+    float rotation;
+} PipeTransform;
+
 typedef struct PipeBlueprint {
-    struct PipeTransform *instance_lists[PIPE_COUNT];
+    PipeTransform *instance_lists[PIPE_COUNT];
 } PipeBlueprint;
 
 void load_pipes_resources();
@@ -51,7 +57,7 @@ const char *get_pipe_name(enum PipeModelID id);
 
 void start_pipe_tool(Axial start_tile, enum PipeModelID start_pipe_id, char hex_direction);
 
-enum PipeModelID update_pipe_tool(Axial next_tile, enum PipeModelID next_tile_pipe_id);
+enum PipeModelID update_pipe_tool(Axial next_tile, char inputs);
 
 void commit_pipe_tool_to_blueprints(PipeBlueprint *blueprints);
 

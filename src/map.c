@@ -3,8 +3,23 @@
 //
 
 #include "map.h"
+
 #include <stdlib.h>
 #include "extern/stb_ds.h"
+
+#define BUCKET_HASH(C) (((C).row * CHUNK_SIZE + (C).col) % MAP_BUCKET_COUNT)
+
+// dense array
+static Chunk *loaded_chunk_lists[MAP_BUCKET_COUNT];
+
+void init_map() {
+    // initialize every bucket to nullptr to work with stb_ds
+    for (int i = 0; i < MAP_BUCKET_COUNT; ++i) { loaded_chunk_lists[i] = nullptr; }
+}
+
+void close_map() {
+
+}
 
 Chunk generate_chunk(const Checker coord) {
     Chunk chunk = {
@@ -29,6 +44,8 @@ Chunk generate_chunk(const Checker coord) {
             .flags = TF_CAN_INTERACT | TF_CAN_BUILD | TF_SOURCE
         };
     }
+
+    arrput(loaded_chunk_lists[BUCKET_HASH(coord)], chunk);
 
     return chunk;
 }

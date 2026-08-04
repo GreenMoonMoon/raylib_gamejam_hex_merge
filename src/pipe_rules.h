@@ -11,6 +11,7 @@
 #define IN_D 0x8    // south
 #define IN_E 0x10   // south west
 #define IN_F 0x20   // north west
+#define IN_MASK 0x3F
 #include "pipes.h"
 
 struct PipeEntry {
@@ -18,7 +19,7 @@ struct PipeEntry {
     char rotation;
 };
 
-const struct PipeEntry pipe_entries[] = {
+const struct PipeEntry pipe_ruleset[] = {
     {.id = PIPE_NONE, .rotation = 0},         // 000000
     {.id = PIPE_SHORT_END, .rotation = 0},    // 000001
     {.id = PIPE_SHORT_END, .rotation = 1},    // 000010
@@ -85,10 +86,12 @@ const struct PipeEntry pipe_entries[] = {
     {.id = PIPE_NONE, .rotation = 0}, // 111111
 };
 
-// void generate_pipe_rule_table(void **table);
+inline char rotate_inputs_right(const char inputs) {
+    return inputs & IN_A ? inputs >> 1 | IN_F : inputs >> 1;
+}
 
-char rotate_inputs_right(char inputs);
-
-char rotate_inputs_left(char inputs);
+inline char rotate_inputs_left(const char inputs) {
+    return inputs & IN_F ? inputs << 1 & IN_MASK | IN_A : inputs << 1 & IN_MASK;
+}
 
 #endif //RAYLIB_GAMEJAM_ENTRY_PIPE_RULES_H

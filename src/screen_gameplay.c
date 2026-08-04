@@ -144,7 +144,7 @@ void UpdateGameplayScreen() {
 
         mouse_pipe_tool = true;
         const AxialDirection dir = ((int)roundf(Vector2LineAngle(inputs.mouse_position, AxialToPosition(inputs.selected_tile)) / (PI / 3)) + 2) % HD_COUNT;
-        start_pipe_tool(inputs.selected_tile, tile->pipe_id, dir);
+        start_pipe_tool(inputs.selected_tile, tile->part_id, dir);
         const Checker checker = axial_to_checker(inputs.selected_tile);
         map.layers[0][CHECKER2INDEX(checker.col, checker.row)].flags |= TF_BLUEPRINT;
     }
@@ -156,10 +156,10 @@ void UpdateGameplayScreen() {
             Tile *tile = get_chunk_tile(&map, inputs.selected_tile);
             // if (tile != nullptr && tile->flags == 0) {
             if (tile != nullptr) {
-                const enum PipeModelID id = update_pipe_tool(inputs.selected_tile, tile->pipe_id);
+                const enum PipeModelID id = update_pipe_tool(inputs.selected_tile, tile->part_id);
                 if (id != PIPE_NONE) {
                     tile->flags |= TF_BLUEPRINT;
-                    tile->pipe_id = id;
+                    tile->part_id = id;
                 }
             }
         }

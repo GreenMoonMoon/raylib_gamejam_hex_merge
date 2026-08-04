@@ -10,6 +10,8 @@
 #define CHUNK_SIZE 16
 #define HALF_CHUNK_SIZE 8
 #define CHUNK_LAYER_COUNT 1
+#define MAP_BUCKET_COUNT 1024
+#define MAP_CHUNK_WIDTH 256
 
 #define CHECKER2INDEX(C, R) ((C) * HALF_CHUNK_SIZE + (R) / 2)
 #define INDEX2CHECKER(I) ((Checker){(I) / HALF_CHUNK_SIZE, (I) % HALF_CHUNK_SIZE * 2})
@@ -24,14 +26,18 @@
 
 typedef struct Tile {
     unsigned int flags;
-    // enum PipeModelID pipe_id;
-    int pipe_id;
+    int part_id;
+    short inputs;
 } Tile;
 
 typedef struct Chunk {
     Checker coord;
     Tile *layers[CHUNK_LAYER_COUNT];
 } Chunk;
+
+void init_map();
+
+void close_map();
 
 Chunk generate_chunk(Checker coord);
 

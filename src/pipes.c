@@ -3,18 +3,11 @@
 //
 
 #include "pipes.h"
-
-#include <unistd.h>
-
+#include "pipe_rules.h"
 #include "raymath.h"
 #include "rlgl.h"
 #include "draw_utils.h"
 #include "extern/stb_ds.h"
-
-struct PipeTransform {
-    Vector3 position;
-    float rotation;
-};
 
 static const char *pipe_names[PIPE_COUNT] = {
     "Bend",
@@ -44,14 +37,17 @@ static Matrix *pipe_transform_list[PIPE_COUNT];
 
 // TODO: contextualize with a drone?
 // PIPE TOOL
-struct BPP {
-    // Vector2 position;
+struct PipeToolEntry {
     Axial coordinate;
     unsigned int rotation;
     enum PipeModelID id;
+    char inputs;
 };
-static struct BPP *pipe_tool_bpp_list;
-static Axial previous_tile;
+// static struct PipeToolEntry *pipe_tool_entry_list;
+static int pipe_tool_count = 0;
+static struct PipeToolEntry *previous_tile;
+#define PIPE_TOOL_HASH(A) ((unsigned int)((A).q * 1459 + (A).r) % 32)
+static struct PipeToolEntry *hash_bucket_list[32]; // TODO: remove magic number
 
 void load_pipes_resources() {
     pipe_models = LoadModel("./resources/models/pipes.glb");
@@ -63,10 +59,14 @@ void load_pipes_resources() {
     pipe_color = BLUE;
 
     default_material = LoadMaterialDefault();
+
+    // clear the hash_bucket_list for use with std_ds
+    for (int i = 0; i < 32; ++i) { hash_bucket_list[i] = nullptr; }
 }
 
 void unload_pipes_resources() {
-    if (pipe_tool_bpp_list != nullptr) { arrfree(pipe_tool_bpp_list); }
+    // if (pipe_tool_entry_list != nullptr) { arrfree(pipe_tool_entry_list); }
+    for (int i = 0; i < 32; ++i) { if (hash_bucket_list[i] != nullptr) { arrfree(hash_bucket_list[i]); } }
     UnloadModel(pipe_models);
 }
 
@@ -113,100 +113,120 @@ const char * get_pipe_name(const enum PipeModelID id) {
 
 void start_pipe_tool(const Axial start_tile, const enum PipeModelID start_pipe_id, const char hex_direction) {
     if (PIPE_NONE == start_pipe_id) {
-        const struct BPP bpp = {
+        struct PipeToolEntry *bpp = arraddnptr(hash_bucket_list[PIPE_TOOL_HASH(start_tile)], 1);
+        *bpp = (struct PipeToolEntry) {
             .coordinate = start_tile,
             .rotation = hex_direction,
-            .id = PIPE_WELL_OPEN
+            .id = PIPE_WELL_OPEN,
+            .inputs = 1 << hex_direction
         };
-        arrput(pipe_tool_bpp_list, bpp);
-        previous_tile = start_tile;
+        previous_tile = bpp;
     } else {
-        const struct BPP bpp = {
+        struct PipeToolEntry *bpp = arraddnptr(hash_bucket_list[PIPE_TOOL_HASH(start_tile)], 1);
+        *bpp = (struct PipeToolEntry) {
             .coordinate = start_tile,
             .rotation = hex_direction,
-            .id = PIPE_SPLIT_BRANCH
+            .id = PIPE_SPLIT_BRANCH,
+            .inputs = 1 << hex_direction
         };
-        arrput(pipe_tool_bpp_list, bpp);
-        previous_tile = start_tile;
+        previous_tile = bpp;
     }
+
+    pipe_tool_count = 1;
 }
 
-enum PipeModelID update_pipe_tool(const Axial next_tile, const enum PipeModelID next_tile_pipe_id) {
-    const int distance = AxialDistance(previous_tile, next_tile);
+enum PipeModelID update_pipe_tool(const Axial next_tile, const char inputs) {
+    const int distance = AxialDistance(previous_tile->coordinate, next_tile);
     if (distance != 1) {
         // use line drawing or walk the tiles ?
         return PIPE_NONE;
     }
 
-    const AxialDirection direction = AxialDirectionToward(AxialSubtract(previous_tile, next_tile));
-    if (arrlen(pipe_tool_bpp_list) <= 1) {
-        if (PIPE_WELL_OPEN == arrlast(pipe_tool_bpp_list).id) {
+    const AxialDirection direction = AxialDirectionToward(AxialSubtract(previous_tile->coordinate, next_tile));
+
+    // if (arrlen(pipe_tool_entry_list) <= 1) {
+    if (pipe_tool_count <= 1) {
+        if (PIPE_WELL_OPEN == previous_tile->id) {
             // update the well
-            arrlast(pipe_tool_bpp_list).id = PIPE_WELL_CONNECTED;
-            arrlast(pipe_tool_bpp_list).rotation = direction;
+            previous_tile->id = PIPE_WELL_CONNECTED;
+            previous_tile->rotation = direction;
+            previous_tile->inputs = 1 << direction;
         }
     } else {
-        const AxialDirection dd = ((direction - arrlast(pipe_tool_bpp_list).rotation) + 6) % 6;
-        if (PIPE_NONE == next_tile_pipe_id) {
-            if (dd == 4 || dd == 2) { return PIPE_NONE; }
-            switch (dd) {
-                case 1:
-                    arrlast(pipe_tool_bpp_list).rotation = (arrlast(pipe_tool_bpp_list).rotation + 4) % 6;
-                    arrlast(pipe_tool_bpp_list).id = PIPE_BEND;
-                    break;
-                case 5:
-                    arrlast(pipe_tool_bpp_list).id = PIPE_BEND;
-                    break;
-                default:
-                    arrlast(pipe_tool_bpp_list).id = PIPE_STRAIGHT;
-                    break;
-            }
-        } else {
-            return PIPE_NONE;
-        }
+        const struct PipeEntry entry = pipe_ruleset[inputs];
+        if (PIPE_NONE == entry.id) { return PIPE_NONE; }
+
+        // update last tile
+        arrlast(pipe_tool_entry_list).inputs |= 1 << direction;
+        const struct PipeEntry last_entry = pipe_ruleset[inputs];
+        arrlast(pipe_tool_entry_list).id = last_entry.id;
+        arrlast(pipe_tool_entry_list).rotation = last_entry.rotation;
+
+        // const AxialDirection dd = ((direction - arrlast(pipe_tool_bpp_list).rotation) + 6) % 6;
+        // if (PIPE_NONE == entry.id) {
+        //     if (dd == 4 || dd == 2) { return PIPE_NONE; }
+        //     switch (dd) {
+        //         case 1:
+        //             arrlast(pipe_tool_bpp_list).rotation = (arrlast(pipe_tool_bpp_list).rotation + 4) % 6;
+        //             arrlast(pipe_tool_bpp_list).id = PIPE_BEND;
+        //             break;
+        //         case 5:
+        //             arrlast(pipe_tool_bpp_list).id = PIPE_BEND;
+        //             break;
+        //         default:
+        //             arrlast(pipe_tool_bpp_list).id = PIPE_STRAIGHT;
+        //             break;
+        //     }
+        // } else {
+        //     return PIPE_NONE;
+        // }
     }
 
     // set the end
-    const struct BPP bpp = {
+    const struct PipeToolEntry bpp = {
         .coordinate = next_tile,
         .rotation = direction,
-        .id = PIPE_SHORT_END
+        .id = PIPE_SHORT_END,
+        .inputs = 1 << direction
     };
-    arrput(pipe_tool_bpp_list, bpp);
+    arrput(pipe_tool_entry_list, bpp);
+    arrput(hash_bucket_list[PIPE_TOOL_HASH(next_tile)], bpp);
 
     previous_tile = next_tile;
-    return arrlast(pipe_tool_bpp_list).id;
+    return arrlast(pipe_tool_entry_list).id;
 }
 
 void commit_pipe_tool_to_blueprints(PipeBlueprint *blueprints) {
-    for (int i = 0; i < arrlen(pipe_tool_bpp_list); ++i) {
-        const Vector2 position = AxialToPosition(pipe_tool_bpp_list[i].coordinate);
-        const struct PipeTransform transform = {
+    for (int i = 0; i < arrlen(pipe_tool_entry_list); ++i) {
+        const Vector2 position = AxialToPosition(pipe_tool_entry_list[i].coordinate);
+        const PipeTransform transform = {
             .position = (Vector3){.x = position.x, .y = 0.25f, .z = position.y},
-            .rotation = (float)pipe_tool_bpp_list[i].rotation * M_PI_3
+            .rotation = (float)pipe_tool_entry_list[i].rotation * M_PI_3
         };
-        arrput(blueprints->instance_lists[pipe_tool_bpp_list[i].id], transform);
+        arrput(blueprints->instance_lists[pipe_tool_entry_list[i].id], transform);
     }
 
     // clear pipe_tool
-    arrsetlen(pipe_tool_bpp_list, 0);
+    arrsetlen(pipe_tool_entry_list, 0);
 }
 
 void draw_pipe_tool() {
-    const int bpp_count = arrlen(pipe_tool_bpp_list);
-    for (int i = 0; i < bpp_count; ++i) {
-        const Vector2 position = AxialToPosition(pipe_tool_bpp_list[i].coordinate);
-        draw_pipe_wire(pipe_tool_bpp_list[i].id, (Vector3){position.x, 0.25f, position.y}, pipe_tool_bpp_list[i].rotation, SKYBLUE);
+    if (pipe_tool_count <= 0) { return; }
+    for (int i = 0; i < 32; ++i) {
+        for (int j = 0; j < arrlen(hash_bucket_list[i]); ++j) {
+            const Vector2 position = AxialToPosition(hash_bucket_list[i][j].coordinate);
+            draw_pipe_wire(hash_bucket_list[i][j].id, (Vector3){position.x, 0.25f, position.y}, hash_bucket_list[i][j].rotation, SKYBLUE);
+        }
     }
 }
 
 extern Camera3D camera;
 void draw_pipe_tool_debug_info() {
-    if (pipe_tool_bpp_list == nullptr) { return; }
-    const Vector2 position = AxialToPosition(arrlast(pipe_tool_bpp_list).coordinate);
-    const Vector2 screen_position = GetWorldToScreen((Vector3){position.x, 1.0f, position.y}, camera);
+    if (pipe_tool_count <= 0) { return; }
 
-    DrawText(TextFormat("ID: %d R: %d", arrlast(pipe_tool_bpp_list).id, arrlast(pipe_tool_bpp_list).rotation), screen_position.x ,screen_position.y, 20, BLACK);
+    const Vector2 position = AxialToPosition(previous_tile->coordinate);
+    const Vector2 screen_position = GetWorldToScreen((Vector3){.x = position.x, .y = 1.0f, .z = position.y}, camera);
+    DrawText(TextFormat("ID: %d R: %d", previous_tile->id, previous_tile->rotation), screen_position.x ,screen_position.y, 20, BLACK);
 }
 
 static void draw_pipe_instances(const enum PipeModelID id, const struct PipeTransform *transform_list, const Material material) {
@@ -417,12 +437,7 @@ static void draw_pipe_instances(const enum PipeModelID id, const struct PipeTran
     // Disable shader program
     rlDisableShader();
 
-    // Remove instance transforms buffe    // MatrixTranslate()
-    // MatrixRotateY()
-    // MatrixMultiply()
-
     rlUnloadVertexBuffer(instances_vbo_id);
-    // RL_FREE(instanceTransform);
     // rlDisableWireMode();
 }
 
