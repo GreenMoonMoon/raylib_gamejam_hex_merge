@@ -157,57 +157,41 @@ enum PipeModelID update_pipe_tool(const Axial next_tile, const char inputs) {
         if (PIPE_NONE == entry.id) { return PIPE_NONE; }
 
         // update last tile
-        arrlast(pipe_tool_entry_list).inputs |= 1 << direction;
+        previous_tile->inputs |= 1 << direction;
         const struct PipeEntry last_entry = pipe_ruleset[inputs];
-        arrlast(pipe_tool_entry_list).id = last_entry.id;
-        arrlast(pipe_tool_entry_list).rotation = last_entry.rotation;
-
-        // const AxialDirection dd = ((direction - arrlast(pipe_tool_bpp_list).rotation) + 6) % 6;
-        // if (PIPE_NONE == entry.id) {
-        //     if (dd == 4 || dd == 2) { return PIPE_NONE; }
-        //     switch (dd) {
-        //         case 1:
-        //             arrlast(pipe_tool_bpp_list).rotation = (arrlast(pipe_tool_bpp_list).rotation + 4) % 6;
-        //             arrlast(pipe_tool_bpp_list).id = PIPE_BEND;
-        //             break;
-        //         case 5:
-        //             arrlast(pipe_tool_bpp_list).id = PIPE_BEND;
-        //             break;
-        //         default:
-        //             arrlast(pipe_tool_bpp_list).id = PIPE_STRAIGHT;
-        //             break;
-        //     }
-        // } else {
-        //     return PIPE_NONE;
-        // }
+        previous_tile->id = last_entry.id;
+        previous_tile->rotation = last_entry.rotation;
     }
 
     // set the end
-    const struct PipeToolEntry bpp = {
+    struct PipeToolEntry *bpp = arraddnptr(hash_bucket_list[PIPE_TOOL_HASH(next_tile)], 1);
+    *bpp = (struct PipeToolEntry) {
         .coordinate = next_tile,
         .rotation = direction,
         .id = PIPE_SHORT_END,
         .inputs = 1 << direction
     };
-    arrput(pipe_tool_entry_list, bpp);
-    arrput(hash_bucket_list[PIPE_TOOL_HASH(next_tile)], bpp);
+    pipe_tool_count++;
 
-    previous_tile = next_tile;
-    return arrlast(pipe_tool_entry_list).id;
+    previous_tile = bpp;
+    return bpp->id;
 }
 
 void commit_pipe_tool_to_blueprints(PipeBlueprint *blueprints) {
-    for (int i = 0; i < arrlen(pipe_tool_entry_list); ++i) {
-        const Vector2 position = AxialToPosition(pipe_tool_entry_list[i].coordinate);
-        const PipeTransform transform = {
-            .position = (Vector3){.x = position.x, .y = 0.25f, .z = position.y},
-            .rotation = (float)pipe_tool_entry_list[i].rotation * M_PI_3
-        };
-        arrput(blueprints->instance_lists[pipe_tool_entry_list[i].id], transform);
+    for (int i = 0; i < 32; ++i) {
+        for (int j = 0; j < arrlen(hash_bucket_list[i]); ++j) {
+            const Vector2 position = AxialToPosition(hash_bucket_list[i][j].coordinate);
+            const PipeTransform transform = {
+                .position = (Vector3){.x = position.x, .y = 0.25f, .z = position.y},
+                .rotation = (float)hash_bucket_list[i][j].rotation * M_PI_3
+            };
+            arrput(blueprints->instance_lists[hash_bucket_list[i][j].id], transform);
+        }
     }
 
     // clear pipe_tool
-    arrsetlen(pipe_tool_entry_list, 0);
+    for (int i = 0; i < 32; ++i) { arrsetlen(hash_bucket_list[i], 0); }
+    pipe_tool_count = 0;
 }
 
 void draw_pipe_tool() {
