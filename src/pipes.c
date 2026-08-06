@@ -38,16 +38,17 @@ static Matrix *pipe_transform_list[PIPE_COUNT];
 // TODO: contextualize with a drone?
 // PIPE TOOL
 struct PipeToolEntry {
-    Axial coordinate;
-    unsigned int rotation;
-    enum PipeModelID id;
-    char inputs;
+    Axial key;
+    struct PipeToolElement {
+        unsigned int rotation;
+        enum PipeModelID id;
+        char inputs;
+    } value;
 };
 // static struct PipeToolEntry *pipe_tool_entry_list;
-static int pipe_tool_count = 0;
-static struct PipeToolEntry *previous_tile;
-#define PIPE_TOOL_HASH(A) ((unsigned int)((A).q * 1459 + (A).r) % 32)
-static struct PipeToolEntry *hash_bucket_list[32]; // TODO: remove magic number
+static Axial previous_tile;
+// #define PIPE_TOOL_HASH(A) ((unsigned int)((A).q * 1459 + (A).r) % 32)
+static struct PipeToolEntry *pipe_tool_hashmap = nullptr;
 
 void load_pipes_resources() {
     pipe_models = LoadModel("./resources/models/pipes.glb");
@@ -61,12 +62,10 @@ void load_pipes_resources() {
     default_material = LoadMaterialDefault();
 
     // clear the hash_bucket_list for use with std_ds
-    for (int i = 0; i < 32; ++i) { hash_bucket_list[i] = nullptr; }
 }
 
 void unload_pipes_resources() {
-    // if (pipe_tool_entry_list != nullptr) { arrfree(pipe_tool_entry_list); }
-    for (int i = 0; i < 32; ++i) { if (hash_bucket_list[i] != nullptr) { arrfree(hash_bucket_list[i]); } }
+    if (pipe_tool_hashmap != nullptr) { hmfree(pipe_tool_hashmap); }
     UnloadModel(pipe_models);
 }
 
@@ -113,107 +112,97 @@ const char * get_pipe_name(const enum PipeModelID id) {
 
 void start_pipe_tool(const Axial start_tile, const enum PipeModelID start_pipe_id, const char hex_direction) {
     if (PIPE_NONE == start_pipe_id) {
-        struct PipeToolEntry *bpp = arraddnptr(hash_bucket_list[PIPE_TOOL_HASH(start_tile)], 1);
-        *bpp = (struct PipeToolEntry) {
-            .coordinate = start_tile,
+        const struct PipeToolElement pte = {
             .rotation = hex_direction,
             .id = PIPE_WELL_OPEN,
             .inputs = 1 << hex_direction
         };
-        previous_tile = bpp;
+        hmput(pipe_tool_hashmap, start_tile, pte);
+        previous_tile = start_tile;
     } else {
-        struct PipeToolEntry *bpp = arraddnptr(hash_bucket_list[PIPE_TOOL_HASH(start_tile)], 1);
-        *bpp = (struct PipeToolEntry) {
-            .coordinate = start_tile,
+        const struct PipeToolElement pte = {
             .rotation = hex_direction,
             .id = PIPE_SPLIT_BRANCH,
             .inputs = 1 << hex_direction
         };
-        previous_tile = bpp;
+        hmput(pipe_tool_hashmap, start_tile, pte);
     }
-
-    pipe_tool_count = 1;
+    previous_tile = start_tile;
 }
 
 enum PipeModelID update_pipe_tool(const Axial next_tile, const char inputs) {
-    const int distance = AxialDistance(previous_tile->coordinate, next_tile);
+    const int distance = AxialDistance(previous_tile, next_tile);
     if (distance != 1) {
         // use line drawing or walk the tiles ?
         return PIPE_NONE;
     }
 
-    const AxialDirection direction = AxialDirectionToward(AxialSubtract(previous_tile->coordinate, next_tile));
-
-    // if (arrlen(pipe_tool_entry_list) <= 1) {
-    if (pipe_tool_count <= 1) {
-        if (PIPE_WELL_OPEN == previous_tile->id) {
+    const AxialDirection direction = AxialDirectionToward(AxialSubtract(previous_tile, next_tile));
+    const int pi = hmgeti(pipe_tool_hashmap, previous_tile);
+    if (hmlen(pipe_tool_hashmap) <= 1) {
+        if (PIPE_WELL_OPEN == pipe_tool_hashmap[pi].value.id) {
             // update the well
-            previous_tile->id = PIPE_WELL_CONNECTED;
-            previous_tile->rotation = direction;
-            previous_tile->inputs = 1 << direction;
+            pipe_tool_hashmap[pi].value.id = PIPE_WELL_CONNECTED;
+            pipe_tool_hashmap[pi].value.rotation = direction;
+            pipe_tool_hashmap[pi].value.inputs = 1 << direction;
         }
     } else {
         const struct PipeEntry entry = pipe_ruleset[inputs];
         if (PIPE_NONE == entry.id) { return PIPE_NONE; }
 
         // update last tile
-        previous_tile->inputs |= 1 << direction;
+        pipe_tool_hashmap[pi].value.inputs |= 1 << direction;
         const struct PipeEntry last_entry = pipe_ruleset[inputs];
-        previous_tile->id = last_entry.id;
-        previous_tile->rotation = last_entry.rotation;
+        pipe_tool_hashmap[pi].value.id = last_entry.id;
+        pipe_tool_hashmap[pi].value.rotation = last_entry.rotation;
     }
 
     // set the end
-    struct PipeToolEntry *bpp = arraddnptr(hash_bucket_list[PIPE_TOOL_HASH(next_tile)], 1);
-    *bpp = (struct PipeToolEntry) {
-        .coordinate = next_tile,
+    const struct PipeToolElement pte = {
         .rotation = direction,
         .id = PIPE_SHORT_END,
-        .inputs = 1 << direction
+        // .inputs = 1 << direction
+        .inputs = 0x20 >> direction
     };
-    pipe_tool_count++;
+    hmput(pipe_tool_hashmap, next_tile, pte);
 
-    previous_tile = bpp;
-    return bpp->id;
+    previous_tile = next_tile;
+    return pte.id;
 }
 
 void commit_pipe_tool_to_blueprints(PipeBlueprint *blueprints) {
-    for (int i = 0; i < 32; ++i) {
-        for (int j = 0; j < arrlen(hash_bucket_list[i]); ++j) {
-            const Vector2 position = AxialToPosition(hash_bucket_list[i][j].coordinate);
-            const PipeTransform transform = {
-                .position = (Vector3){.x = position.x, .y = 0.25f, .z = position.y},
-                .rotation = (float)hash_bucket_list[i][j].rotation * M_PI_3
-            };
-            arrput(blueprints->instance_lists[hash_bucket_list[i][j].id], transform);
-        }
+    for (int i = 0; i < hmlen(pipe_tool_hashmap); ++i) {
+        const Vector2 position = AxialToPosition(pipe_tool_hashmap[i].key);
+        const PipeTransform transform = {
+            .position = (Vector3){.x = position.x, .y = 0.25f, .z = position.y},
+            .rotation = (float)pipe_tool_hashmap[i].value.rotation * M_PI_3
+        };
+        arrput(blueprints->instance_lists[pipe_tool_hashmap[i].value.id], transform);
     }
 
     // clear pipe_tool
-    for (int i = 0; i < 32; ++i) { arrsetlen(hash_bucket_list[i], 0); }
-    pipe_tool_count = 0;
+    if (pipe_tool_hashmap != nullptr) { hmfree(pipe_tool_hashmap); }
 }
 
 void draw_pipe_tool() {
-    if (pipe_tool_count <= 0) { return; }
-    for (int i = 0; i < 32; ++i) {
-        for (int j = 0; j < arrlen(hash_bucket_list[i]); ++j) {
-            const Vector2 position = AxialToPosition(hash_bucket_list[i][j].coordinate);
-            draw_pipe_wire(hash_bucket_list[i][j].id, (Vector3){position.x, 0.25f, position.y}, hash_bucket_list[i][j].rotation, SKYBLUE);
-        }
+    if (hmlen(pipe_tool_hashmap) <= 0) { return; }
+    for (int i = 0; i < hmlen(pipe_tool_hashmap); ++i) {
+        const Vector2 position = AxialToPosition(pipe_tool_hashmap[i].key);
+        draw_pipe_wire(pipe_tool_hashmap[i].value.id, (Vector3){position.x, 0.25f, position.y}, pipe_tool_hashmap[i].value.rotation, SKYBLUE);
     }
 }
 
 extern Camera3D camera;
 void draw_pipe_tool_debug_info() {
-    if (pipe_tool_count <= 0) { return; }
+    if (hmlen(pipe_tool_hashmap) <= 0) { return; }
 
-    const Vector2 position = AxialToPosition(previous_tile->coordinate);
+    const struct PipeToolElement pte = hmget(pipe_tool_hashmap, previous_tile);
+    const Vector2 position = AxialToPosition(previous_tile);
     const Vector2 screen_position = GetWorldToScreen((Vector3){.x = position.x, .y = 1.0f, .z = position.y}, camera);
-    DrawText(TextFormat("ID: %d R: %d", previous_tile->id, previous_tile->rotation), screen_position.x ,screen_position.y, 20, BLACK);
+    DrawText(TextFormat("ID: %d R: %d", pte.id, pte.rotation), screen_position.x ,screen_position.y, 20, BLACK);
 }
 
-static void draw_pipe_instances(const enum PipeModelID id, const struct PipeTransform *transform_list, const Material material) {
+static void draw_pipe_instances(const enum PipeModelID id, const PipeTransform *transform_list, const Material material) {
     const Mesh mesh = pipe_models.meshes[id];
 
     rlEnableShader(material.shader.id);
