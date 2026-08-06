@@ -156,7 +156,7 @@ void UpdateGameplayScreen() {
             Tile *tile = get_chunk_tile(&map, inputs.selected_tile);
             // if (tile != nullptr && tile->flags == 0) {
             if (tile != nullptr) {
-                const enum PipeModelID id = update_pipe_tool(inputs.selected_tile, tile->part_id);
+                const enum PipeModelID id = update_pipe_tool(inputs.selected_tile, tile->inputs);
                 if (id != PIPE_NONE) {
                     tile->flags |= TF_BLUEPRINT;
                     tile->part_id = id;
@@ -251,23 +251,13 @@ void UpdateGameplayScreen() {
 void DrawGameplayScreen() {
     BeginMode3D(camera);
 
+    // DEBUG
     draw_chunk_grid(map, DARKBLUE);
     DrawChunkBoundaries(map.coord, 0.1f, BLACK);
     DrawHexWire(player.coordinate, 0.1f, BLUE); // draw actual player coordinate
 
-    // TODO: build a display setup for quick rendering?
-    for (int c = 0; c < CHUNK_SIZE; ++c) {
-        for (int r = c % 2; r < CHUNK_SIZE; r += 2) {
-            const Tile tile = map.layers[0][CHECKER2INDEX(c, r)];
-            if (tile.flags & TF_STACK) {
-                const Vector2 position = CheckerToPosition((Checker){.col = c, .row = r});
-                DrawCube((Vector3){.x = position.x, .y = 0, .z = position.y}, 0.5f, 0.5f, 0.5f, GRAY);
-            } else if (tile.flags & TF_CAN_INTERACT) {
-                const Vector2 position = CheckerToPosition((Checker){.col = c, .row = r});
-                DrawCube((Vector3){.x = position.x, .y = 0, .z = position.y}, 0.5f, 0.5f, 0.5f, RED);
-            }
-        }
-    }
+    // Draw Map ============================================================
+    draw_map();
 
     // Pipes
     draw_pipes();
@@ -309,6 +299,7 @@ void DrawGameplayScreen() {
     DrawFPS(10, 10);
     draw_pipe_tool_debug_info();
 
+    // UI ============================================================
     if (show_build_menu) {
         // menu background
         const int x = 20, y = 20;

@@ -31,22 +31,22 @@ const struct PipeEntry pipe_ruleset[] = {
     {.id = PIPE_SHORT_END, .rotation = 3}, // 001000
     {.id = PIPE_STRAIGHT, .rotation = 0}, //001001
     {.id = PIPE_BEND, .rotation = 4}, // 001010
-    {.id = PIPE_SPLIT_BRANCH_FLIP, .rotation = 0}, // 001011
+    {.id = PIPE_SPLIT_BRANCH_FLIPPED, .rotation = 3}, // 001011
     {.id = PIPE_NONE, .rotation = 0}, // 001100
-    {.id = PIPE_SPLIT_BRANCH, .rotation = 2}, // 001101
+    {.id = PIPE_SPLIT_BRANCH, .rotation = 0}, // 001101
     {.id = PIPE_NONE, .rotation = 0}, // 001110
     {.id = PIPE_NONE, .rotation = 0}, // 001111
     {.id = PIPE_SHORT_END, .rotation = 4}, // 010000
     {.id = PIPE_BEND, .rotation = 1}, // 010001
     {.id = PIPE_STRAIGHT, .rotation = 1}, // 010010
-    {.id = PIPE_NONE, .rotation = 0}, // 010011
+    {.id = PIPE_SPLIT_BRANCH, .rotation = 4}, // 010011
     {.id = PIPE_BEND, .rotation = 5}, // 010100
     {.id = PIPE_NONE, .rotation = 0}, // 010101
-    {.id = PIPE_NONE, .rotation = 0}, // 010110
+    {.id = PIPE_SPLIT_BRANCH_FLIPPED, .rotation = 4}, // 010110
     {.id = PIPE_NONE, .rotation = 0}, // 010111
     {.id = PIPE_NONE, .rotation = 0}, // 011000
-    {.id = PIPE_NONE, .rotation = 0}, // 011001
-    {.id = PIPE_SPLIT_BRANCH, .rotation = 5}, // 011010
+    {.id = PIPE_SPLIT_BRANCH_FLIPPED, .rotation = 0}, // 011001
+    {.id = PIPE_SPLIT_BRANCH, .rotation = 1}, // 011010
     {.id = PIPE_NONE, .rotation = 0}, // 011011
     {.id = PIPE_NONE, .rotation = 0}, // 011100
     {.id = PIPE_NONE, .rotation = 0}, // 011101
@@ -57,22 +57,22 @@ const struct PipeEntry pipe_ruleset[] = {
     {.id = PIPE_BEND, .rotation = 2}, // 100010
     {.id = PIPE_NONE, .rotation = 0}, // 100011
     {.id = PIPE_STRAIGHT, .rotation = 2}, // 100100
-    {.id = PIPE_NONE, .rotation = 0}, // 100101
-    {.id = PIPE_NONE, .rotation = 0}, // 100110
+    {.id = PIPE_SPLIT_BRANCH_FLIPPED, .rotation = 2}, // 100101
+    {.id = PIPE_SPLIT_BRANCH, .rotation = 5}, // 100110
     {.id = PIPE_NONE, .rotation = 0}, // 100111
     {.id = PIPE_BEND, .rotation = 0}, // 101000
-    {.id = PIPE_NONE, .rotation = 0}, // 101001
+    {.id = PIPE_SPLIT_BRANCH, .rotation = 3}, // 101001
     {.id = PIPE_NONE, .rotation = 0}, // 101010
     {.id = PIPE_NONE, .rotation = 0}, // 101011
-    {.id = PIPE_NONE, .rotation = 0}, // 101100
+    {.id = PIPE_SPLIT_BRANCH_FLIPPED, .rotation = 5}, // 101100
     {.id = PIPE_NONE, .rotation = 0}, // 101101
     {.id = PIPE_NONE, .rotation = 0}, // 101110
     {.id = PIPE_NONE, .rotation = 0}, // 101111
     {.id = PIPE_NONE, .rotation = 0}, // 110000
     {.id = PIPE_NONE, .rotation = 0}, // 110001
-    {.id = PIPE_NONE, .rotation = 0}, // 110010
+    {.id = PIPE_SPLIT_BRANCH_FLIPPED, .rotation = 1}, // 110010
     {.id = PIPE_NONE, .rotation = 0}, // 110011
-    {.id = PIPE_NONE, .rotation = 0}, // 110100
+    {.id = PIPE_SPLIT_BRANCH, .rotation = 2}, // 110100
     {.id = PIPE_NONE, .rotation = 0}, // 110101
     {.id = PIPE_NONE, .rotation = 0}, // 110110
     {.id = PIPE_NONE, .rotation = 0}, // 110111

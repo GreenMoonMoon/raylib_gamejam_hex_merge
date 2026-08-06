@@ -140,6 +140,8 @@ enum PipeModelID update_pipe_tool(const Axial next_tile, const char inputs) {
 
     const AxialDirection direction = AxialDirectionToward(AxialSubtract(previous_tile, next_tile));
     const AxialDirection flipped_direction = (direction + 3) % HD_COUNT;
+
+    // Update the previous tile
     const int pi = hmgeti(pipe_tool_hashmap, previous_tile);
     if (hmlen(pipe_tool_hashmap) <= 1) {
         if (PIPE_WELL_OPEN == pipe_tool_hashmap[pi].value.id) {
@@ -150,20 +152,16 @@ enum PipeModelID update_pipe_tool(const Axial next_tile, const char inputs) {
         }
     } else {
         const struct PipeEntry entry = pipe_ruleset[pipe_tool_hashmap[pi].value.inputs | (1 << direction)];
-
-        const int debug = hmlen(pipe_tool_hashmap);
-
         if (PIPE_NONE == entry.id) { return PIPE_NONE; }
-
-        // update last tile
         pipe_tool_hashmap[pi].value.inputs |= 1 << direction;
         const struct PipeEntry last_entry = pipe_ruleset[pipe_tool_hashmap[pi].value.inputs];
         pipe_tool_hashmap[pi].value.id = last_entry.id;
         pipe_tool_hashmap[pi].value.rotation = last_entry.rotation;
     }
 
-    // set the end
+    // update the current tile
     const int ni = hmgeti(pipe_tool_hashmap, next_tile);
+
     struct PipeToolElement pte = {
         .rotation = direction,
         .id = PIPE_SHORT_END,

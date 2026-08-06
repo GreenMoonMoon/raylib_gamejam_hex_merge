@@ -62,6 +62,7 @@ Axial PositionToAxial(const Vector2 position) {
     return AxialRound(fractional_axial.x, fractional_axial.y);
 }
 
+// TODO: check if direction can also be managed with bitflags
 AxialDirection AxialDirectionToward(const Axial axial) {
     if (axial.q > 0) {
         if (axial.r < 0) { return HD_SOUTH_EAST; }

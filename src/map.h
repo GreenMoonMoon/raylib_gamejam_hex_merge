@@ -9,7 +9,7 @@
 
 #define CHUNK_SIZE 16
 #define HALF_CHUNK_SIZE 8
-#define CHUNK_LAYER_COUNT 1
+
 #define MAP_BUCKET_COUNT 1024
 #define MAP_CHUNK_WIDTH 256
 
@@ -24,6 +24,13 @@
 #define TF_OBSTACLE 0xf
 #define TF_STACK 0x10
 
+typedef enum MapLayer {
+    MAP_LAYER_PIPE,
+    MAP_LAYER_BLUEPRINT,
+
+    MAP_LAYER_COUNT
+} MapLayer;
+
 typedef struct Tile {
     unsigned int flags;
     int part_id;
@@ -32,7 +39,7 @@ typedef struct Tile {
 
 typedef struct Chunk {
     Checker coord;
-    Tile *layers[CHUNK_LAYER_COUNT];
+    Tile *layers[MAP_LAYER_COUNT];
 } Chunk;
 
 void init_map();
@@ -50,5 +57,7 @@ Tile *get_chunk_tile(const Chunk *chunk, Axial axial);
 bool check_chunk_collision(const Chunk *chunk, Axial coord);
 
 bool is_tile_free(Chunk *chunk, Axial coord);
+
+void draw_map();
 
 #endif //RAYLIB_GAMEJAM_ENTRY_MAP_H

@@ -12,6 +12,10 @@
 // dense array
 static Chunk *loaded_chunk_lists[MAP_BUCKET_COUNT];
 
+static Axial PathNextMapCoordinate(const Chunk *chunk, const Axial from, const Axial to) {
+    return from;
+}
+
 void init_map() {
     // initialize every bucket to nullptr to work with stb_ds
     for (int i = 0; i < MAP_BUCKET_COUNT; ++i) { loaded_chunk_lists[i] = nullptr; }
@@ -51,7 +55,7 @@ Chunk generate_chunk(const Checker coord) {
 }
 
 void delete_chunk(const Chunk *chunk) {
-    for (int i = 0; i < CHUNK_LAYER_COUNT; ++i) {
+    for (int i = 0; i < MAP_LAYER_COUNT; ++i) {
         if (chunk->layers[i] != nullptr) { free(chunk->layers[i]); }
     }
 }
@@ -76,6 +80,30 @@ bool is_tile_free(Chunk *chunk, Axial coord) {
     return true;
 }
 
-Axial PathNextMapCoordinate(const Chunk *chunk, const Axial from, const Axial to) {
-    return from;
+static void draw_chunk(const Chunk chunk) {
+    for (int c = 0; c < CHUNK_SIZE; ++c) {
+        for (int r = c % 2; r < CHUNK_SIZE; r += 2) {
+            // draw tiles...
+
+            // draw blueprints...
+
+            const Tile tile = chunk.layers[0][CHECKER2INDEX(c, r)];
+            if (tile.flags & TF_STACK) {
+                const Vector2 position = CheckerToPosition((Checker){.col = c, .row = r});
+                DrawCube((Vector3){.x = position.x, .y = 0, .z = position.y}, 0.5f, 0.5f, 0.5f, GRAY);
+            } else if (tile.flags & TF_CAN_INTERACT) {
+                const Vector2 position = CheckerToPosition((Checker){.col = c, .row = r});
+                DrawCube((Vector3){.x = position.x, .y = 0, .z = position.y}, 0.5f, 0.5f, 0.5f, RED);
+            }
+        }
+    }
+}
+
+void draw_map() {
+    for (int i = 0; i < MAP_BUCKET_COUNT; ++i) {
+        if (nullptr == loaded_chunk_lists[i]) { continue; }
+        for (int j = 0; j < arrlen(loaded_chunk_lists[i]); ++j) {
+            draw_chunk(loaded_chunk_lists[i][j]);
+        }
+    }
 }
