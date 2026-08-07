@@ -49,7 +49,6 @@ static int build_menu_cursor = 0;
 static Player player;
 
 static bool mouse_pipe_tool = false;
-struct PipeBlueprint pipe_blueprints;
 
 // static
 
@@ -151,7 +150,8 @@ void UpdateGameplayScreen() {
     if (mouse_pipe_tool) {
         if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
             mouse_pipe_tool = false;
-            commit_pipe_tool_to_blueprints(&pipe_blueprints);
+            commit_pipe_blueprints_to_map(pipe_tool_get_blueprint_list());
+            pipe_tool_clear();
         } else {
             Tile *tile = get_chunk_tile(&map, inputs.selected_tile);
             // if (tile != nullptr && tile->flags == 0) {
@@ -259,14 +259,8 @@ void DrawGameplayScreen() {
     // Draw Map ============================================================
     draw_map();
 
-    // Pipes
-    draw_pipes();
-    // MOUSE BLUEPRINT MODE
     // draw the blueprint pipe network
     if (mouse_pipe_tool) { draw_pipe_tool(); }
-
-    // draw blueprints
-    draw_pipe_blueprint(&pipe_blueprints);
 
     DrawHex(selectedCell, -0.2f, ORANGE);
     DrawHex(AxialAdd(player.coordinate, hexDirections[player.target_direction]), 0, GREEN);
@@ -322,9 +316,8 @@ void DrawGameplayScreen() {
 // Gameplay Screen Unload logic
 void UnloadGameplayScreen() {
     // delete all blueprints
-    delete_pipe_blueprint(&pipe_blueprints);
     unload_pipes_resources();
-    delete_chunk(&map);
+    close_map();
     UnloadPlayerResources();
 }
 

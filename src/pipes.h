@@ -7,6 +7,8 @@
 
 #include "raylib.h"
 #include "hex.h"
+#include "raylib_ext.h"
+#include "blueprint.h"
 
 enum PipeModelID {
     PIPE_NONE,
@@ -32,21 +34,13 @@ enum PipeModelID {
     PIPE_COUNT,
 };
 
-
-typedef struct PipeTransform {
-    Vector3 position;
-    float rotation;
-} PipeTransform;
-
 typedef struct PipeBlueprint {
-    PipeTransform *instance_lists[PIPE_COUNT];
+    TileInstanceTransform *instance_lists[PIPE_COUNT];
 } PipeBlueprint;
 
 void load_pipes_resources();
 
 void unload_pipes_resources();
-
-void draw_pipes();
 
 void draw_pipe_wire(enum PipeModelID id, Vector3 position, char rotation, Color color);
 
@@ -60,7 +54,9 @@ void start_pipe_tool(Axial start_tile, enum PipeModelID start_pipe_id, char hex_
 
 enum PipeModelID update_pipe_tool(Axial next_tile, char inputs);
 
-void commit_pipe_tool_to_blueprints(PipeBlueprint *blueprints);
+Blueprint* pipe_tool_get_blueprint_list();
+
+void pipe_tool_clear();
 
 void draw_pipe_tool_debug_info();
 

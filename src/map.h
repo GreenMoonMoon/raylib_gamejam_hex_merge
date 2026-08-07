@@ -6,15 +6,16 @@
 #define RAYLIB_GAMEJAM_ENTRY_MAP_H
 
 #include "hex.h"
+#include "pipes.h"
 
-#define CHUNK_SIZE 16
-#define HALF_CHUNK_SIZE 8
+#define CHUNK_SIZE 32
+#define HALF_CHUNK_SIZE 16
 
 #define MAP_BUCKET_COUNT 1024
 #define MAP_CHUNK_WIDTH 256
 
 #define CHECKER2INDEX(C, R) ((C) * HALF_CHUNK_SIZE + (R) / 2)
-#define INDEX2CHECKER(I) ((Checker){(I) / HALF_CHUNK_SIZE, (I) % HALF_CHUNK_SIZE * 2})
+#define INDEX2CHECKER(I) ((Checker){(I) / HALF_CHUNK_SIZE, (I) % HALF_CHUNK_SIZE * 2 + ((I) / HALF_CHUNK_SIZE) % 2})
 
 // cell flags
 #define TF_CAN_INTERACT 0x1
@@ -25,6 +26,7 @@
 #define TF_STACK 0x10
 
 typedef enum MapLayer {
+    MAP_LAYER_TERRAIN,
     MAP_LAYER_PIPE,
     MAP_LAYER_BLUEPRINT,
 
@@ -40,6 +42,12 @@ typedef struct Tile {
 typedef struct Chunk {
     Checker coord;
     Tile *layers[MAP_LAYER_COUNT];
+
+    // static tile mesh cache. for instance rendering
+    bool need_blueprint_cache_rebuild;
+    MeshTransform *blueprint_mesh_cache[HALF_CHUNK_SIZE * CHUNK_SIZE];
+    bool need_mesh_cache_rebuild;
+    MeshTransform *tile_mesh_cache[HALF_CHUNK_SIZE * CHUNK_SIZE];
 } Chunk;
 
 void init_map();
@@ -57,6 +65,8 @@ Tile *get_chunk_tile(const Chunk *chunk, Axial axial);
 bool check_chunk_collision(const Chunk *chunk, Axial coord);
 
 bool is_tile_free(Chunk *chunk, Axial coord);
+
+void commit_pipe_blueprints_to_map(Blueprint *pipe_blueprint_list);
 
 void draw_map();
 

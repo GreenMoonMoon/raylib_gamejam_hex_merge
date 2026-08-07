@@ -82,12 +82,20 @@ inline Checker CheckerAbs(const Checker coord) {
     return (Checker){ abs(coord.col), abs(coord.row)};
 }
 
-inline Checker CheckerAdd(const Checker a, const Checker b) {
-    return (Checker){a.col + b.col, a.row + b.row};
+inline Checker checker_add(const Checker a, const Checker b) {
+    return (Checker){.col = a.col + b.col, .row = a.row + b.row};
 }
 
 inline Checker CheckerSubtract(const Checker a, const Checker b) {
-    return (Checker){a.col - b.col, a.row - b.row};
+    return (Checker) {.col = a.col - b.col, .row = a.row - b.row};
+}
+
+Checker checker_multiply(const Checker a, const Checker b) {
+    return (Checker) { .col = a.col * b.col, .row = a.row * b.row};
+}
+
+Checker checker_divide(const Checker a, const Checker b) {
+    return (Checker) { .col = a.col / b.col, .row = a.row / b.row };
 }
 
 int CheckerDistance(const Checker a, const Checker b) {
@@ -108,6 +116,10 @@ inline Vector2 CheckerToPosition(const Checker coord) {
         .x = 1.5f * (float)coord.col,
         .y = SQRT_3_2 * (float)coord.row
     };
+}
+
+Checker checker_modulo(const Checker a, const Checker b) {
+    return (Checker) { .col = a.col % b.col, .row = a.row % b.row };
 }
 
 // CONVERSIONS

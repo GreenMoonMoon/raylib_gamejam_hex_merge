@@ -3,26 +3,55 @@
 //
 
 #include "map.h"
-
 #include <stdlib.h>
 #include "extern/stb_ds.h"
 
-#define BUCKET_HASH(C) (((C).row * CHUNK_SIZE + (C).col) % MAP_BUCKET_COUNT)
+#define GET_CHUNK_ROOT(C) (checker_multiply(checker_divide(C,(Checker){CHUNK_SIZE,HALF_CHUNK_SIZE}),(Checker){CHUNK_SIZE,HALF_CHUNK_SIZE}))
 
-// dense array
-static Chunk *loaded_chunk_lists[MAP_BUCKET_COUNT];
+struct ChunkEntry {
+    Checker key;
+    Chunk value;
+};
+static struct ChunkEntry *loaded_chunk_hashmap = nullptr;
 
 static Axial PathNextMapCoordinate(const Chunk *chunk, const Axial from, const Axial to) {
     return from;
 }
 
+static void rebuild_chunk_mesh_cache() {
+    for (int i = 0; i < hmlen(loaded_chunk_hashmap); ++i) {
+        if (loaded_chunk_hashmap[i].value.need_blueprint_cache_rebuild) {
+
+        }
+    }
+}
+
+static void draw_chunk(const Checker coord, const Chunk chunk) {
+    // draw mesh caches
+    // blueprint ...
+    // pipe ...
+
+    // draw individual tiles
+    for (int i = 0; i < HALF_CHUNK_SIZE * CHUNK_SIZE; ++i) {
+        const Vector2 position = CheckerToPosition(checker_add(coord, INDEX2CHECKER(i)));
+        if ((chunk.layers[MAP_LAYER_TERRAIN][i].flags & TF_SOURCE) != 0) {
+            DrawCube((Vector3){.x = position.x, .y = 0, .z = position.y}, 0.5f, 0.5f, 0.5f, RED);
+        }
+        else if (chunk.layers[MAP_LAYER_TERRAIN][i].flags & TF_CAN_INTERACT) {
+            DrawCube((Vector3){.x = position.x, .y = 0, .z = position.y}, 0.5f, 0.5f, 0.5f, GRAY);
+        }
+    }
+}
+
 void init_map() {
-    // initialize every bucket to nullptr to work with stb_ds
-    for (int i = 0; i < MAP_BUCKET_COUNT; ++i) { loaded_chunk_lists[i] = nullptr; }
 }
 
 void close_map() {
-
+    if (nullptr == loaded_chunk_hashmap) { return; }
+    for (int i = 0; i < hmlen(loaded_chunk_hashmap); ++i) {
+        delete_chunk(&loaded_chunk_hashmap[i].value);
+    }
+    hmfree(loaded_chunk_hashmap);
 }
 
 Chunk generate_chunk(const Checker coord) {
@@ -32,24 +61,26 @@ Chunk generate_chunk(const Checker coord) {
     };
 
     // create inlets
-    const size_t msize = sizeof(Tile) * CHUNK_SIZE * (CHUNK_SIZE * 2);
-    chunk.layers[0] = malloc(msize);
-    memset(chunk.layers[0], 0, msize);
+    const size_t msize = sizeof(Tile) * CHUNK_SIZE * HALF_CHUNK_SIZE;
+    for (int i = 0; i < MAP_LAYER_COUNT; ++i) {
+        chunk.layers[i] = malloc(msize);
+        memset(chunk.layers[i], 0, msize);
+    }
 
-    chunk.layers[0][0].flags |= (TF_STACK | TF_CAN_INTERACT);
+    chunk.layers[MAP_LAYER_TERRAIN][0].flags |= (TF_STACK | TF_CAN_INTERACT);
 
     for (int i = 0; i < 6; ++i) {
         const int c = GetRandomValue(0, CHUNK_SIZE);
         const int r = GetRandomValue(0, CHUNK_SIZE) + c % 2;
         const int index = CHECKER2INDEX(c, r);
-        if (chunk.layers[0][index].flags != 0) { continue; }
+        if (chunk.layers[MAP_LAYER_TERRAIN][index].flags != 0) { continue; }
 
-        chunk.layers[0][CHECKER2INDEX(c, r)] = (Tile) {
+        chunk.layers[MAP_LAYER_TERRAIN][CHECKER2INDEX(c, r)] = (Tile) {
             .flags = TF_CAN_INTERACT | TF_CAN_BUILD | TF_SOURCE
         };
     }
 
-    arrput(loaded_chunk_lists[BUCKET_HASH(coord)], chunk);
+    hmput(loaded_chunk_hashmap, coord, chunk);
 
     return chunk;
 }
@@ -72,7 +103,6 @@ Tile * get_chunk_tile(const Chunk *chunk, const Axial axial) {
 }
 
 bool check_chunk_collision(const Chunk *chunk, const Axial coord) {
-    // if (OUT_OF_BOUND(map, coord)) { return true; }
     return false;
 }
 
@@ -80,30 +110,33 @@ bool is_tile_free(Chunk *chunk, Axial coord) {
     return true;
 }
 
-static void draw_chunk(const Chunk chunk) {
-    for (int c = 0; c < CHUNK_SIZE; ++c) {
-        for (int r = c % 2; r < CHUNK_SIZE; r += 2) {
-            // draw tiles...
+void commit_pipe_blueprints_to_map(Blueprint *pipe_blueprint_list) {
+    for (int i = 0; i < arrlen(pipe_blueprint_list); ++i) {
+        const Checker tile_coord = axial_to_checker(pipe_blueprint_list[i].coord);
+        const Checker chunk_coord = GET_CHUNK_ROOT(tile_coord);
+        const int ci = hmgeti(loaded_chunk_hashmap, chunk_coord);
 
-            // draw blueprints...
-
-            const Tile tile = chunk.layers[0][CHECKER2INDEX(c, r)];
-            if (tile.flags & TF_STACK) {
-                const Vector2 position = CheckerToPosition((Checker){.col = c, .row = r});
-                DrawCube((Vector3){.x = position.x, .y = 0, .z = position.y}, 0.5f, 0.5f, 0.5f, GRAY);
-            } else if (tile.flags & TF_CAN_INTERACT) {
-                const Vector2 position = CheckerToPosition((Checker){.col = c, .row = r});
-                DrawCube((Vector3){.x = position.x, .y = 0, .z = position.y}, 0.5f, 0.5f, 0.5f, RED);
-            }
+        if (ci < 0) {
+            TraceLog(LOG_ERROR, "somehow a blueprint is trying to be placed on an unloaded chunk. This is not normal!");
+            continue;
         }
+
+        loaded_chunk_hashmap[ci].value.layers[MAP_LAYER_BLUEPRINT][CHECKER2INDEX(tile_coord.col, tile_coord.row)] = (Tile){
+            .flags = TF_BLUEPRINT,
+            .part_id = pipe_blueprint_list[i].id,
+            .inputs = pipe_blueprint_list[i].inputs
+        };
     }
+
+    rebuild_chunk_mesh_cache();
 }
 
 void draw_map() {
-    for (int i = 0; i < MAP_BUCKET_COUNT; ++i) {
-        if (nullptr == loaded_chunk_lists[i]) { continue; }
-        for (int j = 0; j < arrlen(loaded_chunk_lists[i]); ++j) {
-            draw_chunk(loaded_chunk_lists[i][j]);
-        }
+    if (nullptr == loaded_chunk_hashmap) {
+        TraceLog(LOG_TRACE, "no chunk is currently loaded!");
+        return;
+    }
+    for (int i = 0; i < hmlen(loaded_chunk_hashmap); ++i) {
+        draw_chunk(loaded_chunk_hashmap[i].key, loaded_chunk_hashmap[i].value);
     }
 }

@@ -27,7 +27,7 @@ typedef enum AxialDirection {
 } AxialDirection;
 
 /// Hexagonal Coordinate Axial
-typedef struct AxialCoordinate {
+typedef struct AxialBase {
     int q, r; // NOTE: q is diagonal down and r is vertical
 } Axial;
 
@@ -60,21 +60,27 @@ AxialDirection AxialDirectionToward(Axial axial);
 
 /// Hexagonal "double heigth" coordinate where vertical step size is doubled
 /// more info: https://www.redblobgames.com/grids/hexagons/#coordinates
-typedef struct CheckerCoordinate { // RedBlobGame called it Doubled
+typedef struct CheckerBase { // RedBlobGame called it Doubled
     int col, row;
 } Checker;
 
 Checker CheckerAbs(Checker coord);
 
-Checker CheckerAdd(Checker a, Checker b);
+Checker checker_add(Checker a, Checker b);
 
 Checker CheckerSubtract(Checker a, Checker b);
+
+Checker checker_multiply(Checker a, Checker b);
+
+Checker checker_divide(Checker a, Checker b);
 
 int CheckerDistance(Checker a, Checker b);
 
 Checker PositionToChecker(Vector2 position);
 
 Vector2 CheckerToPosition(Checker coord);
+
+Checker checker_modulo(Checker a, Checker b);
 
 // CONVERSIONS
 

@@ -5,16 +5,13 @@
 #ifndef RAYLIB_GAMEJAM_ENTRY_BUILDING_H
 #define RAYLIB_GAMEJAM_ENTRY_BUILDING_H
 
-#include "raylib.h"
-
-typedef struct MeshTransform {
-    Vector3 position;
-    float rotation;
-} MeshTransform;
+#include "hex.h"
 
 typedef struct Blueprint {
     int id;
-    // TODO: how to keep resources count...
+    // MeshTransform transform;
+    Axial coord;
+    char inputs;
 } Blueprint;
 
 #endif //RAYLIB_GAMEJAM_ENTRY_BUILDING_H

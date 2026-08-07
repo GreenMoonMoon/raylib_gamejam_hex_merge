@@ -71,7 +71,8 @@ target_sources(${PROJECT_NAME} PRIVATE
         src/screen_gameplay.c
         src/screen_logo.c
         src/screen_options.c
-        src/screen_title.c)
+        src/screen_title.c
+        src/raylib_ext.c)
 
 # copy resource files if they changed.
 #add_custom_command(
