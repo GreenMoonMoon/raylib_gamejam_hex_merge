@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include "extern/stb_ds.h"
 
-#define GET_CHUNK_ROOT(C) (checker_multiply(checker_divide(C,(Checker){CHUNK_SIZE,HALF_CHUNK_SIZE}),(Checker){CHUNK_SIZE,HALF_CHUNK_SIZE}))
+#define GET_CHUNK_ROOT(C) (checker_multiply(checker_divide(C,(Checker){CHUNK_SIZE,CHUNK_SIZE}),(Checker){CHUNK_SIZE,HALF_CHUNK_SIZE}))
 
 struct ChunkEntry {
     Checker key;
