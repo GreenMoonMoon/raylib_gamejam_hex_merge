@@ -7,7 +7,7 @@
 #include "rlgl.h"
 #include "extern/stb_ds.h"
 
-void draw_tile_mesh_instances(const Mesh mesh, TileInstanceTransform *transform_list, const Material material, const InstanceMaterialLocations locations) {
+void draw_tile_mesh_instances(const Mesh mesh, const Material material, const InstanceMaterialLocations locations, MeshTransform *transforms, const int count) {
     rlEnableShader(material.shader.id);
     // rlEnableWireMode();
 
@@ -55,7 +55,7 @@ void draw_tile_mesh_instances(const Mesh mesh, TileInstanceTransform *transform_
     // Enable mesh VAO to attach new buffer
     rlEnableVertexArray(mesh.vaoId);
 
-    const int instances = arrlen(transform_list);
+    // const int instances = arrlen(transform_list);
     // struct PipeTransform *transforms = calloc(instances, sizeof(struct PipeTransform));
 
 
@@ -63,16 +63,16 @@ void draw_tile_mesh_instances(const Mesh mesh, TileInstanceTransform *transform_
     // It isn't clear which would be reliably faster in all cases and on all platforms,
     // anecdotally glMapBuffer() seems quite slow (syncs) while glBufferSubData() seems
     // no faster, since all the transform matrices are transferred anyway
-    unsigned int instances_vbo_id = rlLoadVertexBuffer(transform_list, instances * sizeof(TileInstanceTransform), false);
+    unsigned int instances_vbo_id = rlLoadVertexBuffer(transforms, count * sizeof(MeshTransform), false);
 
     if (locations.position_loc != -1) {
         rlEnableVertexAttribute(locations.position_loc);
-        rlSetVertexAttribute(locations.position_loc, 3, RL_FLOAT, 0, sizeof(TileInstanceTransform), 0);
+        rlSetVertexAttribute(locations.position_loc, 3, RL_FLOAT, 0, sizeof(MeshTransform), 0);
         rlSetVertexAttributeDivisor(locations.position_loc, 1);
     }
     if (locations.rotation_loc != -1) {
         rlEnableVertexAttribute(locations.rotation_loc);
-        rlSetVertexAttribute(locations.rotation_loc, 1, RL_FLOAT, 0, sizeof(TileInstanceTransform), sizeof(Vector3));
+        rlSetVertexAttribute(locations.rotation_loc, 1, RL_FLOAT, 0, sizeof(MeshTransform), sizeof(Vector3));
         rlSetVertexAttributeDivisor(locations.rotation_loc, 1);
     }
 
@@ -185,8 +185,8 @@ void draw_tile_mesh_instances(const Mesh mesh, TileInstanceTransform *transform_
         rlSetUniformMatrix(material.shader.locs[SHADER_LOC_MATRIX_MVP], matModelViewProjection);
 
         // Draw mesh instanced
-        if (mesh.indices != NULL) rlDrawVertexArrayElementsInstanced(0, mesh.triangleCount*3, 0, instances);
-        else rlDrawVertexArrayInstanced(0, mesh.vertexCount, instances);
+        if (mesh.indices != NULL) rlDrawVertexArrayElementsInstanced(0, mesh.triangleCount*3, 0, count);
+        else rlDrawVertexArrayInstanced(0, mesh.vertexCount, count);
     }
 
     // Unbind all bound texture maps

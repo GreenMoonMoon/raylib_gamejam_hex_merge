@@ -28,7 +28,7 @@ static const char *pipe_names[PIPE_COUNT] = {
 };
 
 static Color pipe_color;
-static Model pipe_models;
+Model pipe_meshes;
 static Material default_material_instancing;
 static InstanceMaterialLocations default_material_instancing_locs;
 static Material default_material;
@@ -51,7 +51,7 @@ static Axial previous_tile;
 static struct PipeToolEntry *pipe_tool_hashmap = nullptr;
 
 void load_pipes_resources() {
-    pipe_models = LoadModel("./resources/models/pipes.glb");
+    pipe_meshes = LoadModel("./resources/models/pipes.glb");
     default_material_instancing = LoadMaterialDefault();
     default_material_instancing.shader = LoadShader("./resources/shaders/default_instancing_pipes.vert", "./resources/shaders/default.frag");
     default_material_instancing_locs.position_loc = GetShaderLocationAttrib(default_material_instancing.shader, "instance_position");
@@ -66,22 +66,22 @@ void load_pipes_resources() {
 
 void unload_pipes_resources() {
     if (pipe_tool_hashmap != nullptr) { hmfree(pipe_tool_hashmap); }
-    UnloadModel(pipe_models);
+    UnloadModel(pipe_meshes);
 }
 
-void draw_pipes() {
+void draw_pipes(enum PipeModelID id, MeshTransform *transforms, const int count) {
     default_material_instancing.maps[MATERIAL_MAP_DIFFUSE].color = pipe_color;
-    for (int i = 0; i < PIPE_COUNT; ++i) {
-        if (arrlen(pipe_transform_list[i]) == 0) { continue; }
-        DrawMeshInstanced(pipe_models.meshes[i], default_material_instancing, pipe_transform_list[i], arrlen(pipe_transform_list[i]));
-    }
+    // for (int i = 0; i < PIPE_COUNT; ++i) {
+    // if (arrlen(pipe_transform_list[i]) == 0) { continue; }
+    draw_tile_mesh_instances(pipe_meshes.meshes[id], default_material_instancing, default_material_instancing_locs, transforms, count);
+    // }
 }
 
 void draw_pipe_wire(const enum PipeModelID id, const Vector3 position, const char rotation, const Color color) {
     const Color old_color = default_material.maps[MATERIAL_MAP_DIFFUSE].color;
     default_material.maps[MATERIAL_MAP_DIFFUSE].color = color;
     draw_mesh_wire(
-        pipe_models.meshes[id],
+        pipe_meshes.meshes[id],
         default_material,
         MatrixMultiply(MatrixRotateY((float)rotation * (PI / 3)), MatrixTranslate(position.x, position.y, position.z)));
     default_material.maps[MATERIAL_MAP_DIFFUSE].color = old_color;
@@ -91,7 +91,7 @@ void draw_pipe(const enum PipeModelID id, const Vector3 position, const char rot
     const Color old_color = default_material.maps[MATERIAL_MAP_DIFFUSE].color;
     default_material.maps[MATERIAL_MAP_DIFFUSE].color = color;
     DrawMesh(
-        pipe_models.meshes[id],
+        pipe_meshes.meshes[id],
         default_material,
         MatrixMultiply(MatrixRotateY((float)rotation * (PI / 3)), MatrixTranslate(position.x, position.y, position.z)));
     default_material.maps[MATERIAL_MAP_DIFFUSE].color = old_color;
@@ -222,10 +222,11 @@ void draw_pipe_tool_debug_info() {
 void draw_pipe_blueprint(const PipeBlueprint *blueprint) {
     for (int i = 0; i < PIPE_COUNT; ++i) {
         draw_tile_mesh_instances(
-            pipe_models.meshes[i],
-            blueprint->instance_lists[i],
+            pipe_meshes.meshes[i],
             default_material_instancing,
-            default_material_instancing_locs
+            default_material_instancing_locs,
+            blueprint->instance_lists[i],
+            arrlen(blueprint->instance_lists)
         );
     }
 }

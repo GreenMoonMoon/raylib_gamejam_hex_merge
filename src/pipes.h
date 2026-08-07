@@ -34,8 +34,10 @@ enum PipeModelID {
     PIPE_COUNT,
 };
 
+extern Model pipe_meshes;
+
 typedef struct PipeBlueprint {
-    TileInstanceTransform *instance_lists[PIPE_COUNT];
+    MeshTransform *instance_lists[PIPE_COUNT];
 } PipeBlueprint;
 
 void load_pipes_resources();
@@ -43,6 +45,8 @@ void load_pipes_resources();
 void unload_pipes_resources();
 
 void draw_pipe_wire(enum PipeModelID id, Vector3 position, char rotation, Color color);
+
+void draw_pipes(enum PipeModelID id, MeshTransform *transforms, int count);
 
 void draw_pipe(enum PipeModelID id, Vector3 position, char rotation, Color color);
 

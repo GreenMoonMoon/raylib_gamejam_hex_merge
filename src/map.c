@@ -14,21 +14,34 @@ struct ChunkEntry {
 };
 static struct ChunkEntry *loaded_chunk_hashmap = nullptr;
 
-static Axial PathNextMapCoordinate(const Chunk *chunk, const Axial from, const Axial to) {
-    return from;
-}
-
+// TODO: revise how to generate transform cache for instancing... it's a bit too complex right now
 static void rebuild_chunk_mesh_cache() {
     for (int i = 0; i < hmlen(loaded_chunk_hashmap); ++i) {
         if (loaded_chunk_hashmap[i].value.need_blueprint_cache_rebuild) {
-
+            Chunk *chunk = &loaded_chunk_hashmap[i].value;
+            // clear all counts
+            for (int j = 0; j < PIPE_COUNT; ++j) { chunk->blueprint_mesh_cache_count[j] = 0; }
+            for (int k = 0; k < CHUNK_SIZE * HALF_CHUNK_SIZE; ++k) {
+                if (chunk->layers[MAP_LAYER_BLUEPRINT][k].part_id != PIPE_NONE) {
+                    chunk->blueprint_mesh_cache
+                }
+            }
         }
     }
 }
 
 static void draw_chunk(const Checker coord, const Chunk chunk) {
     // draw mesh caches
-    // blueprint ...
+    // blueprint
+    int index = 0;
+    for (int i = 0; i < PIPE_COUNT; ++i) {
+        const int count = chunk.blueprint_mesh_cache_count[i];
+        if (count > 0) {
+            draw_pipes(i, chunk.blueprint_mesh_cache[index], count);
+            index += count;
+        }
+    }
+
     // pipe ...
 
     // draw individual tiles

@@ -12,16 +12,11 @@ typedef struct MeshTransform {
     float rotation;
 } MeshTransform;
 
-typedef struct TileInstanceTransform {
-    Vector3 position;
-    float rotation;
-} TileInstanceTransform;
-
 typedef struct InstanceMaterialLocations {
     int position_loc;
     int rotation_loc;
 } InstanceMaterialLocations;
 
-void draw_tile_mesh_instances(Mesh mesh, TileInstanceTransform *transform_list, Material material, InstanceMaterialLocations locations);
+void draw_tile_mesh_instances(Mesh mesh, Material material, InstanceMaterialLocations locations, MeshTransform *transforms, int count);
 
 #endif //RAYLIB_GAMEJAM_ENTRY_RAYLIB_EXT_H

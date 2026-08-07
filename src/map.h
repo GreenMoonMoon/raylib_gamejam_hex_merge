@@ -45,6 +45,7 @@ typedef struct Chunk {
 
     // static tile mesh cache. for instance rendering
     bool need_blueprint_cache_rebuild;
+    int blueprint_mesh_cache_count[PIPE_COUNT];
     MeshTransform *blueprint_mesh_cache[HALF_CHUNK_SIZE * CHUNK_SIZE];
     bool need_mesh_cache_rebuild;
     MeshTransform *tile_mesh_cache[HALF_CHUNK_SIZE * CHUNK_SIZE];
